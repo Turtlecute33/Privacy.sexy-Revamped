@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DEPLOY_BASE_URL: /Privacy.sexy-Revamped/
+  DEPLOY_BASE_URL: /
 
 jobs:
   build:

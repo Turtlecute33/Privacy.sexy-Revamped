@@ -6,8 +6,7 @@ Privacy.sexy Revamped is a web-first tool for building privacy and security
 scripts. Choose the changes you want, inspect the commands, then copy or
 download the generated script.
 
-Website: [turtlecute33.github.io/Privacy.sexy-Revamped](https://turtlecute33.github.io/Privacy.sexy-Revamped/).
-It will later move to **privacy.turtlecute.org**.
+Website: [privacy.turtlecute.org](https://privacy.turtlecute.org/).
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](./LICENSE)
 [![Original project](https://img.shields.io/badge/based_on-privacy.sexy-e91e63.svg)](https://github.com/undergroundwires/privacy.sexy)
