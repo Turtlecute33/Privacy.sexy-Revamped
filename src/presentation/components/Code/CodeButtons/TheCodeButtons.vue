@@ -1,6 +1,5 @@
 <template>
   <div v-if="hasCode" class="container">
-    <CodeRunButton class="code-button" />
     <CodeSaveButton class="code-button" />
     <CodeCopyButton class="code-button" />
   </div>
@@ -11,13 +10,11 @@ import {
   defineComponent, computed,
 } from 'vue';
 import { injectKey } from '@/presentation/injectionSymbols';
-import CodeRunButton from './CodeRunButton.vue';
 import CodeCopyButton from './CodeCopyButton.vue';
 import CodeSaveButton from './Save/CodeSaveButton.vue';
 
 export default defineComponent({
   components: {
-    CodeRunButton,
     CodeCopyButton,
     CodeSaveButton,
   },

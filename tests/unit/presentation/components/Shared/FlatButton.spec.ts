@@ -40,7 +40,7 @@ describe('FlatButton.vue', () => {
   describe('icon', () => {
     it('renders icon when provided', () => {
       // arrange
-      const expectedIcon: IconName = 'globe';
+      const expectedIcon: IconName = 'tag';
 
       // act
       const wrapper = mountComponent({ iconPropValue: expectedIcon });
@@ -60,7 +60,7 @@ describe('FlatButton.vue', () => {
     });
     it('correctly binds given icon', () => {
       // arrange
-      const expectedIcon: IconName = 'globe';
+      const expectedIcon: IconName = 'tag';
 
       // act
       const wrapper = mountComponent({ iconPropValue: expectedIcon });
@@ -74,7 +74,7 @@ describe('FlatButton.vue', () => {
     it('renders both label and icon when provided', () => {
       // arrange
       const expectedLabel = 'Test Label';
-      const expectedIcon: IconName = 'globe';
+      const expectedIcon: IconName = 'tag';
 
       // act
       const wrapper = mountComponent({
@@ -159,7 +159,7 @@ function mountComponent(options?: {
 }) {
   return shallowMount(FlatButton, {
     props: {
-      icon: options === undefined ? 'globe' : options?.iconPropValue,
+      icon: options === undefined ? 'tag' : options?.iconPropValue,
       label: options === undefined ? 'stub-label' : options?.labelPropValue,
       disabled: options?.isDisabledPropValue,
     },

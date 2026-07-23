@@ -23,9 +23,7 @@ describe('DependencyProvider', () => {
       useCurrentCode: createTransientTests(),
       useUserSelectionState: createTransientTests(),
       useLogger: createTransientTests(),
-      useCodeRunner: createTransientTests(),
       useDialog: createTransientTests(),
-      useScriptDiagnosticsCollector: createTransientTests(),
       useAutoUnsubscribedEventListener: createTransientTests(),
     };
     Object.entries(testCases).forEach(([key, runTests]) => {

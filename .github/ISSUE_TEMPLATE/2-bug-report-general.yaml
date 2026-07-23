@@ -61,8 +61,8 @@ body:
       description: |-
         If applicable, mention how you were using privacy.sexy when the bug occurred:
 
-        - Web (on which operating system and browser?)
-        - Or desktop (Windows, macOS, or Linux?)
+        - Operating system and version
+        - Browser and version
       placeholder: >-
         For example: "The web version on Edge browser on Windows 11 23H2."
     validations:
@@ -76,14 +76,12 @@ body:
 
         Helpful information includes:
 
-        - Application logs (desktop version only), see: [how to find application logs](https://github.com/undergroundwires/privacy.sexy/blob/master/docs/desktop/desktop-vs-web-features.md#logging).
-        - Terminal output
+        - Browser console output
         - Proposed solutions
         - Other related context such as related issues, software behavior, etc.
 
         > **💡 Tip:** You can attach log files by dragging them into this area.
-      placeholder: >-
-        For example: "Here are the logs I get from the privacy.sexy 0.13.2 desktop application: ..."
+      placeholder: Add browser console output and any other relevant context.
     validations:
       required: false
   -

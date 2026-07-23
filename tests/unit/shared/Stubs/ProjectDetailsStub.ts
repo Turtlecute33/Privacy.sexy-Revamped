@@ -17,8 +17,6 @@ export class ProjectDetailsStub implements ProjectDetails {
 
   public repositoryWebUrl = 'stub-repositoryWebUrl';
 
-  public downloadUrl = 'stub-downloadUrl';
-
   public slogan = 'stub-slogan';
 
   public withName(name: string): this {
@@ -59,9 +57,5 @@ export class ProjectDetailsStub implements ProjectDetails {
   public withRepositoryWebUrl(repositoryWebUrl: string): this {
     this.repositoryWebUrl = repositoryWebUrl;
     return this;
-  }
-
-  public getDownloadUrl(): string {
-    return this.downloadUrl;
   }
 }

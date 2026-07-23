@@ -12,10 +12,8 @@ import {
 import type { PropertyKeys } from '@/TypeHelpers';
 import { useUserSelectionState } from '@/presentation/components/Shared/Hooks/UseUserSelectionState';
 import { useLogger } from '@/presentation/components/Shared/Hooks/Log/UseLogger';
-import { useCodeRunner } from '@/presentation/components/Shared/Hooks/UseCodeRunner';
 import { CurrentEnvironment } from '@/infrastructure/RuntimeEnvironment/RuntimeEnvironmentFactory';
 import { useDialog } from '@/presentation/components/Shared/Hooks/Dialog/UseDialog';
-import { useScriptDiagnosticsCollector } from '@/presentation/components/Shared/Hooks/UseScriptDiagnosticsCollector';
 import { useAutoUnsubscribedEventListener } from '@/presentation/components/Shared/Hooks/UseAutoUnsubscribedEventListener';
 
 export function provideDependencies(
@@ -66,17 +64,9 @@ export function provideDependencies(
       InjectionKeys.useLogger,
       useLogger,
     ),
-    useCodeRunner: (di) => di.provide(
-      InjectionKeys.useCodeRunner,
-      useCodeRunner,
-    ),
     useDialog: (di) => di.provide(
       InjectionKeys.useDialog,
       useDialog,
-    ),
-    useScriptDiagnosticsCollector: (di) => di.provide(
-      InjectionKeys.useScriptDiagnosticsCollector,
-      useScriptDiagnosticsCollector,
     ),
     useAutoUnsubscribedEventListener: (di) => di.provide(
       InjectionKeys.useAutoUnsubscribedEventListener,

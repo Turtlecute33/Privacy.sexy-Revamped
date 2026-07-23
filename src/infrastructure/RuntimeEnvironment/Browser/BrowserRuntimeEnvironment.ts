@@ -7,8 +7,6 @@ import type { RuntimeEnvironment } from '../RuntimeEnvironment';
 import type { BrowserEnvironment, BrowserOsDetector } from './BrowserOs/BrowserOsDetector';
 
 export class BrowserRuntimeEnvironment implements RuntimeEnvironment {
-  public readonly isRunningAsDesktopApplication: boolean;
-
   public readonly os: OperatingSystem | undefined;
 
   public readonly isNonProduction: boolean;
@@ -21,14 +19,8 @@ export class BrowserRuntimeEnvironment implements RuntimeEnvironment {
   ) {
     if (!window) { throw new Error('missing window'); } // do not trust strictNullChecks for global objects
     this.isNonProduction = environmentVariables.isNonProduction;
-    this.isRunningAsDesktopApplication = isElectronRendererProcess(window);
     this.os = determineOperatingSystem(window, touchDetector, browserOsDetector);
   }
-}
-
-function isElectronRendererProcess(globalWindow: Partial<Window>): boolean {
-  return globalWindow.isRunningAsDesktopApplication === true; // Preloader injects this
-  // We could also do `globalWindow?.navigator?.userAgent?.includes('Electron') === true;`
 }
 
 function determineOperatingSystem(

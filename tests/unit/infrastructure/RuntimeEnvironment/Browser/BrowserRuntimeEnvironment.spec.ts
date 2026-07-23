@@ -27,7 +27,10 @@ describe('BrowserRuntimeEnvironment', () => {
       // arrange
       const expectedTouchSupport = true;
       const osDetector = new BrowserOsDetectorStub();
-      const window = { os: undefined, navigator: { userAgent: 'Forcing touch detection' } } as Partial<Window>;
+      const window = {
+        os: undefined,
+        navigator: { userAgent: 'Forcing touch detection' },
+      } as unknown as Partial<Window>;
       // act
       new BrowserRuntimeEnvironmentBuilder()
         .withWindow(window)
@@ -39,34 +42,6 @@ describe('BrowserRuntimeEnvironment', () => {
       expectExists(actualCall);
       const [{ isTouchSupported: actualTouchSupport }] = actualCall.args;
       expect(actualTouchSupport).to.equal(expectedTouchSupport);
-    });
-  });
-  describe('isRunningAsDesktopApplication', () => {
-    it('returns true when window property `isRunningAsDesktopApplication` is true', () => {
-      // arrange
-      const expectedValue = true;
-      const desktopWindow: Partial<Window> = {
-        isRunningAsDesktopApplication: true,
-      };
-      // act
-      const sut = new BrowserRuntimeEnvironmentBuilder()
-        .withWindow(desktopWindow)
-        .build();
-      // assert
-      expect(sut.isRunningAsDesktopApplication).to.equal(expectedValue);
-    });
-    it('returns false when window property `isRunningAsDesktopApplication` is undefined', () => {
-      // arrange
-      const expectedValue = false;
-      const browserWindow: Partial<Window> = {
-        isRunningAsDesktopApplication: undefined,
-      };
-      // act
-      const sut = new BrowserRuntimeEnvironmentBuilder()
-        .withWindow(browserWindow)
-        .build();
-      // assert
-      expect(sut.isRunningAsDesktopApplication).to.equal(expectedValue);
     });
   });
   describe('os', () => {

@@ -1,4 +1,3 @@
-import { OperatingSystem } from '@/domain/OperatingSystem';
 import { Version } from '@/domain/Version';
 
 export interface ProjectDetails {
@@ -11,5 +10,4 @@ export interface ProjectDetails {
   readonly feedbackUrl: string;
   readonly releaseUrl: string;
   readonly repositoryWebUrl: string;
-  getDownloadUrl(os: OperatingSystem): string;
 }

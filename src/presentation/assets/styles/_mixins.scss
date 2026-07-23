@@ -113,7 +113,7 @@
         due to inconsistent bold rendering in macOS browsers:
           - Safari: Renders bold, causes layout shift.
           - Firefox: Renders bold correctly, no layout shift.
-          - Chromium-based browsers (including Electron app): Do not render bold, no layout shift.
+          - Chromium-based browsers: Do not render bold, no layout shift.
       */
     }
   }

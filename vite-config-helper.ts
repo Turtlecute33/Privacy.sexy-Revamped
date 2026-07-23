@@ -7,10 +7,7 @@ import packageJson from './package.json' with { type: 'json' };
 type ViteAliasDefinitions = Record<string, string>;
 
 export function getAliases(): ViteAliasDefinitions {
-  return {
-    ...getPathAliasesFromTsConfig(),
-    ...getElectronProcessSpecificModuleAliases(),
-  };
+  return getPathAliasesFromTsConfig();
 }
 
 export function getSelfDirectoryAbsolutePath() {
@@ -50,19 +47,6 @@ function getPathAliasesFromTsConfig(): ViteAliasDefinitions {
     const aliasName = pathName.substring(0, pathName.length - 2); // trim /* from end
     const aliasPath = resolve(getSelfDirectoryAbsolutePath(), aliasFolder);
     aliases[aliasName] = aliasPath;
-    return aliases;
-  }, {} as ViteAliasDefinitions);
-}
-
-function getElectronProcessSpecificModuleAliases(): ViteAliasDefinitions {
-  // Workaround for Vite not being able to build tests with scoped Electron module imports.
-  const electronProcessScopedModuleAliases = [
-    'electron/main',
-    'electron/renderer',
-    'electron/common',
-  ] as const;
-  return electronProcessScopedModuleAliases.reduce((aliases, alias) => {
-    aliases[alias] = 'electron';
     return aliases;
   }, {} as ViteAliasDefinitions);
 }

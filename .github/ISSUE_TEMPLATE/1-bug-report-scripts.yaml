@@ -57,9 +57,6 @@ body:
         GitHub may restrict script file attachments.
         Upload your script file to a service like [GitHub Gist](https://gist.github.com/) and share the link here.
 
-        If you used the desktop version to run the script, it is already stored on your system.
-        See the [documentation to locate it](https://github.com/undergroundwires/privacy.sexy/blob/master/docs/desktop/desktop-vs-web-features.md#secure-script-executionstorage).
-
         > **💡 Tip:** You can attach script files by dragging them into this area.
       placeholder: |-
         Attach the script, or post GitHub Gist link.
@@ -86,14 +83,12 @@ body:
 
         Helpful information includes:
 
-        - Application logs (desktop version only), see: [how to find application logs](https://github.com/undergroundwires/privacy.sexy/blob/master/docs/desktop/desktop-vs-web-features.md#logging).
         - Terminal output
         - Proposed solutions
         - Other related context such as related issues, software behavior, etc.
 
         > **💡 Tip:** You can attach log files by dragging them into this area.
-      placeholder: >-
-        For example: "Here are the logs I get from the privacy.sexy 0.13.2 desktop application: ..."
+      placeholder: Add terminal output and any other relevant context.
     validations:
       required: false
   -

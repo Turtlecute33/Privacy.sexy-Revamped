@@ -37,44 +37,6 @@ jobs:
         shell: bash # Required for correct argument passing (--)
         run: npm run check:verify-build-artifacts -- --web
 
-  build-desktop:
-    strategy:
-      matrix:
-        os: [ macos, ubuntu, windows ]
-        mode: [
-          # electron-vite modes: https://electron-vite.org/guide/env-and-mode.html#global-env-variables
-          development,  # Used by `dev` command
-          production,   # Used by `build` and `preview` commands
-        ]
-      fail-fast: false # Allows to see results from other combinations
-    runs-on: ${{ matrix.os }}-latest
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v4
-      -
-        name: Setup node
-        uses: ./.github/actions/setup-node
-      -
-        name: Install dependencies
-        uses: ./.github/actions/npm-install-dependencies
-      -
-        name: Prebuild desktop
-        shell: bash # Required for correct argument passing (--)
-        run: npm run electron:prebuild -- --mode ${{ matrix.mode }}
-      -
-        name: Verify unbundled desktop build artifacts
-        shell: bash # Required for correct argument passing (--)
-        run: npm run check:verify-build-artifacts -- --electron-unbundled
-      -
-        name: Build (bundle and package) desktop application
-        shell: bash # Required for correct argument passing (--)
-        run: npm run electron:build -- --publish never
-      -
-        name: Verify bundled desktop build artifacts
-        shell: bash # Required for correct argument passing (--)
-        run: npm run check:verify-build-artifacts -- --electron-bundled
-
   build-docker:
     strategy:
       matrix:

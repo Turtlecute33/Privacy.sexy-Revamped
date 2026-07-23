@@ -1,8 +1,8 @@
 <template>
   <div>
     <IconButton
-      :text="isRunningAsDesktopApplication ? 'Save' : 'Download'"
-      :icon-name="isRunningAsDesktopApplication ? 'floppy-disk' : 'file-arrow-down'"
+      text="Download"
+      icon-name="file-arrow-down"
       @click="saveCode"
     />
     <ModalDialog v-model="areInstructionsVisible">
@@ -33,9 +33,7 @@ export default defineComponent({
   },
   setup() {
     const { currentState } = injectKey((keys) => keys.useCollectionState);
-    const { isRunningAsDesktopApplication } = injectKey((keys) => keys.useRuntimeEnvironment);
     const { dialog } = injectKey((keys) => keys.useDialog);
-    const { scriptDiagnosticsCollector } = injectKey((keys) => keys.useScriptDiagnosticsCollector);
 
     const areInstructionsVisible = ref(false);
     const filename = computed<string>(
@@ -50,23 +48,15 @@ export default defineComponent({
       );
       if (!success) {
         dialog.showError(...(await createScriptErrorDialog({
-          errorContext: 'save',
           errorType: error.type,
           errorMessage: error.message,
-          isFileReadbackError: error.type === 'FileReadbackVerificationError',
-        }, scriptDiagnosticsCollector)));
+        })));
         return;
       }
-      if (!isRunningAsDesktopApplication) {
-        areInstructionsVisible.value = true;
-      }
-      // On desktop, it would be better to to prompt the user with a system
-      // dialog offering options after saving, such as:
-      // • Open Containing Folder • "Open File" in default text editor • Close
+      areInstructionsVisible.value = true;
     }
 
     return {
-      isRunningAsDesktopApplication,
       areInstructionsVisible,
       filename,
       saveCode,

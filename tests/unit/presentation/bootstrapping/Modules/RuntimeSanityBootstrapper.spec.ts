@@ -9,7 +9,6 @@ describe('RuntimeSanityBootstrapper', () => {
     // arrange
     const expectedOptions: SanityCheckOptions = {
       validateEnvironmentVariables: true,
-      validateWindowVariables: true,
     };
     let actualOptions: SanityCheckOptions | undefined;
     const validatorMock: RuntimeSanityValidator = (options) => {

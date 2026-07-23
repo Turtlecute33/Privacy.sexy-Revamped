@@ -8,8 +8,6 @@
  *   node scripts/verify-build-artifacts.js [options]
  *
  * Options:
- *   --electron-unbundled    Verify artifacts for the unbundled Electron application.
- *   --electron-bundled      Verify artifacts for the bundled Electron application.
  *   --web                   Verify artifacts for the web application.
  */
 
@@ -41,21 +39,6 @@ async function main() {
 
 function getBuildVerificationConfigs() {
   return {
-    '--electron-unbundled': {
-      printDistDirScriptArgument: '--electron-unbundled',
-      filePatterns: [
-        /main[/\\]index\.(cjs|mjs|js)/,
-        /preload[/\\]index\.(cjs|mjs|js)/,
-        /renderer[/\\]index\.htm(l)?/,
-      ],
-    },
-    '--electron-bundled': {
-      printDistDirScriptArgument: '--electron-bundled',
-      filePatterns: [
-        /latest.*\.yml/, // generates latest.yml for auto-updates
-        /.*-\d+\.\d+\.\d+\..*/, // a file with extension and semantic version (packaged application)
-      ],
-    },
     '--web': {
       printDistDirScriptArgument: '--web',
       filePatterns: [

@@ -1,138 +1,40 @@
 import { describe, it, expect } from 'vitest';
 import {
-  createEnvironmentSpecificLoggedDialog, type WindowDialogCreationFunction,
-  type BrowserDialogCreationFunction, type DialogLoggingDecorator,
+  createEnvironmentSpecificLoggedDialog,
+  type BrowserDialogCreationFunction,
+  type DialogLoggingDecorator,
 } from '@/presentation/components/Shared/Hooks/Dialog/ClientDialogFactory';
-import type { RuntimeEnvironment } from '@/infrastructure/RuntimeEnvironment/RuntimeEnvironment';
-import { RuntimeEnvironmentStub } from '@tests/unit/shared/Stubs/RuntimeEnvironmentStub';
 import { DialogStub } from '@tests/unit/shared/Stubs/DialogStub';
-import { collectExceptionMessage } from '@tests/unit/shared/ExceptionCollector';
 import type { Dialog } from '@/presentation/common/Dialog';
 
 describe('ClientDialogFactory', () => {
-  describe('createEnvironmentSpecificLoggedDialog', () => {
-    describe('dialog selection based on environment', () => {
-      describe('when in non-desktop environment', () => {
-        it('provides a browser dialog', () => {
-          // arrange
-          const expectedDialog = new DialogStub();
-          const context = new DialogCreationTestSetup()
-            .withEnvironment(new RuntimeEnvironmentStub().withIsRunningAsDesktopApplication(false))
-            .withBrowserDialogFactory(() => expectedDialog);
+  it('creates a browser dialog', () => {
+    const expectedDialog = new DialogStub();
+    const browserFactory: BrowserDialogCreationFunction = () => expectedDialog;
 
-          // act
-          const actualDialog = context.createDialogForTest();
+    const actualDialog = createEnvironmentSpecificLoggedDialog(
+      (dialog) => dialog,
+      browserFactory,
+    );
 
-          // assert
-          expect(expectedDialog).to.equal(actualDialog);
-        });
-      });
-      describe('when in desktop environment', () => {
-        it('provides a window-injected dialog', () => {
-          // arrange
-          const expectedDialog = new DialogStub();
-          const context = new DialogCreationTestSetup()
-            .withEnvironment(new RuntimeEnvironmentStub().withIsRunningAsDesktopApplication(true))
-            .withWindowInjectedDialogFactory(() => expectedDialog);
+    expect(actualDialog).to.equal(expectedDialog);
+  });
 
-          // act
-          const actualDialog = context.createDialogForTest();
+  it('decorates the browser dialog with logging', () => {
+    const browserDialog = new DialogStub();
+    const decoratedDialog = new DialogStub();
+    let actualDecoratedDialog: Dialog | undefined;
+    const decorator: DialogLoggingDecorator = (dialog) => {
+      actualDecoratedDialog = dialog;
+      return decoratedDialog;
+    };
 
-          // assert
-          expect(expectedDialog).to.equal(actualDialog);
-        });
-        it('throws error if window-injected dialog is not available', () => {
-          // arrange
-          const expectedError = 'Failed to retrieve Dialog API from window object in desktop environment.';
-          const context = new DialogCreationTestSetup()
-            .withEnvironment(new RuntimeEnvironmentStub().withIsRunningAsDesktopApplication(true))
-            .withWindowInjectedDialogFactory(() => undefined);
+    const actualDialog = createEnvironmentSpecificLoggedDialog(
+      decorator,
+      () => browserDialog,
+    );
 
-          // act
-          const act = () => context.createDialogForTest();
-
-          // assert
-          const actualError = collectExceptionMessage(act);
-          expect(actualError).to.include(expectedError);
-        });
-      });
-    });
-    describe('dialog decoration with logging', () => {
-      it('returns a dialog decorated with logging', () => {
-        // arrange
-        const expectedLoggingDialogStub = new DialogStub();
-        const decoratorStub: DialogLoggingDecorator = () => expectedLoggingDialogStub;
-        const context = new DialogCreationTestSetup()
-          .withDialogLoggingDecorator(decoratorStub);
-
-        // act
-        const actualDialog = context.createDialogForTest();
-
-        // assert
-        expect(expectedLoggingDialogStub).to.equal(actualDialog);
-      });
-      it('applies logging decorator to the provided dialog', () => {
-        // arrange
-        const expectedDialog = new DialogStub();
-        let actualDecoratedDialog: Dialog | undefined;
-        const decoratorStub: DialogLoggingDecorator = (dialog) => {
-          actualDecoratedDialog = dialog;
-          return new DialogStub();
-        };
-        const context = new DialogCreationTestSetup()
-          .withEnvironment(new RuntimeEnvironmentStub().withIsRunningAsDesktopApplication(false))
-          .withBrowserDialogFactory(() => expectedDialog)
-          .withDialogLoggingDecorator(decoratorStub);
-
-        // act
-        context.createDialogForTest();
-
-        // assert
-        expect(expectedDialog).to.equal(actualDecoratedDialog);
-      });
-    });
+    expect(actualDecoratedDialog).to.equal(browserDialog);
+    expect(actualDialog).to.equal(decoratedDialog);
   });
 });
-
-class DialogCreationTestSetup {
-  private environment: RuntimeEnvironment = new RuntimeEnvironmentStub();
-
-  private browserDialogFactory: BrowserDialogCreationFunction = () => new DialogStub();
-
-  private windowInjectedDialogFactory: WindowDialogCreationFunction = () => new DialogStub();
-
-  private dialogLoggingDecorator: DialogLoggingDecorator = (dialog) => dialog;
-
-  public withEnvironment(environment: RuntimeEnvironment): this {
-    this.environment = environment;
-    return this;
-  }
-
-  public withBrowserDialogFactory(browserDialogFactory: BrowserDialogCreationFunction): this {
-    this.browserDialogFactory = browserDialogFactory;
-    return this;
-  }
-
-  public withWindowInjectedDialogFactory(
-    windowInjectedDialogFactory: WindowDialogCreationFunction,
-  ): this {
-    this.windowInjectedDialogFactory = windowInjectedDialogFactory;
-    return this;
-  }
-
-  public withDialogLoggingDecorator(
-    dialogLoggingDecorator: DialogLoggingDecorator,
-  ): this {
-    this.dialogLoggingDecorator = dialogLoggingDecorator;
-    return this;
-  }
-
-  public createDialogForTest() {
-    return createEnvironmentSpecificLoggedDialog(
-      this.environment,
-      this.dialogLoggingDecorator,
-      this.windowInjectedDialogFactory,
-      this.browserDialogFactory,
-    );
-  }
-}

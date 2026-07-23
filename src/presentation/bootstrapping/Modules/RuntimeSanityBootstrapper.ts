@@ -9,7 +9,6 @@ export class RuntimeSanityBootstrapper implements Bootstrapper {
   public async bootstrap(): Promise<void> {
     this.validator({
       validateEnvironmentVariables: true,
-      validateWindowVariables: true,
     });
   }
 }

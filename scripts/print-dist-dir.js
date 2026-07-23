@@ -7,8 +7,6 @@
  *   node scripts/print-dist-dir.js [options]
  *
  * Options:
- *   --electron-unbundled   Path for the unbundled Electron application
- *   --electron-bundled     Path for the bundled Electron application
  *   --web                  Path for the web application
  */
 
@@ -27,8 +25,6 @@ async function main() {
 
 function mapCliFlagsToDistDirs(distDirs) {
   return {
-    '--electron-unbundled': distDirs.electronUnbundled,
-    '--electron-bundled': distDirs.electronBundled,
     '--web': distDirs.web,
   };
 }

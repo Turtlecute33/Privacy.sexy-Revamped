@@ -65,7 +65,7 @@ function mountComponent(options?: {
   readonly iconPropValue?: IconName,
   readonly loader?: UseSvgLoaderStub,
 }) {
-  const iconName = options?.iconPropValue ?? 'globe';
+  const iconName = options?.iconPropValue ?? 'tag';
   const loaderStub = options?.loader ?? new UseSvgLoaderStub().withSvgIcon(iconName, '<svg />');
   return shallowMount(AppIcon, {
     props: {

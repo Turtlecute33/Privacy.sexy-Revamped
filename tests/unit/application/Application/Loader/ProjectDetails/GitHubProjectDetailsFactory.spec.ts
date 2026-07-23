@@ -1,9 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { OperatingSystem } from '@/domain/OperatingSystem';
-import { EnumRangeTestRunner } from '@tests/unit/application/Common/EnumRangeTestRunner';
 import { VersionStub } from '@tests/unit/shared/Stubs/VersionStub';
 import type { PropertyKeys } from '@/TypeHelpers';
-import { type SupportedOperatingSystem, AllSupportedOperatingSystems } from '@tests/shared/TestCases/SupportedOperatingSystems';
 import type { ProjectDetailsParameters } from '@/application/Application/Loader/ProjectDetails/ProjectDetailsFactory';
 import { createGitHubProjectDetails } from '@/application/Application/Loader/ProjectDetails/GitHubProjectDetailsFactory';
 import { ProjectDetailsParametersStub } from '@tests/unit/shared/Stubs/ProjectDetailsParametersStub';
@@ -122,52 +119,6 @@ describe('GitHubProjectDetailsFactory', () => {
           expect(actual).to.equal(expectedValue);
         });
       });
-    });
-  });
-  describe('correct retrieval of download URL for every supported operating system', () => {
-    const testScenarios: Record<SupportedOperatingSystem, {
-      readonly expected: string,
-      readonly repositoryUrl: string,
-      readonly version: string,
-    }> = {
-      [OperatingSystem.macOS]: {
-        expected: 'https://github.com/undergroundwires/privacy.sexy/releases/download/0.7.2/privacy.sexy-0.7.2.dmg',
-        repositoryUrl: 'https://github.com/undergroundwires/privacy.sexy.git',
-        version: '0.7.2',
-      },
-      [OperatingSystem.Linux]: {
-        expected: 'https://github.com/undergroundwires/privacy.sexy/releases/download/0.7.2/privacy.sexy-0.7.2.AppImage',
-        repositoryUrl: 'https://github.com/undergroundwires/privacy.sexy.git',
-        version: '0.7.2',
-      },
-      [OperatingSystem.Windows]: {
-        expected: 'https://github.com/undergroundwires/privacy.sexy/releases/download/0.7.2/privacy.sexy-Setup-0.7.2.exe',
-        repositoryUrl: 'https://github.com/undergroundwires/privacy.sexy.git',
-        version: '0.7.2',
-      },
-    };
-    AllSupportedOperatingSystems.forEach((operatingSystem) => {
-      it(`should return the expected download URL for ${OperatingSystem[operatingSystem]}`, () => {
-        // arrange
-        const { expected, version, repositoryUrl } = testScenarios[operatingSystem];
-        const sut = create((params) => params
-          .withVersion(new VersionStub(version))
-          .withRepositoryUrl(repositoryUrl));
-        // act
-        const actual = sut.getDownloadUrl(operatingSystem);
-        // assert
-        expect(actual).to.equal(expected);
-      });
-    });
-    describe('should throw an error when provided with an invalid operating system', () => {
-      // arrange
-      const sut = create();
-      // act
-      const act = (os: OperatingSystem) => sut.getDownloadUrl(os);
-      // assert
-      new EnumRangeTestRunner(act)
-        .testOutOfRangeThrows()
-        .testInvalidValueThrows(OperatingSystem.KaiOS, `Unsupported os: ${OperatingSystem[OperatingSystem.KaiOS]}`);
     });
   });
 });

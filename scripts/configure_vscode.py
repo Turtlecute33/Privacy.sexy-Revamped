@@ -52,12 +52,6 @@ def add_or_update_settings() -> None:
     # Details: # pylint: disable-next=line-too-long
     #   - https://web.archive.org/web/20230801024405/https://eslint.vuejs.org/user-guide/#visual-studio-code
 
-    configure_setting_key('terminal.integrated.env.linux', {"GTK_PATH": ""})
-    # Unset GTK_PATH on Linux for Electron development in sandboxed environments
-    # like Snap or Flatpak VSCode installations, enabling script execution.
-    # Details: # pylint: disable-next=line-too-long
-    #   - https://archive.ph/2024.01.06-003914/https://github.com/microsoft/vscode/issues/179274, https://web.archive.org/web/20240106003915/https://github.com/microsoft/vscode/issues/179274
-
     # Disable telemetry
     configure_setting_key('redhat.telemetry.enabled', False)
     configure_setting_key('gitlens.telemetry.enabled', False)

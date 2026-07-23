@@ -2,17 +2,6 @@
   <div>
     <div class="footer">
       <div class="footer__section">
-        <span v-if="isRunningAsDesktopApplication" class="footer__section__item">
-          <AppIcon class="icon" icon="globe" />
-          <span>
-            Online version at <a :href="homepageUrl" target="_blank" rel="noopener noreferrer">{{ homepageUrl }}</a>
-          </span>
-        </span>
-        <span v-else class="footer__section__item">
-          <DownloadUrlList />
-        </span>
-      </div>
-      <div class="footer__section">
         <div class="footer__section__item">
           <a :href="feedbackUrl" target="_blank" rel="noopener noreferrer">
             <AppIcon class="icon" icon="face-smile" />
@@ -55,26 +44,21 @@ import ModalDialog from '@/presentation/components/Shared/Modal/ModalDialog.vue'
 import AppIcon from '@/presentation/components/Shared/Icon/AppIcon.vue';
 import { injectKey } from '@/presentation/injectionSymbols';
 import FlatButton from '@/presentation/components/Shared/FlatButton.vue';
-import DownloadUrlList from './DownloadUrlList.vue';
 import PrivacyPolicy from './PrivacyPolicy.vue';
 
 export default defineComponent({
   components: {
     ModalDialog,
     PrivacyPolicy,
-    DownloadUrlList,
     AppIcon,
     FlatButton,
   },
   setup() {
     const { projectDetails } = injectKey((keys) => keys.useApplication);
-    const { isRunningAsDesktopApplication } = injectKey((keys) => keys.useRuntimeEnvironment);
 
     const isPrivacyDialogVisible = ref(false);
 
     const version = computed<string>(() => projectDetails.version.toString());
-
-    const homepageUrl = computed<string>(() => projectDetails.homepage);
 
     const repositoryUrl = computed<string>(() => projectDetails.repositoryWebUrl);
 
@@ -87,11 +71,9 @@ export default defineComponent({
     }
 
     return {
-      isRunningAsDesktopApplication,
       isPrivacyDialogVisible,
       showPrivacyDialog,
       version,
-      homepageUrl,
       repositoryUrl,
       releaseUrl,
       feedbackUrl,

@@ -29,7 +29,6 @@ describe('MobileSafariActivePseudoClassEnabler', () => {
           `User agent\t\t: ${navigator.userAgent}`,
           `Touch supported\t\t: ${supportsTouch}`,
           `Current OS\t\t: ${patchedEnvironment.os === undefined ? 'unknown' : OperatingSystem[patchedEnvironment.os]}`,
-          `Is desktop?\t\t: ${patchedEnvironment.isRunningAsDesktopApplication ? 'Yes (Desktop app)' : 'No (Browser)'}`,
           `Listeners\t\t: ${formatListeners()}`,
         ]));
       });
