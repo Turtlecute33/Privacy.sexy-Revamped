@@ -1,0 +1,59 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  DEPLOY_BASE_URL: /Privacy.sexy-Revamped/
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v6
+      -
+        name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+          cache: npm
+      -
+        name: Install dependencies
+        run: npm ci
+      -
+        name: Build
+        run: npm run build
+      -
+        name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      -
+        name: Upload website
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist-web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      -
+        name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

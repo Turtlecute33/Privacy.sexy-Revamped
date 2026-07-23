@@ -16,6 +16,7 @@ export function createVueConfig(options?: {
 }): UserConfig {
   return {
     root: WEB_DIRECTORY,
+    base: process.env.DEPLOY_BASE_URL ?? '/',
     build: {
       outDir: resolve(getSelfDirectoryAbsolutePath(), distDirs.web),
     },
