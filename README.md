@@ -1,10 +1,10 @@
 # Privacy.sexy Revamped
 
-> Take back control of Windows, macOS, and Linux—one transparent script at a time.
+> Build privacy and security scripts for Windows, macOS, and Linux.
 
 Privacy.sexy Revamped is a web-first tool for building privacy and security
-hardening scripts. Choose the changes you want, read exactly what each one does,
-then copy or download a script to run on your own computer.
+scripts. Choose the changes you want, inspect the commands, then copy or
+download the generated script.
 
 The new home of the project will be **privacy.turtlecute.org**.
 
@@ -20,10 +20,9 @@ activist, and I love what privacy.sexy set out to do: make operating-system
 hardening understandable, inspectable, and available to everyone.
 
 The [original privacy.sexy project](https://github.com/undergroundwires/privacy.sexy)
-was created by undergroundwires and grew into an impressive library of privacy
-scripts. When it entered an abandoned state, I did not want that idea—or all of
-that work—to disappear. This repository is my attempt to modernize it, remove
-outdated or risky advice, and keep it useful as operating systems change.
+was created by undergroundwires. It is now in an abandoned state, so I created
+this fork to update its scripts, remove outdated or risky advice, and keep it
+working as operating systems change.
 
 I will maintain this fork and continue reviewing its scripts against current
 vendor documentation. This is an independent revival and is not affiliated with
@@ -31,42 +30,36 @@ the original maintainer.
 
 ## The idea
 
-Privacy tools should never be black boxes.
-
-Instead of downloading an unexplained "debloat" script and hoping for the best,
 Privacy.sexy Revamped lets you:
 
 1. Pick your operating system and the changes you actually want.
 2. Read the documentation, privacy benefit, and possible side effects.
 3. Inspect the exact commands before anything runs.
 4. Copy or download the generated script.
-5. Run it locally, on your terms.
+5. Run it on your computer.
 
 There is no account, backend, analytics, or telemetry. The web app generates
 your script in the browser and does not execute system changes for you.
 
 ## What I changed
 
-This revival starts by making the project smaller, safer, and easier to
-maintain:
-
-- **Web-only distribution** — I removed the abandoned Electron desktop app and
+- **Web-only distribution:** I removed the abandoned Electron desktop app and
   its updater, packaging, native runtime, and release machinery. One browser
   build now works across platforms without installing the application.
-- **Current Windows AI controls** — I updated the catalog for modern Windows
+- **Current Windows AI controls:** I updated the catalog for modern Windows
   policies, including Recall, Click to Do, the Microsoft Copilot app, and
   Copilot features in Edge.
-- **Safer recommendations** — I removed tweaks that traded away important
+- **Safer recommendations:** I removed tweaks that traded away important
   protections by disabling browser and application updates, authentication,
   recovery, antivirus integration, or other security-critical behavior.
-- **Obsolete-script cleanup** — I removed legacy policy paths and retired tools
+- **Obsolete-script cleanup:** I removed legacy policy paths and retired tools
   such as `wmic`, then fixed stale commands and invalid filesystem paths across
   Windows, macOS, and Linux.
-- **Safer elevated scripts** — User-scoped actions now resolve the real user's
+- **Safer elevated scripts:** User-scoped actions now resolve the real user's
   home directory when a script is run with elevated privileges.
-- **Modern web stack** — The app now uses a leaner Vue and Vite toolchain with
+- **Modern web stack:** The app now uses a leaner Vue and Vite toolchain with
   updated dependencies.
-- **Regression tests for the revamp** — New tests protect the web-only build,
+- **Regression tests:** New tests protect the web-only build,
   current Windows AI policies, and the safety boundaries of the script catalog.
 
 ## Features
@@ -80,26 +73,6 @@ maintain:
 - **Copy or download scripts without an account**
 - **Open-source code, scripts, tests, and build process**
 
-## Run it locally
-
-Until **privacy.turtlecute.org** is live, run the web app from source:
-
-```bash
-git clone https://github.com/Turtlecute33/Privacy.sexy-Revamped.git
-cd Privacy.sexy-Revamped
-npm install
-npm run dev
-```
-
-For a production build:
-
-```bash
-npm run build
-npm run preview
-```
-
-More details are available in the [development guide](docs/development.md).
-
 ## A note on safety
 
 Privacy hardening changes system behavior. Read each script, understand its
@@ -111,17 +84,6 @@ transparent tools and better defaults; the final decision is yours.
 
 For vulnerabilities in the application itself, read the
 [security policy](SECURITY.md).
-
-## Roadmap
-
-My next priorities are:
-
-- Launch the maintained web app at **privacy.turtlecute.org**
-- Keep Windows, macOS, and Linux scripts aligned with current releases
-- Add new privacy controls as operating systems introduce new tracking and AI
-  features
-- Continue removing unsafe, obsolete, or poorly documented tweaks
-- Improve the interface and make every tradeoff easier to understand
 
 ## Credits
 
