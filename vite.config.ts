@@ -19,6 +19,15 @@ export function createVueConfig(options?: {
     base: process.env.DEPLOY_BASE_URL ?? '/',
     build: {
       outDir: resolve(getSelfDirectoryAbsolutePath(), distDirs.web),
+      emptyOutDir: true,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            const collectionName = getCollectionChunkName(id);
+            return collectionName ? `collection-${collectionName}` : undefined;
+          },
+        },
+      },
     },
     plugins: [
       vue(),
@@ -56,8 +65,13 @@ export function createVueConfig(options?: {
 }
 
 export default defineConfig(createVueConfig({
-  supportLegacyBrowsers: true,
+  supportLegacyBrowsers: false,
 }));
+
+function getCollectionChunkName(id: string): string | undefined {
+  const collectionMatch = id.match(/\/collections\/(windows|macos|linux)\.yaml$/);
+  return collectionMatch?.[1];
+}
 
 function getStaticHtmlMinificationOptions(): Parameters<typeof ViteMinifyPlugin>[0] {
   return {
