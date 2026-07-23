@@ -1,192 +1,140 @@
-# privacy.sexy — Privacy is sexy
+# Privacy.sexy Revamped
 
-> Enforce privacy & security best-practices on Windows, macOS and Linux, because privacy is sexy.
+> Take back control of Windows, macOS, and Linux—one transparent script at a time.
 
-<!-- markdownlint-disable MD033 -->
-<p align="center">
-  <a href="https://undergroundwires.dev/donate?project=privacy.sexy" target="_blank" rel="noopener noreferrer">
-    <img
-      alt="donation badge"
-      src="https://undergroundwires.dev/img/badges/donate/flat.svg"
-    />
-  </a>
-  <a href="https://github.com/undergroundwires/privacy.sexy/blob/master/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">
-    <img
-      alt="contributions are welcome"
-      src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat"
-    />
-  </a>
-  <a href="https://codeclimate.com/github/undergroundwires/privacy.sexy/maintainability" target="_blank" rel="noopener noreferrer">
-    <img
-      alt="Maintainability"
-      src="https://api.codeclimate.com/v1/badges/3a70b7ef602e2264342c/maintainability"
-    />
-  </a>
-  <!-- Tests -->
-  <br />
-  <a href="https://github.com/undergroundwires/privacy.sexy/actions/workflows/tests.unit.yaml" target="_blank" rel="noopener noreferrer">
-    <img
-      alt="Unit tests status"
-      src="https://github.com/undergroundwires/privacy.sexy/workflows/unit-tests/badge.svg"
-    />
-  </a>
-  <a href="https://github.com/undergroundwires/privacy.sexy/actions/workflows/tests.integration.yaml" target="_blank" rel="noopener noreferrer">
-    <img
-      alt="Integration tests status"
-      src="https://github.com/undergroundwires/privacy.sexy/workflows/integration-tests/badge.svg"
-    />
-  </a>
-  <a href="https://github.com/undergroundwires/privacy.sexy/actions/workflows/tests.e2e.yaml" target="_blank" rel="noopener noreferrer">
-    <img
-      alt="E2E tests status"
-      src="https://github.com/undergroundwires/privacy.sexy/workflows/e2e-tests/badge.svg"
-    />
-  </a>
-  <!-- Security checks -->
-  <br />
-  <a href="https://github.com/undergroundwires/privacy.sexy/actions/workflows/checks.security.sast.yaml" target="_blank" rel="noopener noreferrer">
-    <img
-      alt="Status of dependency security checks"
-      src="https://github.com/undergroundwires/privacy.sexy/workflows/checks.security.sast/badge.svg"
-    />
-  </a>
-  <a href="https://github.com/undergroundwires/privacy.sexy/actions/workflows/checks.security.dependencies.yaml" target="_blank" rel="noopener noreferrer">
-    <img
-      alt="Status of Static Analysis Security Testing (SAST)"
-      src="https://github.com/undergroundwires/privacy.sexy/workflows/checks.security.dependencies/badge.svg"
-    />
-  </a>
-  <!-- Checks -->
-  <br />
-  <a href="https://github.com/undergroundwires/privacy.sexy/actions/workflows/checks.quality.yaml" target="_blank" rel="noopener noreferrer">
-    <img
-      alt="Status of quality checks"
-      src="https://github.com/undergroundwires/privacy.sexy/workflows/checks.quality/badge.svg"
-    />
-  </a>
-  <a href="https://github.com/undergroundwires/privacy.sexy/actions/workflows/checks.build.yaml" target="_blank" rel="noopener noreferrer">
-    <img
-      alt="Status of build checks"
-      src="https://github.com/undergroundwires/privacy.sexy/workflows/checks.build/badge.svg"
-    />
-  </a>
-  <a href="https://github.com/undergroundwires/privacy.sexy/actions/workflows/checks.desktop-runtime-errors.yaml" target="_blank" rel="noopener noreferrer">
-    <img
-      alt="Status of runtime error checks for the desktop application"
-      src="https://github.com/undergroundwires/privacy.sexy/workflows/checks.desktop-runtime-errors/badge.svg"
-    />
-  </a>
-  <a href="https://github.com/undergroundwires/privacy.sexy/actions/workflows/checks.scripts.yaml" target="_blank" rel="noopener noreferrer">
-    <img
-      alt="Status of script checks"
-      src="https://github.com/undergroundwires/privacy.sexy/workflows/checks.scripts/badge.svg"
-    />
-  </a>
-  <a href="https://github.com/undergroundwires/privacy.sexy/actions/workflows/checks.external-urls.yaml" target="_blank" rel="noopener noreferrer">
-    <img
-      alt="Status of external URL checks"
-      src="https://github.com/undergroundwires/privacy.sexy/workflows/checks.external-urls/badge.svg"
-    />
-  </a>
-  <!-- Release -->
-  <br />
-  <a href="https://github.com/undergroundwires/privacy.sexy/actions/workflows/release.git.yaml" target="_blank" rel="noopener noreferrer">
-    <img
-      alt="Git release status"
-      src="https://github.com/undergroundwires/privacy.sexy/workflows/release-git/badge.svg"
-    />
-  </a>
-  <a href="https://github.com/undergroundwires/privacy.sexy/actions/workflows/release.site.yaml" target="_blank" rel="noopener noreferrer">
-    <img
-      alt="Site release status"
-      src="https://github.com/undergroundwires/privacy.sexy/workflows/release-site/badge.svg"
-    />
-  </a>
-  <a href="https://github.com/undergroundwires/privacy.sexy/actions/workflows/release.desktop.yaml" target="_blank" rel="noopener noreferrer">
-    <img
-      alt="Desktop application release status"
-      src="https://github.com/undergroundwires/privacy.sexy/workflows/release-desktop/badge.svg"
-    />
-  </a>
-  <!-- Others -->
-  <br />
-  <a href="https://github.com/undergroundwires/bump-everywhere" target="_blank" rel="noopener noreferrer">
-    <img
-      alt="Auto-versioned by bump-everywhere"
-      src="https://github.com/undergroundwires/bump-everywhere/blob/master/badge.svg?raw=true"
-    />
-  </a>
-</p>
-<!-- markdownlint-restore -->
+Privacy.sexy Revamped is a web-first tool for building privacy and security
+hardening scripts. Choose the changes you want, read exactly what each one does,
+then copy or download a script to run on your own computer.
 
-## Get started
+The new home of the project will be **privacy.turtlecute.org**.
 
-- 🌍️ **Online**: [https://privacy.sexy](https://privacy.sexy).
-- 🖥️ **Offline**: Download directly for: [Windows](https://github.com/undergroundwires/privacy.sexy/releases/download/0.13.8/privacy.sexy-Setup-0.13.8.exe), [macOS](https://github.com/undergroundwires/privacy.sexy/releases/download/0.13.8/privacy.sexy-0.13.8.dmg), [Linux](https://github.com/undergroundwires/privacy.sexy/releases/download/0.13.8/privacy.sexy-0.13.8.AppImage). For more options, see [here](#additional-install-options).
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](./LICENSE)
+[![Original project](https://img.shields.io/badge/based_on-privacy.sexy-e91e63.svg)](https://github.com/undergroundwires/privacy.sexy)
 
-See also:
+[![Privacy.sexy interface](img/screenshot.png)](img/screenshot.png)
 
-- [Desktop vs. Web Features](./docs/desktop/desktop-vs-web-features.md): Differences and unique aspects of desktop and web versions.
-- [System Requirements](./docs/desktop/system-requirements.md): Hardware and software requirements for the desktop version.
+## Why I revived this
 
-💡 Regularly applying your configuration with privacy.sexy is recommended, especially after each new release and major operating system updates. Each version updates scripts to enhance stability, privacy, and security.
+I'm [Turtlecute](https://github.com/Turtlecute33). I'm a privacy and security
+activist, and I love what privacy.sexy set out to do: make operating-system
+hardening understandable, inspectable, and available to everyone.
 
-[![privacy.sexy application](img/screenshot.png?raw=true )](https://privacy.sexy)
+The [original privacy.sexy project](https://github.com/undergroundwires/privacy.sexy)
+was created by undergroundwires and grew into an impressive library of privacy
+scripts. When it entered an abandoned state, I did not want that idea—or all of
+that work—to disappear. This repository is my attempt to modernize it, remove
+outdated or risky advice, and keep it useful as operating systems change.
+
+I will maintain this fork and continue reviewing its scripts against current
+vendor documentation. This is an independent revival and is not affiliated with
+the original maintainer.
+
+## The idea
+
+Privacy tools should never be black boxes.
+
+Instead of downloading an unexplained "debloat" script and hoping for the best,
+Privacy.sexy Revamped lets you:
+
+1. Pick your operating system and the changes you actually want.
+2. Read the documentation, privacy benefit, and possible side effects.
+3. Inspect the exact commands before anything runs.
+4. Copy or download the generated script.
+5. Run it locally, on your terms.
+
+There is no account, backend, analytics, or telemetry. The web app generates
+your script in the browser and does not execute system changes for you.
+
+## What I changed
+
+This revival starts by making the project smaller, safer, and easier to
+maintain:
+
+- **Web-only distribution** — I removed the abandoned Electron desktop app and
+  its updater, packaging, native runtime, and release machinery. One browser
+  build now works across platforms without installing the application.
+- **Current Windows AI controls** — I updated the catalog for modern Windows
+  policies, including Recall, Click to Do, the Microsoft Copilot app, and
+  Copilot features in Edge.
+- **Safer recommendations** — I removed tweaks that traded away important
+  protections by disabling browser and application updates, authentication,
+  recovery, antivirus integration, or other security-critical behavior.
+- **Obsolete-script cleanup** — I removed legacy policy paths and retired tools
+  such as `wmic`, then fixed stale commands and invalid filesystem paths across
+  Windows, macOS, and Linux.
+- **Safer elevated scripts** — User-scoped actions now resolve the real user's
+  home directory when a script is run with elevated privileges.
+- **Modern web stack** — The app now uses a leaner Vue and Vite toolchain with
+  updated dependencies.
+- **Regression tests for the revamp** — New tests protect the web-only build,
+  current Windows AI policies, and the safety boundaries of the script catalog.
 
 ## Features
 
-- **Rich**: Hundreds of scripts that aims to give you control of your data.
-- **Free**: Both free as in "beer" and free as in "speech".
-- **Transparent**. Have full visibility into what the tweaks do as you enable them.
-- **Reversible**. Revert if something feels wrong.
-- **Accessible**. No need to run any compiled software on your computer with web version.
-- **Secure**: Security is a top priority at privacy.sexy with [comprehensive safeguards](./SECURITY.md#security-practices) in place.
-- **Open**. What you see as code in this repository is what you get. The application itself, its infrastructure and deployments are open-source and automated thanks to [bump-everywhere](https://github.com/undergroundwires/bump-everywhere).
-- **Tested**. A lot of tests. Automated and manual. Community-testing and verification. Stability improvements comes before new features.
-- **Extensible**. Effortlessly [extend scripts](./CONTRIBUTING.md#extend-scripts) with a custom designed [templating language](./docs/templating.md).
-- **Portable and simple**. Every script is independently executable without cross-dependencies.
+- **Windows, macOS, and Linux support**
+- **A searchable library of privacy and security tweaks**
+- **Plain-language documentation and source links**
+- **Standard and strict recommendation levels**
+- **Full visibility into every generated command**
+- **Revert commands for supported changes**
+- **Copy or download scripts without an account**
+- **Open-source code, scripts, tests, and build process**
 
-## Support
+## Run it locally
 
-**Sponsor 💕**. Consider sponsoring on [GitHub Sponsors](https://github.com/sponsors/undergroundwires), or you can donate using [other ways such as crypto or a coffee](https://undergroundwires.dev/donate).
+Until **privacy.turtlecute.org** is live, run the web app from source:
 
-**Star 🤩**. Feel free to give it a star ⭐ .
+```bash
+git clone https://github.com/Turtlecute33/Privacy.sexy-Revamped.git
+cd Privacy.sexy-Revamped
+npm install
+npm run dev
+```
 
-**Contribute 👷**. Contributions of any type are welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md) as the starting point. It includes useful information like [how to add new scripts](./CONTRIBUTING.md#extend-scripts).
+For a production build:
 
-## Additional Install Options
+```bash
+npm run build
+npm run preview
+```
 
-- Check the [releases page](https://github.com/undergroundwires/privacy.sexy/releases) for all available versions.
-- Other unofficial channels (not maintained by privacy.sexy) for Windows include:
-  - [Scoop 🥄](https://scoop.sh/#/apps?q=privacy.sexy&s=2&d=1&o=true) (latest version):
+More details are available in the [development guide](docs/development.md).
 
-    ```powershell
-      scoop bucket add extras
-      scoop install privacy.sexy
-    ```
+## A note on safety
 
-  - [winget 🪟](https://winget.run/pkg/undergroundwires/privacy.sexy) (may be outdated):
+Privacy hardening changes system behavior. Read each script, understand its
+warnings, keep backups, and start with the standard recommendations. A setting
+that is right for one computer may break a feature another person needs.
 
-    ```powershell
-      winget install -e --id undergroundwires.privacy.sexy
-    ```
+No script can guarantee privacy, security, or anonymity. This project gives you
+transparent tools and better defaults; the final decision is yours.
 
-    With winget, updates require manual submission; the auto-update feature within privacy.sexy will notify you of new releases post-installation.
+For vulnerabilities in the application itself, read the
+[security policy](SECURITY.md).
 
-## Development
+## Roadmap
 
-Refer to [development.md](./docs/development.md) for Docker usage and reading more about setting up your development environment.
+My next priorities are:
 
-Check [architecture.md](./docs/architecture.md) for an overview of design and how different parts and layers work together. You can refer to [application.md](./docs/application.md) for a closer look at application layer codebase and [presentation.md](./docs/presentation.md) for code related to GUI layer. [collection-files.md](./docs/collection-files.md) explains the YAML files that are the core of the application and [templating.md](./docs/templating.md) documents how to use templating language in those files. In [ci-cd.md](./docs/ci-cd.md), you can read more about the pipelines that automates maintenance tasks and ensures you get what see.
+- Launch the maintained web app at **privacy.turtlecute.org**
+- Keep Windows, macOS, and Linux scripts aligned with current releases
+- Add new privacy controls as operating systems introduce new tracking and AI
+  features
+- Continue removing unsafe, obsolete, or poorly documented tweaks
+- Improve the interface and make every tradeoff easier to understand
 
-[docs/](./docs/) folder includes all other documentation.
+## Credits
 
-## Security
+This project is based on
+[undergroundwires/privacy.sexy](https://github.com/undergroundwires/privacy.sexy).
+The original author and contributors built the foundation, application
+architecture, and script library that made this revival possible.
 
-Security is a top priority at privacy.sexy.
-An extensive commitment to security verification ensures this priority.
-For any security concerns or vulnerabilities, please consult the [Security Policy](./SECURITY.md).
+If you want to help continue that work, bug reports, documentation fixes, script
+research, and pull requests are welcome. Start with
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Supporters
+## License
 
-[![Supporters appreciation banner showing the supporters](https://undergroundwires.dev/img/supporters.jpg)](https://undergroundwires.dev/supporters)
+[GNU Affero General Public License v3.0](LICENSE), following the license of the
+original project.
