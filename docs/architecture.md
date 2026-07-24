@@ -3,14 +3,14 @@
 This repository consists of:
 
 - A [layered application](#layered-application).
-- [AWS infrastructure](#aws-infrastructure) as code and instructions to host the website.
+- [Web infrastructure](#web-infrastructure) for automated website deployment.
 - [GitOps](#gitops) practices for development, maintenance and deployment.
 
 ## Layered application
 
 Application is
 
-- powered by **TypeScript**, **Vue.js** and **Electron** 💪,
+- powered by **TypeScript** and **Vue.js**,
 - and driven by **Domain-driven design**, **Event-driven architecture**, **Data-driven programming** concepts.
 
 Application uses highly decoupled models & services in different DDD layers:
@@ -62,15 +62,12 @@ Each layer treat application layer differently.
 
 It's comparable with `flux`, `vuex`, and `pinia`. A difference is that mutable application layer state in privacy.sexy is mutable and lies in single "store" that holds app state and logic. The "actions" mutate the state directly which in turns act as dispatcher to notify its own event subscriptions (callbacks).
 
-## AWS infrastructure
+## Web infrastructure
 
-The web-site runs on serverless AWS infrastructure. Infrastructure is open-source and deployed as code. [aws-static-site-with-cd](https://github.com/undergroundwires/aws-static-site-with-cd) project includes the source code.
-
-[![AWS solution](../img/architecture/aws-solution.png)](https://github.com/undergroundwires/aws-static-site-with-cd)
-
-The design priorities highest security then minimizing cloud infrastructure costs.
-
-This project includes [GitHub Actions](../.github/workflows/) to automatically provision the infrastructure with zero-touch and without any "hidden" steps, ensuring everything is open-source and transparent. Git repositories includes all necessary instructions and automation with [GitOps](#gitops) practices.
+The website is built and deployed to GitHub Pages by the
+[`deploy.pages.yaml`](../.github/workflows/deploy.pages.yaml) workflow.
+The deployment configuration is stored in this repository and runs from the
+published source code.
 
 ## GitOps
 

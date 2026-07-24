@@ -2,7 +2,9 @@
 
 ## GitOps
 
-CI/CD is fully automated using different Git events and GitHub actions. This repository uses [bump-everywhere](https://github.com/undergroundwires/bump-everywhere) to automate versioning, tagging, creation of `CHANGELOG.md` and GitHub releases. A dedicated workflow [release.desktop.yaml](./../.github/workflows/release.desktop.yaml) creates desktop installers and executables and attaches them into GitHub releases.
+CI/CD is automated using Git events and GitHub Actions. The
+[`deploy.pages.yaml`](./../.github/workflows/deploy.pages.yaml) workflow builds
+the web application and deploys it to GitHub Pages.
 
 Everything that's merged in the master goes directly to production.
 

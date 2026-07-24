@@ -4,7 +4,7 @@
   "private": true,
   "slogan": "Privacy is sexy",
   "description": "Enforce privacy & security best-practices on Windows, macOS and Linux, because privacy is sexy.",
-  "author": "undergroundwires",
+  "author": "Turtlecute",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -62,7 +62,7 @@
     "remark-preset-lint-consistent": "^6.0.1",
     "remark-validate-links": "^13.1.0",
     "sass": "~1.85.1",
-    "start-server-and-test": "^2.0.10",
+    "start-server-and-test": "^3.0.11",
     "terser": "^5.39.0",
     "tslib": "^2.8.1",
     "typescript": "~5.6.3",
@@ -81,7 +81,7 @@
     "eslint": "Cannot migrate to v9 `@typescript-eslint/eslint-plugin` (≤ v7), `@typescript-eslint/parser` (≤ v7), `@vue/eslint-config-airbnb-with-typescript@` (≤ v8) requires `eslint` ≤ v8, see https://github.com/vuejs/eslint-config-airbnb/issues/65, https://github.com/typescript-eslint/typescript-eslint/issues/8211",
     "eslint-plugin-cypress": "Cannot migrate to v4 because it requires eslint (≤ v9)"
   },
-  "homepage": "https://privacy.turtlecute.org/",
+  "homepage": "https://github.com/Turtlecute33/Privacy.sexy-Revamped",
   "repository": {
     "type": "git",
     "url": "https://github.com/Turtlecute33/Privacy.sexy-Revamped.git"

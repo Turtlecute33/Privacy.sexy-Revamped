@@ -62,7 +62,7 @@ describe('DocumentationParser', () => {
     });
     it('returns all when array', () => {
       // arrange
-      const expected = ['https://privacy.sexy', 'https://github.com/undergroundwires/privacy.sexy'];
+      const expected = ['https://privacy.turtlecute.org', 'https://github.com/Turtlecute33/Privacy.sexy-Revamped'];
       const sut: DocumentableData = { docs: expected };
       // act
       const actual = parseDocs(sut);

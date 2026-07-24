@@ -45,7 +45,7 @@ describe('CompositeMarkdownRenderer', () => {
   it('should correctly handle inline reference labels converting them to superscript', () => {
     // arrange
     const renderer = new CompositeMarkdownRenderer();
-    const expectedInlineReferenceUrlHref = 'https://undergroundwires.dev';
+    const expectedInlineReferenceUrlHref = 'https://example.com';
     const expectedInlineReferenceUrlLabel = '1';
     const markdownContent = [
       `See reference [${expectedInlineReferenceUrlLabel}].`,
@@ -67,7 +67,7 @@ describe('CompositeMarkdownRenderer', () => {
   it('should process mixed content, converting URLs and references within complex Markdown', () => {
     // arrange
     const renderer = new CompositeMarkdownRenderer();
-    const expectedInlineReferenceUrlHref = 'https://undergroundwires.dev';
+    const expectedInlineReferenceUrlHref = 'https://example.com';
     const expectedInlineReferenceUrlLabel = 'Example Reference';
     const expectedPlainUrlHref = 'https://privacy.sexy';
     const expectedPlainUrlLabel = 'privacy.sexy';

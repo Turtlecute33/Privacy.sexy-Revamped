@@ -73,29 +73,29 @@ describe('GitHubProjectDetailsFactory', () => {
       }],
       feedbackUrl: [{
         description: 'without `.git` suffix',
-        expectedValue: 'https://github.com/undergroundwires/privacy.sexy/issues',
+        expectedValue: 'https://github.com/Turtlecute33/Privacy.sexy-Revamped/issues',
         prepareParams: (params) => params
-          .withRepositoryUrl('https://github.com/undergroundwires/privacy.sexy'),
+          .withRepositoryUrl('https://github.com/Turtlecute33/Privacy.sexy-Revamped'),
         getActualValue: (sut) => sut.feedbackUrl,
       }, {
         description: 'with `.git` suffix',
-        expectedValue: 'https://github.com/undergroundwires/privacy.sexy/issues',
+        expectedValue: 'https://github.com/Turtlecute33/Privacy.sexy-Revamped/issues',
         prepareParams: (params) => params
-          .withRepositoryUrl('https://github.com/undergroundwires/privacy.sexy.git'),
+          .withRepositoryUrl('https://github.com/Turtlecute33/Privacy.sexy-Revamped.git'),
         getActualValue: (sut) => sut.feedbackUrl,
       }],
       releaseUrl: [{
         description: 'without `.git` suffix',
-        expectedValue: 'https://github.com/undergroundwires/privacy.sexy/releases/tag/0.7.2',
+        expectedValue: 'https://github.com/Turtlecute33/Privacy.sexy-Revamped/releases',
         prepareParams: (params) => params
-          .withRepositoryUrl('https://github.com/undergroundwires/privacy.sexy')
+          .withRepositoryUrl('https://github.com/Turtlecute33/Privacy.sexy-Revamped')
           .withVersion(new VersionStub('0.7.2')),
         getActualValue: (sut) => sut.releaseUrl,
       }, {
         description: 'with `.git` suffix',
-        expectedValue: 'https://github.com/undergroundwires/privacy.sexy/releases/tag/0.7.2',
+        expectedValue: 'https://github.com/Turtlecute33/Privacy.sexy-Revamped/releases',
         prepareParams: (params) => params
-          .withRepositoryUrl('https://github.com/undergroundwires/privacy.sexy.git')
+          .withRepositoryUrl('https://github.com/Turtlecute33/Privacy.sexy-Revamped.git')
           .withVersion(new VersionStub('0.7.2')),
         getActualValue: (sut) => sut.releaseUrl,
       }],

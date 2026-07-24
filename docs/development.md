@@ -27,8 +27,6 @@ See [ci-cd.md](./ci-cd.md) for more information.
   - `npm run test:cy:open`: Run tests interactively using the development server with hot-reloading.
   - `npm run test:cy:run`: Run tests on the production build in a headless mode.
 - Run checks:
-  - `npm run check:desktop`: Run runtime checks for packaged desktop applications ([README.md](./../tests/checks/desktop-runtime-errors/check-desktop-runtime-errors/README.md)).
-    - You can set environment variables active its flags such as `BUILD=true SCREENSHOT=true npm run check:desktop`
   - `npm run check:external-urls`: Test whether external URLs used in applications are alive.
 
 📖 Read more about testing in [tests](./tests.md).
@@ -53,23 +51,15 @@ See [ci-cd.md](./ci-cd.md) for more information.
   - Start a local web server that serves the built solution from `./dist`.
   - 💡 Run `npm run build` before `npm run preview`.
 
-**Desktop apps:**
-
-- `npm run electron:dev`: The command will build the main process and preload scripts source code, and start a dev server for the renderer, and start the Electron app.
-- `npm run electron:preview`: The command will build the main process, preload scripts and renderer source code, and start the Electron app to preview.
-- `npm run electron:prebuild`: The command will build the main process, preload scripts and renderer source code. Usually before packaging the Electron application, you need to execute this command.
-- `npm run electron:build`: Prebuilds the Electron application, packages and publishes it through `electron-builder`.
-
 **Docker:**
 
-1. Build: `docker build -t undergroundwires/privacy.sexy:latest .`
-2. Run: `docker run -it -p 8080:80 --rm --name privacy.sexy undergroundwires/privacy.sexy:latest`
+1. Build: `docker build -t privacy-sexy-revamped:latest .`
+2. Run: `docker run -it -p 8080:80 --rm --name privacy.sexy privacy-sexy-revamped:latest`
 3. Application should be available at [`http://localhost:8080`](http://localhost:8080)
 
 ### Building
 
 - Build web application: `npm run build`
-- Build desktop application: `npm run electron:build`
 - (Re)create icons (see [documentation](../img/README.md)): `npm run create-icons`
 
 ### Scripts

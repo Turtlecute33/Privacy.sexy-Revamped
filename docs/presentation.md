@@ -1,6 +1,6 @@
 # Presentation layer
 
-The presentation layer handles UI concerns using Vue as JavaScript framework and Electron to provide desktop functionality.
+The presentation layer handles UI concerns using Vue.
 
 It reflects the [application state](./application.md#application-state) and allows user interactions to modify it. Components manage their own local UI state.
 
@@ -10,7 +10,7 @@ The presentation layer uses an event-driven architecture for bidirectional react
 
 ## Structure
 
-- [`/src/` **`presentation/`**](./../src/presentation/): Contains Vue and Electron code.
+- [`/src/` **`presentation/`**](./../src/presentation/): Contains the Vue web application.
   - [**`main.ts`**](./../src/presentation/main.ts): Starts Vue app.
   - [**`index.html`**](./../src/presentation/index.html): The `index.html` entry file, located at the root of the project as required by Vite
   - [**`bootstrapping/`**](./../src/presentation/bootstrapping/): Registers Vue components and plugins.
@@ -22,13 +22,7 @@ The presentation layer uses an event-driven architecture for bidirectional react
     - [**`fonts/`**](./../src/presentation/assets/fonts/): Contains fonts.
     - [**`styles/`**](./../src/presentation/assets/styles/): Contains shared styles.
       - [**`main.scss`**](./../src/presentation/assets/styles/main.scss): Main Sass file, imported by other components as single entrypoint..
-  - [**`electron/`**](./../src/presentation/electron/): Contains Electron code.
-    - [`/main/` **`index.ts`**](./../src/presentation/electron/main/index.ts): Main entry for Electron, managing application windows and lifecycle events.
-    - [`/preload/` **`index.ts`**](./../src/presentation/electron/preload/index.ts): Script executed before the renderer, securing Node.js features for renderer use.
-    - [**`/shared/`**](./../src/presentation/electron/shared/): Shared logic between different Electron processes.
-    - [**`/build/`**](./../src/presentation/electron/build/): `electron-builder` build resources directory, [README.md](./../src/presentation/electron/build/README.md).
 - [**`/vite.config.ts`**](./../vite.config.ts): Contains Vite configurations for building web application.
-- [**`/electron.vite.config.ts`**](./../electron.vite.config.ts): Contains Vite configurations for building desktop applications.
 - [**`/postcss.config.cjs`**](./../postcss.config.cjs): Contains PostCSS configurations for Vite.
 
 ## Visual design best-practices
@@ -74,7 +68,7 @@ Stateful components can mutate and/or react to state changes (e.g., user selecti
 - **State Access and Modification**: It provides functions to read and mutate for accessing and modifying the state, encapsulating the details of these operations.
 - **Event Subscription Lifecycle Management**: Includes an `events` member that simplifies state subscription lifecycle events. This ensures that components unsubscribe from state events when they are no longer in use, or when [ApplicationContext](./../src/application/Context/ApplicationContext.ts) switches the active [collection](./collection-files.md).
 
-📖 Refer to [architecture.md | Application State](./architecture.md#application-state) for an overview of event handling and [application.md | Application State](./presentation.md#application-state) for an in-depth understanding of state management in the application layer.
+📖 Refer to [architecture.md | Application State](./architecture.md#application-state) for an overview of event handling and [application.md | Application State](./application.md#application-state) for an in-depth understanding of state management in the application layer.
 
 ## Dependency injections
 
@@ -103,12 +97,6 @@ Shared components include:
 - [TooltipWrapper.vue](./../src/presentation/components/Shared/Tooltip/TooltipWrapper.vue): Provides tooltip functionality for improved information accessibility.
 - [FlatButton.vue](./../src/presentation/components/Shared/FlatButton.vue): Creates flat-style buttons for a unified and consistent user interface.
 
-## Desktop builds
-
-Desktop builds uses `electron-vite` to bundle the code, and `electron-builder` to build and publish the packages.
-
-Host system access is strictly controlled. The [`preloader`](./../src/presentation/electron/preload/) isolates logic that interacts with the host system. These functionalities are then securely exposed to the renderer process (Vue application) using context-bridging. [`ApiContextBridge.ts`](./../src/presentation/electron/preload/ContextBridging/ApiContextBridge.ts) handles the configuration of the exposed APIs, ensuring a secure bridge between the Electron and Vue layers.
-
 ## Styles
 
 ### Style location
@@ -129,4 +117,3 @@ Host system access is strictly controlled. The [`preloader`](./../src/presentati
 - Grouping and name variables from generic to specific, e.g.:
   - ✅ `$border-blue`, `$border-blue-light`, `$border-blue-lightest`, `$border-red`
   - ❌ `$blue-border`, `$light-blue-border`, `$lightest-blue-border`, `$red-border`
-  

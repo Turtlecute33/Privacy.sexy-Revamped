@@ -7,8 +7,8 @@ Please report any discovered vulnerabilities responsibly.
 
 Efforts to responsibly disclose findings are greatly appreciated. To report a security vulnerability, follow these steps:
 
-- For general vulnerabilities, [open an issue](https://github.com/undergroundwires/privacy.sexy/issues/new/choose) using the bug report template.
-- For sensitive matters, [contact the developer directly](https://undergroundwires.dev).
+- For general vulnerabilities, [open an issue](https://github.com/Turtlecute33/Privacy.sexy-Revamped/issues/new/choose) using the bug report template.
+- For sensitive matters, [contact Turtlecute](https://github.com/Turtlecute33) without posting details publicly.
 
 ## Security Report Handling
 
@@ -68,9 +68,7 @@ Details on testing practices are available in the [Testing Documentation](./docs
 
 ## Support
 
-For help or any questions, [submit a GitHub issue](https://github.com/undergroundwires/privacy.sexy/issues/new/choose). Addressing security concerns is a priority, and we ensure the necessary support.
-
-Support privacy.sexy's commitment to security by [making a donation ❤️](https://github.com/sponsors/undergroundwires). Your contributions aid in maintaining and enhancing the project's security features.
+For help or any questions, [submit a GitHub issue](https://github.com/Turtlecute33/Privacy.sexy-Revamped/issues/new/choose). Addressing security concerns is a priority, and we ensure the necessary support.
 
 ---
 

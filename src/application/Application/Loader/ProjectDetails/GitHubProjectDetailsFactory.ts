@@ -11,7 +11,7 @@ export const createGitHubProjectDetails: ProjectDetailsFactory = (parameters) =>
     homepage: parameters.homepage,
     repositoryWebUrl: githubRepositoryWebUrl,
     feedbackUrl: `${githubRepositoryWebUrl}/issues`,
-    releaseUrl: `${githubRepositoryWebUrl}/releases/tag/${parameters.version}`,
+    releaseUrl: `${githubRepositoryWebUrl}/releases`,
   };
 };
 

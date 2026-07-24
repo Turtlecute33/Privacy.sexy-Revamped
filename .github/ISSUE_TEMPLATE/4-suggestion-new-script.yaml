@@ -11,8 +11,8 @@ body:
         Please complete as much of the form below as possible.
         Your feedback is valuable, even if you can't provide all details.
 
-        For guidance, see our [script guidelines](https://github.com/undergroundwires/privacy.sexy/blob/master/docs/script-guidelines.md).
-        Consider submitting a PR to get your script added more quickly: (see [CONTRIBUTING.md](https://github.com/undergroundwires/privacy.sexy/blob/master/CONTRIBUTING.md#extend-scripts))
+        For guidance, see our [script guidelines](https://github.com/Turtlecute33/Privacy.sexy-Revamped/blob/master/docs/script-guidelines.md).
+        Consider submitting a PR to get your script added more quickly: (see [CONTRIBUTING.md](https://github.com/Turtlecute33/Privacy.sexy-Revamped/blob/master/CONTRIBUTING.md#extend-scripts))
   -
     type: dropdown
     attributes:
@@ -32,7 +32,7 @@ body:
       description: |-
         Suggest a name for the script that clearly describes its function.
 
-        See [script naming conventions](https://github.com/undergroundwires/privacy.sexy/blob/master/docs/script-guidelines.md#name) for best practices.
+        See [script naming conventions](https://github.com/Turtlecute33/Privacy.sexy-Revamped/blob/master/docs/script-guidelines.md#name) for best practices.
       placeholder: E.g, "Disable error data submission"
     validations:
       required: true
@@ -44,7 +44,7 @@ body:
         Provide any relevant documentation or references.
         Prefer high-quality sources such as vendor documentation.
 
-        See [documentation guidelines](https://github.com/undergroundwires/privacy.sexy/blob/master/docs/script-guidelines.md#documentation) for best practices.
+        See [documentation guidelines](https://github.com/Turtlecute33/Privacy.sexy-Revamped/blob/master/docs/script-guidelines.md#documentation) for best practices.
       placeholder: >-
         For example: "This script will disable the error data submission, see https://microsoft.com/...".
     validations:
@@ -56,7 +56,7 @@ body:
       description: |-
         If possible, provide or explain the code that the script should execute.
 
-        See [script code guidelines](https://github.com/undergroundwires/privacy.sexy/blob/master/docs/script-guidelines.md#code).
+        See [script code guidelines](https://github.com/Turtlecute33/Privacy.sexy-Revamped/blob/master/docs/script-guidelines.md#code).
       placeholder: |-
         For example: "Set registry key like this `reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection" /v "AllowTelemetry" /t "REG_DWORD" /d "1"`".
     validations:
@@ -126,8 +126,7 @@ body:
         > [!NOTE]
         > We are a small open-source project with a small community.
         > It can sometimes take a long time for issues to be addressed, so please be patient.
-        > Consider [donating](https://undergroundwires.dev/donate) to keep privacy.sexy alive and improve support ❤️.
         > But your issue will eventually get attention regardless.
-        > <p align="right">@undergroundwires</p>
+        > <p align="right">@Turtlecute33</p>
 
         ---

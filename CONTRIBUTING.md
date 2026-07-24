@@ -41,7 +41,7 @@ If you're interested in adding new scripts to privacy.sexy:
 
 1. Read [guidelines for a good script](./docs/script-guidelines.md)
 2. Choose one of two ways to contribute:
-   1. [Create an issue](https://github.com/undergroundwires/privacy.sexy/issues/new/choose) requesting the addition of a new script. This allows other contributors to develop and add it for you. This will take longer time.
+   1. [Create an issue](https://github.com/Turtlecute33/Privacy.sexy-Revamped/issues/new/choose) requesting the addition of a new script. This allows other contributors to develop and add it for you. This will take longer time.
    2. Submit a pull request with your script. This is the faster route to seeing your script included in the project. Add your scripts to the appropriate OS directory in the [collections](src/application/collections/) (for syntax guidance, see [collection-files.md](docs/collection-files.md)) folder, and follow the [pull request process](#pull-request-process).
 
 ## Commit conventions

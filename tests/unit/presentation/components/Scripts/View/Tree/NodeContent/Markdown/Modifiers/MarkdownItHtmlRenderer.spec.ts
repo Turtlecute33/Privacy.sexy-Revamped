@@ -16,12 +16,12 @@ describe('MarkdownItHtmlRenderer', () => {
         {
           attributeName: 'target',
           expectedValue: '_blank',
-          markdownWithNonCompliantAnchorAttributes: '[URL](https://undergroundwires.dev){ target="_self" }',
+          markdownWithNonCompliantAnchorAttributes: '[URL](https://example.com){ target="_self" }',
         },
         {
           attributeName: 'rel',
           expectedValue: 'noopener noreferrer',
-          markdownWithNonCompliantAnchorAttributes: '[URL](https://undergroundwires.dev){ rel="nooverride" }',
+          markdownWithNonCompliantAnchorAttributes: '[URL](https://example.com){ rel="nooverride" }',
         },
       ];
       testScenarios.forEach(({
@@ -29,7 +29,7 @@ describe('MarkdownItHtmlRenderer', () => {
       }) => {
         it(`adds "${attributeName}" attribute to anchors`, () => {
           // arrange
-          const markdown = '[undergroundwires.dev](https://undergroundwires.dev)';
+          const markdown = '[example.com](https://example.com)';
 
           // act
           const renderedOutput = renderMarkdownUsingRenderer(MarkdownItHtmlRenderer, markdown);
