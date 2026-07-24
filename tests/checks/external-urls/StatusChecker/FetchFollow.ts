@@ -59,10 +59,11 @@ async function followRecursivelyWithCookies(
   if (newFollowDepth < 0) {
     throw new Error(`[max-redirect] maximum redirect reached at: ${url}`);
   }
-  const nextUrl = response.headers.get('location');
-  if (!nextUrl) {
+  const redirectLocation = response.headers.get('location');
+  if (!redirectLocation) {
     return response;
   }
+  const nextUrl = resolveRedirectUrl(redirectLocation, url);
   const cookieHeader = response.headers.get('set-cookie');
   if (cookieHeader) {
     cookies.addHeader(cookieHeader);
@@ -72,6 +73,10 @@ async function followRecursivelyWithCookies(
     Host: getDomainFromUrl(nextUrl),
   };
   return followRecursivelyWithCookies(nextUrl, timeoutInMs, options, newFollowDepth, cookies);
+}
+
+export function resolveRedirectUrl(redirectLocation: string, currentUrl: string): string {
+  return new URL(redirectLocation, currentUrl).href;
 }
 
 function isRedirect(code: number): boolean {
