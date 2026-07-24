@@ -1,0 +1,23 @@
+{
+  "name": "privacy.sexy Revamped",
+  "short_name": "privacy.sexy",
+  "description": "Build scripts to debloat, harden, and disable telemetry on Windows, macOS, and Linux.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b1730",
+  "theme_color": "#0b1730",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "256x256",
+      "type": "image/x-icon"
+    }
+  ]
+}

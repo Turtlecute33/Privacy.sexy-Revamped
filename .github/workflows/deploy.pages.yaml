@@ -38,6 +38,18 @@ jobs:
         name: Build
         run: npm run build
       -
+        name: Cache Puppeteer browser
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/puppeteer
+          key: puppeteer-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      -
+        name: Install Chromium for prerendering
+        run: npx puppeteer browsers install chrome
+      -
+        name: Prerender for SEO
+        run: npm run prerender
+      -
         name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       -

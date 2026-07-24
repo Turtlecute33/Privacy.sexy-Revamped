@@ -9,6 +9,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
+    "prerender": "node scripts/prerender.mjs",
+    "generate:og-image": "node scripts/generate-og-image.mjs",
     "preview": "vite preview",
     "test:unit": "vitest run --dir tests/unit",
     "test:integration": "vitest run --dir tests/integration",
@@ -57,6 +59,7 @@
     "jsdom": "^26.0.0",
     "markdownlint-cli": "^0.44.0",
     "postcss": "~8.5.22",
+    "puppeteer": "^25.3.0",
     "remark-cli": "^12.0.1",
     "remark-lint-no-dead-urls": "^2.0.1",
     "remark-preset-lint-consistent": "^6.0.1",
