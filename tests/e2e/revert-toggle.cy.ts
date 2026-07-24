@@ -1,16 +1,17 @@
 import { expectExists } from '@tests/shared/Assertions/ExpectExists';
 import { formatAssertionMessage } from '@tests/shared/FormatAssertionMessage';
-import { openCard } from './support/interactions/card';
+import { openCategory, selectFirstVisibleScript } from './support/interactions/category';
 
 describe('revert toggle', () => {
   context('toggle switch', () => {
     beforeEach(() => {
       cy.visit('/');
-      openCard({
-        cardIndex: 1, // first is often cleanup that may lack revert button
+      openCategory({
+        categoryIndex: 1, // the first one is often cleanup, which may lack revertible scripts
       });
+      // Selecting first pins down the starting state, so the "Apply" assertion is unambiguous.
+      selectFirstVisibleScript();
       cy.get('.toggle-switch')
-        .filter(':visible') // Avoid side-effects from hidden cards
         .first()
         .as('toggleSwitch');
     });
@@ -20,10 +21,17 @@ describe('revert toggle', () => {
         .should('be.visible');
     });
 
-    it('should have revert label', () => {
+    it('should label each state', () => {
+      // A freshly selected script applies its change, so the switch offers to revert it.
       cy.get('@toggleSwitch')
         .find('span')
-        .contains('revert', { matchCase: false });
+        .should('contain.text', 'Apply');
+
+      cy.get('@toggleSwitch').click();
+
+      cy.get('@toggleSwitch')
+        .find('span')
+        .should('contain.text', 'Revert');
     });
 
     it('should render label completely without clipping', () => { // Regression test for a bug where label is partially rendered (clipped)

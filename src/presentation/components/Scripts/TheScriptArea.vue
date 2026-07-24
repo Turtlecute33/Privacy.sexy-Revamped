@@ -10,20 +10,25 @@
       <TheScriptsMenu
         class="workbench__toolbar"
       />
+      <!--
+        The script list opens as wide as the slider allows, leaving the generated script at
+        its minimum width. Browsing and selecting is the primary task; the preview is there
+        to confirm the result and can be dragged wider when the user wants to read it.
+      -->
       <HorizontalResizeSlider
         class="horizontal-slider"
-        first-initial-width="68%"
+        first-initial-width="74%"
         first-min-width="40%"
         second-min-width="26%"
       >
         <template #first>
-          <section class="workbench__pane" aria-label="Privacy tweaks">
-            <TheScriptsView :current-view="ViewType.Cards" />
+          <section class="workbench__pane workbench__pane--scripts" aria-label="Privacy tweaks">
+            <TheScriptsView />
           </section>
         </template>
         <template #second>
-          <section class="workbench__pane" aria-label="Generated script">
-            <TheCodeArea />
+          <section class="workbench__pane workbench__pane--code" aria-label="Generated script">
+            <TheCodeArea class="workbench__code-area" />
           </section>
         </template>
       </HorizontalResizeSlider>
@@ -40,7 +45,6 @@ import TheScriptsView from '@/presentation/components/Scripts/View/TheScriptsVie
 import TheScriptsMenu from '@/presentation/components/Scripts/Menu/TheScriptsMenu.vue';
 import TheSearchBar from '@/presentation/components/TheSearchBar.vue';
 import HorizontalResizeSlider from '@/presentation/components/Scripts/Slider/HorizontalResizeSlider.vue';
-import { ViewType } from '@/presentation/components/Scripts/Menu/View/ViewType';
 
 export default defineComponent({
   components: {
@@ -51,7 +55,6 @@ export default defineComponent({
     TheSearchBar,
     HorizontalResizeSlider,
   },
-  setup: () => ({ ViewType }),
 });
 </script>
 
@@ -109,8 +112,22 @@ export default defineComponent({
   background: $color-scripts-bg;
 }
 
+/*
+  The editor fills what the pane header leaves over. Without an explicit `flex`, its own
+  `height: 100%` would resolve against the whole pane and overflow by the header's height.
+*/
+.workbench__code-area {
+  flex: 1;
+  min-height: 0;
+}
+
+/*
+  A definite height, rather than a minimum, is what lets the script list scroll inside its
+  own pane. Without it the pane grows to the full length of a category and the page itself
+  becomes the scroll container, which strands the generated script far below the fold.
+*/
 .horizontal-slider {
-  min-height: clamp(680px, calc(100dvh - 280px), 920px);
+  height: clamp(680px, calc(100dvh - 280px), 920px);
 }
 
 .workbench__actions {
@@ -120,10 +137,15 @@ export default defineComponent({
   background: rgba($color-on-primary, 0.035);
 }
 
+// Stacked layout: each pane gets its own height instead of sharing one row.
 @media screen and (max-width: $media-vertical-view-breakpoint) {
   .horizontal-slider {
-    min-height: 0;
+    height: auto;
     row-gap: 1px;
+  }
+
+  .workbench__pane--scripts {
+    height: clamp(440px, 70dvh, 760px);
   }
 }
 

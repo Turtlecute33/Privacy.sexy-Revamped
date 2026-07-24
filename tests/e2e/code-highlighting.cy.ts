@@ -1,7 +1,7 @@
 import { expectExists } from '@tests/shared/Assertions/ExpectExists';
 import { getCurrentHighlightRange } from './support/interactions/code-area';
 import { selectAllScripts } from './support/interactions/script-selection';
-import { openCard } from './support/interactions/card';
+import { openCategory } from './support/interactions/category';
 
 describe('script selection highlighting', () => {
   // Regression test for a bug where selecting multiple scripts only highlighted the last one.
@@ -31,10 +31,10 @@ function getNonZeroCurrentHighlightRangeValue() {
 }
 
 function selectLastScript() {
-  openCard({
-    cardIndex: -1, // last card
+  openCategory({
+    categoryIndex: -1, // last category
   });
-  cy.get('.node')
+  cy.get('.row__label')
     .last()
     .click({ force: true });
 }

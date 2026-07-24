@@ -1,7 +1,6 @@
 <template>
   <!-- Use `button` instead of DIV as it is semantically correct and accessibility best-practice -->
   <button
-    v-non-collapsing
     type="button"
     class="flat-button"
     :disabled="disabled || undefined"
@@ -20,13 +19,11 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue';
-import { NonCollapsing } from '@/presentation/components/Scripts/View/Cards/NonCollapsingDirective';
 import type { IconName } from '@/presentation/components/Shared/Icon/IconName';
 import AppIcon from '@/presentation/components/Shared/Icon/AppIcon.vue';
 
 export default defineComponent({
   components: { AppIcon },
-  directives: { NonCollapsing },
   props: {
     label: {
       type: String,

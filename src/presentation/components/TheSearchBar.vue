@@ -2,7 +2,7 @@
   <div class="search-field">
     <!-- Kept for screen readers (labels the search input) but hidden visually. -->
     <label for="script-search" class="visually-hidden">Search privacy tweaks</label>
-    <div v-non-collapsing class="search">
+    <div class="search">
       <div class="icon-wrapper" aria-hidden="true">
         <AppIcon icon="magnifying-glass" />
       </div>
@@ -23,7 +23,6 @@ import {
   defineComponent, ref, watch, computed,
 } from 'vue';
 import { injectKey } from '@/presentation/injectionSymbols';
-import { NonCollapsing } from '@/presentation/components/Scripts/View/Cards/NonCollapsingDirective';
 import AppIcon from '@/presentation/components/Shared/Icon/AppIcon.vue';
 import type { ReadonlyFilterContext } from '@/application/Context/State/Filter/FilterContext';
 import type { FilterResult } from '@/application/Context/State/Filter/Result/FilterResult';
@@ -31,9 +30,6 @@ import type { IEventSubscription } from '@/infrastructure/Events/IEventSource';
 
 export default defineComponent({
   components: { AppIcon },
-  directives: {
-    NonCollapsing,
-  },
   setup() {
     const {
       modifyCurrentState, onStateChange, currentState,

@@ -15,11 +15,9 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { NonCollapsing } from '@/presentation/components/Scripts/View/Cards/NonCollapsingDirective';
 import FlatButton from '@/presentation/components/Shared/FlatButton.vue';
 
 export default defineComponent({
-  directives: { NonCollapsing },
   components: { FlatButton },
   props: {
     enabled: {

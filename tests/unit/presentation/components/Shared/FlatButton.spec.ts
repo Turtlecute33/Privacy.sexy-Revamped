@@ -6,7 +6,6 @@ import FlatButton from '@/presentation/components/Shared/FlatButton.vue';
 import type { IconName } from '@/presentation/components/Shared/Icon/IconName';
 import AppIcon from '@/presentation/components/Shared/Icon/AppIcon.vue';
 import { formatAssertionMessage } from '@tests/shared/FormatAssertionMessage';
-import { hasDirective } from '@/presentation/components/Scripts/View/Cards/NonCollapsingDirective';
 
 const DOM_SELECTOR_LABEL = 'span';
 const DOM_SELECTOR_BUTTON = 'button';
@@ -137,25 +136,12 @@ describe('FlatButton.vue', () => {
       ]));
     });
   });
-  it('applies non-collapsing directive correctly', () => {
-    // act & arrange
-    const wrapper = mountComponent();
-
-    // assert
-    const button = wrapper.find(DOM_SELECTOR_BUTTON);
-    const isDirectiveApplied = hasDirective(button.element);
-    expect(isDirectiveApplied).to.equal(true, formatAssertionMessage([
-      `Attributes: ${JSON.stringify(button.attributes())}`,
-      'Button HTML:', button.html(),
-    ]));
-  });
 });
 
 function mountComponent(options?: {
   readonly iconPropValue?: IconName,
   readonly labelPropValue?: string,
   readonly isDisabledPropValue?: boolean,
-  readonly nonCollapsingDirective?: () => void,
 }) {
   return shallowMount(FlatButton, {
     props: {

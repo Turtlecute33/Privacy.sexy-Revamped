@@ -1,63 +1,47 @@
 <template>
   <div class="scripts-view">
-    <template v-if="!isSearching">
-      <template v-if="currentView === ViewType.Cards">
-        <CardList />
-      </template>
-      <template v-else-if="currentView === ViewType.Tree">
-        <ScriptsTree />
-      </template>
-    </template>
-    <template v-else>
-      <!-- Searching -->
-      <div class="search">
-        <div class="search__query">
-          <div>Searching for "{{ trimmedSearchQuery }}"</div>
-          <div
-            class="search__query__close-button"
-            @click="clearSearchQuery()"
-          >
-            <FlatButton icon="xmark" />
-          </div>
+    <TheSelectionExplorer v-if="!currentFilter" />
+    <ScriptSearchResults
+      v-else-if="searchHasMatches"
+      :filter="currentFilter"
+      :query-label="trimmedSearchQuery"
+      @search-cleared="clearSearchQuery()"
+    />
+    <div v-else class="search-no-matches">
+      <div class="search-no-matches__header">
+        <div class="search-no-matches__title">
+          No matches for "{{ trimmedSearchQuery }}"
         </div>
-        <div v-if="!searchHasMatches" class="search-no-matches">
-          <div>No matches for "{{ trimmedSearchQuery }}"</div>
-          <div>
-            Try a broader term, or help us extend the scripts
-            <a :href="repositoryUrl" class="child github" target="_blank" rel="noopener noreferrer">on GitHub</a>.
-          </div>
-        </div>
+        <FlatButton
+          icon="xmark"
+          label="Close search"
+          @click="clearSearchQuery()"
+        />
       </div>
-      <div v-if="searchHasMatches">
-        <ScriptsTree :has-top-padding="false" />
+      <div>
+        Try a broader term, or help us extend the scripts
+        <a :href="repositoryUrl" class="child github" target="_blank" rel="noopener noreferrer">on GitHub</a>.
       </div>
-    </template>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import {
-  defineComponent, type PropType, ref, computed,
+  defineComponent, ref, computed,
 } from 'vue';
 import { injectKey } from '@/presentation/injectionSymbols';
-import ScriptsTree from '@/presentation/components/Scripts/View/Tree/ScriptsTree.vue';
-import CardList from '@/presentation/components/Scripts/View/Cards/CardList.vue';
-import { ViewType } from '@/presentation/components/Scripts/Menu/View/ViewType';
+import TheSelectionExplorer from '@/presentation/components/Scripts/View/Selection/TheSelectionExplorer.vue';
+import ScriptSearchResults from '@/presentation/components/Scripts/View/Selection/ScriptSearchResults.vue';
 import type { ReadonlyFilterContext } from '@/application/Context/State/Filter/FilterContext';
 import type { FilterResult } from '@/application/Context/State/Filter/Result/FilterResult';
 import FlatButton from '@/presentation/components/Shared/FlatButton.vue';
 
 export default defineComponent({
   components: {
-    ScriptsTree,
-    CardList,
+    TheSelectionExplorer,
+    ScriptSearchResults,
     FlatButton,
-  },
-  props: {
-    currentView: {
-      type: Number as PropType<ViewType>,
-      required: true,
-    },
   },
   setup() {
     const { modifyCurrentState, onStateChange } = injectKey((keys) => keys.useCollectionState);
@@ -65,11 +49,10 @@ export default defineComponent({
     const { projectDetails } = injectKey((keys) => keys.useApplication);
 
     const repositoryUrl = computed<string>(() => projectDetails.repositoryWebUrl);
-    const searchQuery = ref<string | undefined>();
-    const isSearching = computed(() => Boolean(searchQuery.value));
-    const searchHasMatches = ref(false);
+    const currentFilter = ref<FilterResult | undefined>();
+    const searchHasMatches = computed(() => currentFilter.value?.hasAnyMatches() ?? false);
     const trimmedSearchQuery = computed(() => {
-      const query = searchQuery.value;
+      const query = currentFilter.value?.query;
       if (!query) {
         return '';
       }
@@ -95,19 +78,17 @@ export default defineComponent({
     }
 
     function updateFromInitialFilter(filter?: FilterResult) {
-      searchQuery.value = filter?.query;
-      searchHasMatches.value = filter?.hasAnyMatches() ?? false;
+      currentFilter.value = filter?.query ? filter : undefined;
     }
 
     function subscribeToFilterChanges(filter: ReadonlyFilterContext) {
       return filter.filterChanged.on((event) => {
         event.visit({
           onApply: (newFilter) => {
-            searchQuery.value = newFilter.query;
-            searchHasMatches.value = newFilter.hasAnyMatches();
+            currentFilter.value = newFilter;
           },
           onClear: () => {
-            searchQuery.value = undefined;
+            currentFilter.value = undefined;
           },
         });
       });
@@ -116,10 +97,9 @@ export default defineComponent({
     return {
       repositoryUrl,
       trimmedSearchQuery,
-      isSearching,
+      currentFilter,
       searchHasMatches,
       clearSearchQuery,
-      ViewType,
     };
   },
 });
@@ -129,46 +109,37 @@ export default defineComponent({
 @use "@/presentation/assets/styles/main" as *;
 
 .scripts-view {
-  min-width: 0;
-  overflow: visible;
-}
-
-.search {
   display: flex;
   flex-direction: column;
-  background-color: $color-scripts-bg;
-  padding: 18px 22px;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  background: $color-scripts-bg;
+}
 
-  .search__query {
+.search-no-matches {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-relative-small;
+  padding: 18px 16px 36px;
+  color: $color-on-primary;
+  font-size: $font-size-absolute-normal;
+  word-break: break-word;
+
+  &__header {
     display: flex;
-    justify-content: flex-start;
-    flex-direction: row;
     align-items: center;
-    color: $color-primary-light;
-
-    .search__query__close-button {
-      font-size: $font-size-absolute-large;
-      margin-left: $spacing-relative-x-small;
-    }
+    flex-wrap: wrap;
+    gap: 12px;
   }
-  .search-no-matches {
-    display:flex;
-    flex-direction: column;
-    word-break:break-word;
-    color: $color-on-primary;
-    font-size: $font-size-absolute-normal;
-    padding: 36px 16px;
-    text-align: left;
-    gap: $spacing-relative-small;
 
-    > :first-child {
-      font-size: $font-size-absolute-large;
-      font-weight: 700;
-    }
+  &__title {
+    font-size: $font-size-absolute-large;
+    font-weight: 700;
+  }
 
-    a {
-      color: $color-secondary;
-    }
+  a {
+    color: $color-secondary;
   }
 }
 </style>

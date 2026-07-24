@@ -26,7 +26,7 @@ export default defineComponent({
 @use "@/presentation/assets/styles/main" as *;
 .scripts-menu {
   display: grid;
-  grid-template-columns: minmax(230px, 1fr) minmax(330px, 1.5fr);
+  grid-template-columns: minmax(200px, 1fr) minmax(300px, 1.6fr);
   color: rgba($color-on-primary, 0.92);
 
   .control-group {
@@ -45,7 +45,7 @@ export default defineComponent({
 
 @media screen and (max-width: 1100px) {
   .scripts-menu {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
 
     .control-group {
       min-height: 60px;

@@ -1,24 +1,17 @@
-import { ViewType } from '@/presentation/components/Scripts/Menu/View/ViewType';
-import { getEnumValues } from '@/application/Common/Enum';
 import { OperatingSystem } from '@/domain/OperatingSystem';
 import { getOperatingSystemDisplayName } from '@/presentation/components/Shared/OperatingSystemNames';
 import { AllSupportedOperatingSystems } from '@tests/shared/TestCases/SupportedOperatingSystems';
 
 describe('operating system selector', () => {
   // Regression test for a bug where switching between operating systems caused uncaught exceptions.
-  describe('allows user to switch between supported operating systems', () => {
-    getEnumValues(ViewType).forEach((viewType) => {
-      it(`switches to ${ViewType[viewType]} view successfully`, () => {
-        // arrange
-        cy.visit('/');
-        selectViewType(viewType);
-        getSupportedOperatingSystemsList().forEach((operatingSystem) => {
-          // act
-          selectOperatingSystem(operatingSystem);
-          // assert
-          assertExpectedActions();
-        });
-      });
+  it('switches between operating systems successfully', () => {
+    // arrange
+    cy.visit('/');
+    getSupportedOperatingSystemsList().forEach((operatingSystem) => {
+      // act
+      selectOperatingSystem(operatingSystem);
+      // assert
+      assertExpectedActions();
     });
   });
 });
@@ -54,16 +47,3 @@ function selectOperatingSystem(operatingSystem: OperatingSystem) {
     .contains('span', operatingSystemLabel)
     .click();
 }
-
-function selectViewType(viewType: ViewType): void {
-  const viewTypeLabel = ViewTypeLabels[viewType];
-  cy.log(`Selecting view: ${ViewType[viewType]}`);
-  cy
-    .contains('span', viewTypeLabel)
-    .click();
-}
-
-const ViewTypeLabels: Record<ViewType, string> = {
-  [ViewType.Cards]: 'Cards',
-  [ViewType.Tree]: 'Tree',
-} as const;

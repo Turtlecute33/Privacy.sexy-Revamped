@@ -1,6 +1,5 @@
 <template>
   <SizeObserver
-    v-non-collapsing
     @size-changed="sizeChanged()"
   >
     <div
@@ -33,7 +32,6 @@ import { ScriptLanguage } from '@/domain/ScriptMetadata/ScriptLanguage';
 import type { IReadOnlyCategoryCollectionState } from '@/application/Context/State/ICategoryCollectionState';
 import { CodeBuilderFactory } from '@/application/Context/State/Code/Generation/CodeBuilderFactory';
 import SizeObserver from '@/presentation/components/Shared/SizeObserver.vue';
-import { NonCollapsing } from '@/presentation/components/Scripts/View/Cards/NonCollapsingDirective';
 import type { ProjectDetails } from '@/domain/Project/ProjectDetails';
 import type {
   SupportedSyntaxLanguage, CodeEditor, CodeEditorFactory, CodeEditorStyleHandle,
@@ -42,9 +40,6 @@ import type {
 export default defineComponent({
   components: {
     SizeObserver,
-  },
-  directives: {
-    NonCollapsing,
   },
   setup() {
     const { onStateChange, currentState } = injectKey((keys) => keys.useCollectionState);

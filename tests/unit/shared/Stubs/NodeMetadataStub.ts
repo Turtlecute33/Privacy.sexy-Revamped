@@ -1,5 +1,5 @@
 import type { ExecutableId } from '@/domain/Executables/Identifiable';
-import { type NodeMetadata, NodeType } from '@/presentation/components/Scripts/View/Tree/NodeContent/NodeMetadata';
+import { type NodeMetadata, NodeType } from '@/presentation/components/Scripts/View/Content/NodeMetadata';
 
 export class NodeMetadataStub implements NodeMetadata {
   public executableId: ExecutableId = 'stub-id';

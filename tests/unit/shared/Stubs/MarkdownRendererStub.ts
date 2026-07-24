@@ -1,4 +1,4 @@
-import type { MarkdownRenderer } from '@/presentation/components/Scripts/View/Tree/NodeContent/Markdown/MarkdownRenderer';
+import type { MarkdownRenderer } from '@/presentation/components/Scripts/View/Content/Markdown/MarkdownRenderer';
 import { expectExists } from '@tests/shared/Assertions/ExpectExists';
 import { StubWithObservableMethodCalls } from './StubWithObservableMethodCalls';
 

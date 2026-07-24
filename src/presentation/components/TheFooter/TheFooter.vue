@@ -53,80 +53,98 @@ export default defineComponent({
   margin-right: 8px;
 }
 
+/*
+  The footer shares the page surface instead of sitting on a band of its own: no
+  background fill and no full-bleed rule, so it reads as the tail of the page rather
+  than a separate section. Whitespace and muted type carry the separation.
+*/
 .footer {
-  border-top: 1px solid $color-border;
-  background: $color-surface-elevated;
+  background: transparent;
 
   &__inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 24px;
-    width: min(1440px, calc(100% - 64px));
-    min-height: 112px;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    /* Matches `.app__main` so the footer lines up with the workbench edges above it. */
+    width: min(1440px, calc(100% - 32px));
     margin: 0 auto;
-    padding: 24px 0;
+    padding: 18px 0 28px;
   }
 
   &__brand {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
 
     > div {
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 2px;
     }
 
     strong {
-      color: $color-primary-darkest;
-      font-size: $font-size-absolute-normal;
+      color: $color-on-surface;
+      font-size: $font-size-absolute-small;
+      font-weight: 600;
     }
 
     span {
       color: $color-on-surface-muted;
-      font-size: $font-size-absolute-small;
+      font-size: $font-size-absolute-x-small;
     }
   }
 
   &__mark {
     display: block;
-    width: 30px;
-    height: 34px;
+    width: 22px;
+    height: 25px;
     flex: 0 0 auto;
-    background: $color-primary;
+    background: rgba($color-primary, 0.8);
     clip-path: polygon(50% 0, 100% 20%, 92% 72%, 50% 100%, 8% 72%, 0 20%);
   }
 
+  /*
+    Pulled flush with the container edge: the links keep a comfortable hit area, but the
+    padding hangs outside the content width so the labels stay optically aligned.
+  */
   &__section {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 4px;
+    margin-right: -10px;
 
     a {
       display: inline-flex;
       align-items: center;
-      min-height: 44px;
-      padding: 9px 13px;
-      border: 1px solid $color-border;
-      border-radius: 10px;
-      color: $color-on-surface;
+      padding: 8px 10px;
+      border-radius: 8px;
+      color: $color-on-surface-muted;
+      font-size: $font-size-absolute-small;
       text-decoration: none;
       transition:
-        border-color $motion-duration-fast $motion-ease-standard,
         color $motion-duration-fast $motion-ease-standard,
-        background-color $motion-duration-fast $motion-ease-standard,
-        transform $motion-duration-standard $motion-ease-out;
+        background-color $motion-duration-fast $motion-ease-standard;
 
       &:hover {
-        border-color: rgba($color-primary, 0.45);
-        background: $color-primary-light;
+        background: rgba($color-primary, 0.07);
         color: $color-primary-dark;
         text-decoration: none;
-        transform: translateY(-1px);
+      }
+
+      &:focus-visible {
+        outline: 2px solid $color-primary;
+        outline-offset: 1px;
       }
     }
+  }
+}
+
+// Touch targets stay comfortable where the pointer is imprecise.
+@media (pointer: coarse) {
+  .footer__section a {
+    min-height: 44px;
   }
 }
 
@@ -135,10 +153,22 @@ export default defineComponent({
     &__inner {
       align-items: flex-start;
       flex-direction: column;
+      gap: 8px;
       width: min(100% - 32px, 1440px);
-      min-height: 0;
-      padding: 28px 0;
+      padding: 14px 0 24px;
     }
+
+    // Stacked below the brand, the links align to the left edge instead of the right.
+    &__section {
+      margin-right: 0;
+      margin-left: -10px;
+    }
+  }
+}
+
+@media screen and (max-width: $media-screen-small-width) {
+  .footer__inner {
+    width: min(100% - 20px, 1440px);
   }
 }
 </style>

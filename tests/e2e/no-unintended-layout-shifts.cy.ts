@@ -1,5 +1,5 @@
 import { ViewportTestScenarios, LargeScreen } from './support/scenarios/viewport-test-scenarios';
-import { openCard } from './support/interactions/card';
+import { openCategory } from './support/interactions/category';
 import { selectAllScripts, unselectAllScripts } from './support/interactions/script-selection';
 import { assertLayoutStability } from './support/assert/layout-stability';
 
@@ -17,8 +17,8 @@ describe('Layout stability', () => {
           .click();
         // act & assert
         assertLayoutStability('#app', () => {
-          openCard({
-            cardIndex: 0,
+          openCategory({
+            categoryIndex: 0,
           });
           selectAllScripts();
         });
@@ -33,8 +33,8 @@ describe('Layout stability', () => {
         cy.visit('/');
         cy.contains('span', 'Windows')
           .click();
-        openCard({
-          cardIndex: 0,
+        openCategory({
+          categoryIndex: 0,
         });
         selectAllScripts();
         // act & assert
@@ -50,8 +50,8 @@ describe('Layout stability', () => {
     // arrange
     cy.viewport(LargeScreen.width, LargeScreen.height);
     cy.visit('/');
-    openCard({
-      cardIndex: 0,
+    openCategory({
+      categoryIndex: 0,
     });
     // act
     assertLayoutStability('.app__wrapper', () => {

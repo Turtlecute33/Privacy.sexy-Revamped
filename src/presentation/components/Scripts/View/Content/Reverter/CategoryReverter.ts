@@ -1,0 +1,48 @@
+import type { UserSelection } from '@/application/Context/State/Selection/UserSelection';
+import type { CategoryCollection } from '@/domain/Collection/CategoryCollection';
+import type { SelectedScript } from '@/application/Context/State/Selection/Script/SelectedScript';
+import type { ExecutableId } from '@/domain/Executables/Identifiable';
+import { ScriptReverter } from './ScriptReverter';
+import type { Reverter } from './Reverter';
+
+export class CategoryReverter implements Reverter {
+  private readonly scriptReverters: ReadonlyArray<ScriptReverter>;
+
+  constructor(
+    private readonly categoryId: ExecutableId,
+    collection: CategoryCollection,
+  ) {
+    this.scriptReverters = createScriptReverters(categoryId, collection);
+  }
+
+  public getState(selectedScripts: ReadonlyArray<SelectedScript>): boolean {
+    if (!this.scriptReverters.length) {
+      // An empty array indicates there are no reversible scripts in this category
+      return false;
+    }
+    return this.scriptReverters.every((script) => script.getState(selectedScripts));
+  }
+
+  public selectWithRevertState(newState: boolean, selection: UserSelection): void {
+    selection.categories.processChanges({
+      changes: [{
+        categoryId: this.categoryId,
+        newStatus: {
+          isSelected: true,
+          isReverted: newState,
+        },
+      }],
+    });
+  }
+}
+
+function createScriptReverters(
+  categoryId: ExecutableId,
+  collection: CategoryCollection,
+): ScriptReverter[] {
+  const category = collection.getCategory(categoryId);
+  const scripts = category
+    .getAllScriptsRecursively()
+    .filter((script) => script.canRevert());
+  return scripts.map((script) => new ScriptReverter(script.executableId));
+}
