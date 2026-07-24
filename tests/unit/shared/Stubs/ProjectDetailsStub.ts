@@ -13,8 +13,6 @@ export class ProjectDetailsStub implements ProjectDetails {
 
   public feedbackUrl = 'stub-feedbackUrl';
 
-  public releaseUrl = 'stub-releaseUrl';
-
   public repositoryWebUrl = 'stub-repositoryWebUrl';
 
   public slogan = 'stub-slogan';
@@ -46,11 +44,6 @@ export class ProjectDetailsStub implements ProjectDetails {
 
   public withFeedbackUrl(feedbackUrl: string): this {
     this.feedbackUrl = feedbackUrl;
-    return this;
-  }
-
-  public withReleaseUrl(releaseUrl: string): this {
-    this.releaseUrl = releaseUrl;
     return this;
   }
 

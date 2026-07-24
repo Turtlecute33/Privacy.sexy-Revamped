@@ -15,12 +15,6 @@
           </a>
         </div>
         <div class="footer__section__item">
-          <a :href="releaseUrl" target="_blank" rel="noopener noreferrer">
-            <AppIcon class="icon" icon="tag" />
-            <span>v{{ version }}</span>
-          </a>
-        </div>
-        <div class="footer__section__item">
           <FlatButton
             label="Privacy"
             icon="user-secret"
@@ -58,11 +52,7 @@ export default defineComponent({
 
     const isPrivacyDialogVisible = ref(false);
 
-    const version = computed<string>(() => projectDetails.version.toString());
-
     const repositoryUrl = computed<string>(() => projectDetails.repositoryWebUrl);
-
-    const releaseUrl = computed<string>(() => projectDetails.releaseUrl);
 
     const feedbackUrl = computed<string>(() => projectDetails.feedbackUrl);
 
@@ -73,9 +63,7 @@ export default defineComponent({
     return {
       isPrivacyDialogVisible,
       showPrivacyDialog,
-      version,
       repositoryUrl,
-      releaseUrl,
       feedbackUrl,
     };
   },

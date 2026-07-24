@@ -8,6 +8,5 @@ export interface ProjectDetails {
   readonly repositoryUrl: string;
   readonly homepage: string;
   readonly feedbackUrl: string;
-  readonly releaseUrl: string;
   readonly repositoryWebUrl: string;
 }
