@@ -14,55 +14,28 @@
             <span>Source Code</span>
           </a>
         </div>
-        <div class="footer__section__item">
-          <FlatButton
-            label="Privacy"
-            icon="user-secret"
-            flat
-            @click="showPrivacyDialog()"
-          />
-        </div>
       </div>
     </div>
-    <ModalDialog v-model="isPrivacyDialogVisible">
-      <PrivacyPolicy />
-    </ModalDialog>
   </div>
 </template>
 
 <script lang="ts">
-import {
-  defineComponent, ref, computed,
-} from 'vue';
-import ModalDialog from '@/presentation/components/Shared/Modal/ModalDialog.vue';
+import { defineComponent, computed } from 'vue';
 import AppIcon from '@/presentation/components/Shared/Icon/AppIcon.vue';
 import { injectKey } from '@/presentation/injectionSymbols';
-import FlatButton from '@/presentation/components/Shared/FlatButton.vue';
-import PrivacyPolicy from './PrivacyPolicy.vue';
 
 export default defineComponent({
   components: {
-    ModalDialog,
-    PrivacyPolicy,
     AppIcon,
-    FlatButton,
   },
   setup() {
     const { projectDetails } = injectKey((keys) => keys.useApplication);
-
-    const isPrivacyDialogVisible = ref(false);
 
     const repositoryUrl = computed<string>(() => projectDetails.repositoryWebUrl);
 
     const feedbackUrl = computed<string>(() => projectDetails.feedbackUrl);
 
-    function showPrivacyDialog() {
-      isPrivacyDialogVisible.value = true;
-    }
-
     return {
-      isPrivacyDialogVisible,
-      showPrivacyDialog,
       repositoryUrl,
       feedbackUrl,
     };

@@ -2,7 +2,6 @@ export const IconNames = [
   'magnifying-glass',
   'copy',
   'circle-info',
-  'user-secret',
   'tag',
   'github',
   'face-smile',

@@ -30,14 +30,19 @@
     -->
   <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
-        script-src 'self' 'unsafe-inline';
+        script-src 'self' 'unsafe-inline' https://umami.priorato.org;
+        connect-src 'self' https://umami.priorato.org;
         style-src 'self' 'unsafe-inline';
         img-src 'self' data:;
         form-action 'self';
         object-src 'none';
         block-all-mixed-content;
-      ">
+  ">
   <meta name="referrer" content="no-referrer">
+  <script defer src="https://umami.priorato.org/priorato"
+    data-website-id="9b0fe58d-35b1-4222-98f9-d7c0798eff18"></script>
+  <script defer src="https://umami.priorato.org/recorder.js"
+    data-website-id="9b0fe58d-35b1-4222-98f9-d7c0798eff18"></script>
 </head>
 
 <body>

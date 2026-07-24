@@ -38,8 +38,8 @@ Privacy.sexy Revamped lets you:
 4. Copy or download the generated script.
 5. Run it on your computer.
 
-There is no account, backend, analytics, or telemetry. The web app generates
-your script in the browser and does not execute system changes for you.
+There is no account or application backend. Script generation stays in your
+browser, and the website does not execute system changes for you.
 
 ## What I changed
 
