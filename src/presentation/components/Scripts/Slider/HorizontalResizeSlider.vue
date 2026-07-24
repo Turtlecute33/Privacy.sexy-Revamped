@@ -12,6 +12,7 @@
 
 <script lang="ts">
 import { defineComponent, shallowRef } from 'vue';
+import { useAnimationFrameLimiter } from '@/presentation/components/Shared/Hooks/Resize/UseAnimationFrameLimiter';
 import SliderHandle from './SliderHandle.vue';
 
 export default defineComponent({
@@ -34,14 +35,20 @@ export default defineComponent({
   },
   setup() {
     const firstElement = shallowRef<HTMLElement>();
+    const { resetNextFrame } = useAnimationFrameLimiter();
+    let pendingDisplacementX = 0;
 
     function onResize(displacementX: number): void {
-      const element = firstElement.value;
-      if (!element) {
-        throw new Error('The element reference ref is not correctly assigned to a DOM element.');
-      }
-      const leftWidth = element.offsetWidth + displacementX;
-      element.style.width = `${leftWidth}px`;
+      pendingDisplacementX += displacementX;
+      resetNextFrame(() => {
+        const element = firstElement.value;
+        if (!element) {
+          throw new Error('The element reference ref is not correctly assigned to a DOM element.');
+        }
+        const leftWidth = element.offsetWidth + pendingDisplacementX;
+        element.style.width = `${leftWidth}px`;
+        pendingDisplacementX = 0;
+      });
     }
 
     return {
@@ -58,6 +65,8 @@ export default defineComponent({
 .slider {
   display: flex;
   flex-direction: row;
+  background: rgba($color-on-primary, 0.08);
+
   .first {
     min-width: v-bind(firstMinWidth);
     width: v-bind(firstInitialWidth);
@@ -68,6 +77,7 @@ export default defineComponent({
   }
   @media screen and (max-width: $media-vertical-view-breakpoint) {
     flex-direction: column;
+
     .first {
       width: auto !important;
     }

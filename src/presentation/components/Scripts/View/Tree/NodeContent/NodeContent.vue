@@ -3,16 +3,15 @@
     class="node-content-wrapper"
     :docs="nodeMetadata.docs"
   >
-    <div class="node-content">
-      <div class="node-content-item">
-        <NodeTitle :title="nodeMetadata.text" />
-      </div>
+    <NodeTitle :title="nodeMetadata.text" />
+    <template
+      v-if="nodeMetadata.isReversible"
+      #action
+    >
       <RevertToggle
-        v-if="nodeMetadata.isReversible"
-        class="node-content-item"
         :node="nodeMetadata"
       />
-    </div>
+    </template>
   </DocumentableNode>
 </template>
 
@@ -48,15 +47,5 @@ export default defineComponent({
     documentation grows to cause to overflow.
   */
   overflow-wrap: anywhere;
-
-  .node-content {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-
-    .node-content-item:not(:first-child) {
-      margin-left: $spacing-relative-small;
-    }
-  }
 }
 </style>

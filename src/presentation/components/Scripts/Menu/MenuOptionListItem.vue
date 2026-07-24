@@ -5,7 +5,7 @@
       such as adding content in `::before` block without making it clickable.
     -->
     <FlatButton
-      :disabled="!enabled"
+      :pressed="!enabled"
       :label="label"
       flat
       @click="onClicked()"

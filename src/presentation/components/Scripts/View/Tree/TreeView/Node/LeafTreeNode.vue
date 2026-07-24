@@ -68,26 +68,30 @@ export default defineComponent({
   flex: 1;
 
   .node__checkbox {
+    display: grid;
     flex-shrink: 0; // Always render the checkbox properly on small screens
+    width: 44px;
+    min-height: 44px;
+    place-items: center;
   }
   .node__content {
     flex: 1; // Expands the node horizontally, allowing its content to utilize full width for child item alignment, such as icons and text.
-    overflow: auto; // Prevents horizontal expansion of inner content (e.g., when a code block is shown)
+    min-width: 0;
+    overflow: visible;
   }
 }
 .node {
-  margin-bottom: $spacing-absolute-xx-small;
-  margin-top: $spacing-absolute-xx-small;
-  padding-bottom: $spacing-absolute-xx-small;
-  padding-top: $spacing-absolute-xx-small;
-  padding-right: $spacing-absolute-small;
+  min-height: 44px;
+  margin: 0;
+  padding: 4px 8px 4px 0;
   box-sizing: border-box;
+  border-bottom: 1px solid rgba($color-on-primary, 0.055);
 
   .content {
     display: flex; // We could provide `block`, but `flex` is more versatile.
     color: $color-node-fg;
-    padding-left: $spacing-relative-small;
-    padding-right: $spacing-absolute-x-small;
+    padding-left: 8px;
+    padding-right: 4px;
     text-decoration: none;
     user-select: none;
   }

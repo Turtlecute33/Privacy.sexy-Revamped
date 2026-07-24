@@ -6,28 +6,23 @@
       'is-inactive': activeCategoryId && activeCategoryId !== categoryId,
       'is-expanded': isExpanded,
     }"
-    @click="isExpanded = !isExpanded"
   >
-    <div class="card__inner">
-      <!-- Title -->
+    <button
+      type="button"
+      class="card__inner"
+      :aria-expanded="isExpanded"
+      @click="isExpanded = !isExpanded"
+    >
       <span
-        v-if="cardTitle.length > 0"
         class="card__inner__title"
       >
-        <span>{{ cardTitle }}</span>
+        {{ cardTitle || 'Untitled category' }}
       </span>
-      <span v-else>Oh no 😢</span>
-      <!-- Expand icon -->
-      <AppIcon
-        class="card__inner__expand-icon"
-        :icon="isExpanded ? 'folder-open' : 'folder'"
-      />
-      <!-- Indeterminate and full states -->
       <CardSelectionIndicator
         class="card__inner__selection_indicator"
         :category-id="categoryId"
       />
-    </div>
+    </button>
     <CardExpandTransition>
       <div v-show="isExpanded">
         <CardExpansionArrow />
@@ -55,14 +50,12 @@
 
 <script lang="ts">
 import {
-  defineComponent, computed, shallowRef,
+  defineComponent, computed, shallowRef, nextTick,
   type PropType,
 } from 'vue';
-import AppIcon from '@/presentation/components/Shared/Icon/AppIcon.vue';
 import FlatButton from '@/presentation/components/Shared/FlatButton.vue';
 import { injectKey } from '@/presentation/injectionSymbols';
 import ScriptsTree from '@/presentation/components/Scripts/View/Tree/ScriptsTree.vue';
-import { sleep } from '@/infrastructure/Threading/AsyncSleep';
 import type { ExecutableId } from '@/domain/Executables/Identifiable';
 import CardSelectionIndicator from './CardSelectionIndicator.vue';
 import CardExpandTransition from './CardExpandTransition.vue';
@@ -71,7 +64,6 @@ import CardExpansionArrow from './CardExpansionArrow.vue';
 export default defineComponent({
   components: {
     ScriptsTree,
-    AppIcon,
     CardSelectionIndicator,
     FlatButton,
     CardExpandTransition,
@@ -123,8 +115,14 @@ export default defineComponent({
       if (!card) {
         throw new Error('Card is not found');
       }
-      await sleep(400); // wait a bit to allow GUI to render the expanded card
-      card.scrollIntoView({ behavior: 'smooth' });
+      await nextTick();
+      window.requestAnimationFrame(() => {
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        card.scrollIntoView({
+          behavior: reducedMotion ? 'auto' : 'smooth',
+          block: 'nearest',
+        });
+      });
     }
 
     return {
@@ -139,62 +137,76 @@ export default defineComponent({
 </script>
 
 <style scoped lang="scss">
+@use "sass:color";
 @use "@/presentation/assets/styles/main" as *;
 @use "./card-gap" as *;
 
-$card-inner-padding     : $spacing-absolute-xx-large;
-$expanded-margin-top    : $spacing-absolute-xx-large;
+$card-inner-padding     : 18px;
+$expanded-margin-top    : 16px;
 $card-horizontal-gap    : $card-gap;
 
 .card {
   .card__inner {
-    padding-top: $card-inner-padding;
-    padding-right: $card-inner-padding;
-    padding-bottom: 0;
-    padding-left: $card-inner-padding;
+    @include reset-button;
+    overflow: hidden;
+    padding: 16px $card-inner-padding;
     position: relative;
     @include clickable;
     background-color: $color-primary;
     color: $color-on-primary;
     height: 100%;
+    min-height: 96px;
     width: 100%;
-    text-transform: uppercase;
+    border: 1px solid transparent;
+    border-radius: 12px;
     text-align: center;
-    transition: transform 0.2s ease-in-out;
+    transition:
+      background-color $motion-duration-fast $motion-ease-standard,
+      border-color $motion-duration-fast $motion-ease-standard,
+      transform $motion-duration-standard $motion-ease-out;
 
-    display:flex;
-    flex-direction: column;
-    justify-content: center;
+    display: grid;
+    place-items: center;
 
     @include hover-or-touch {
-      background-color: $color-secondary;
-      color: $color-on-secondary;
+      background-color: color.adjust($color-primary, $lightness: 6%);
+      border-color: rgba($color-secondary, 0.55);
+      transform: translateY(-1px);
     }
+
     .card__inner__title {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      justify-content: center;
-      font-size: $font-size-absolute-large;
-    }
-    .card__inner__selection_indicator {
-      height: $card-inner-padding;
-      margin-right: -$card-inner-padding;
-      padding-right: $spacing-absolute-medium;
-      display: flex;
-      justify-content: flex-end;
-    }
-    .card__inner__expand-icon {
+      position: relative;
+      z-index: 1;
+      display: block;
       width: 100%;
-      margin-top: $spacing-relative-x-small;
-      vertical-align: middle;
-      font-size: $font-size-absolute-normal;
+      padding: 0 24px;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.35;
+      letter-spacing: -0.01em;
+      text-align: center;
+      text-wrap: balance;
+      overflow-wrap: anywhere;
     }
+
+    .card__inner__selection_indicator {
+      position: absolute;
+      top: 13px;
+      right: 13px;
+      z-index: 1;
+      color: $color-secondary-light;
+    }
+
   }
+
   .card__expander {
     position: relative;
+    min-height: 200px;
     background-color: $color-primary-darker;
     color: $color-on-primary;
+    border: 1px solid rgba($color-on-primary, 0.08);
+    border-radius: 15px;
+    overflow: hidden;
 
     display: flex;
     align-items: center;
@@ -202,6 +214,7 @@ $card-horizontal-gap    : $card-gap;
 
     .card__expander__content {
       display: flex;
+      flex: 1;
       justify-content: center;
       word-break: break-word;
       max-width: 100%; // Prevents horizontal expansion of inner content (e.g., when a code block is shown)
@@ -211,11 +224,11 @@ $card-horizontal-gap    : $card-gap;
     .card__expander__close-button {
       font-size: $font-size-absolute-large;
       align-self: flex-end;
-      margin-right: $spacing-absolute-small;
+      margin: 8px 8px 0 0;
       @include clickable;
       color: $color-primary-light;
       @include hover-or-touch {
-        color: $color-primary;
+        color: $color-secondary;
       }
     }
   }
@@ -225,16 +238,16 @@ $card-horizontal-gap    : $card-gap;
       height: auto;
       background-color: $color-secondary;
       color: $color-on-secondary;
+      border-color: $color-secondary;
+      transform: none;
+    }
+
+    .card__inner__selection_indicator {
+      color: $color-on-secondary;
     }
 
     .card__expander {
       margin-top: $expanded-margin-top;
-    }
-
-    @include hover-or-touch {
-      .card__inner {
-        transform: scale(1);
-      }
     }
   }
 
@@ -242,15 +255,13 @@ $card-horizontal-gap    : $card-gap;
     .card__inner {
       pointer-events: none;
       height: auto;
-      background-color: $color-primary-light;
-      transform: scale(0.95);
+      background-color: $color-primary-darker;
+      color: rgba($color-on-primary, 0.55);
+      border-color: transparent;
     }
 
-    @include hover-or-touch {
-      .card__inner {
-        background-color: $color-primary;
-        transform: scale(1);
-      }
+    .card__inner__selection_indicator {
+      opacity: 0.45;
     }
   }
 }
@@ -286,4 +297,12 @@ $card-horizontal-gap    : $card-gap;
 .big-screen     {   @include adaptive-card(3);  }
 .medium-screen  {   @include adaptive-card(2);  }
 .small-screen   {   @include adaptive-card(1);  }
+
+@media screen and (max-width: $media-screen-medium-width) {
+  .card {
+    .card__expander {
+      min-height: 160px;
+    }
+  }
+}
 </style>

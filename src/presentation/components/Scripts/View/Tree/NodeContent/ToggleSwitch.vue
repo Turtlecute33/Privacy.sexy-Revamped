@@ -7,6 +7,7 @@
       v-model="isChecked"
       type="checkbox"
       class="toggle-input"
+      :aria-label="`${isChecked ? label : resolvedOffLabel} this setting`"
     >
     <div class="toggle-animation">
       <div class="circle" />
@@ -17,7 +18,7 @@
           'label-on': isChecked,
         }"
       >
-        {{ label }}
+        {{ isChecked ? label : resolvedOffLabel }}
       </span>
     </div>
   </div>
@@ -32,6 +33,10 @@ export default defineComponent({
     label: {
       type: String,
       required: true,
+    },
+    offLabel: {
+      type: String,
+      default: undefined,
     },
     stopClickPropagation: {
       type: Boolean,
@@ -63,9 +68,12 @@ export default defineComponent({
       isChecked.value = !isChecked.value;
     }
 
+    const resolvedOffLabel = computed(() => props.offLabel ?? props.label);
+
     return {
       isChecked,
       onClick,
+      resolvedOffLabel,
     };
   },
 });
@@ -75,7 +83,7 @@ export default defineComponent({
 @use 'sass:math';
 @use "@/presentation/assets/styles/main" as *;
 
-$font-size                    : $font-size-absolute-small;
+$font-size                    : 12px;
 
 $color-toggle-unchecked       : $color-primary-darker;
 $color-toggle-checked         : $color-on-secondary;
@@ -83,10 +91,11 @@ $color-text-unchecked         : $color-on-primary;
 $color-text-checked           : $color-on-secondary;
 $color-bg-unchecked           : $color-primary;
 $color-bg-checked             : $color-secondary;
-$padding-horizontal           : $spacing-relative-small;
+$padding-horizontal           : $spacing-absolute-small;
 $padding-vertical             : $spacing-absolute-small;
-$size-height                  : calc($font-size + ($padding-vertical * 2));
-$size-circle                  : calc($size-height * 2/3);
+$size-width                   : 84px;
+$size-height                  : 26px;
+$size-circle                  : 12px;
 
 $gap-between-circle-and-text  : $spacing-relative-x-small;
 
@@ -102,13 +111,20 @@ $gap-between-circle-and-text  : $spacing-relative-x-small;
 
 .toggle-switch {
   display: flex;
+  align-items: center;
+  flex-shrink: 0;
   overflow: hidden;
   position: relative;
   width: auto;
 
   font-size: $font-size;
-  height: $size-height;
+  min-height: 30px;
   border-radius: $size-height;
+
+  &:focus-within {
+    outline: 3px solid rgba($color-secondary, 0.55);
+    outline-offset: 2px;
+  }
 
   input.toggle-input {
     position: absolute;
@@ -124,10 +140,12 @@ $gap-between-circle-and-text  : $spacing-relative-x-small;
     display: flex;
     align-items: center;
     gap: $gap-between-circle-and-text;
-    width: 100%;
-    height: 100%;
+    width: $size-width;
+    height: $size-height;
     background-color: $color-bg-unchecked;
-    transition: background-color 0.25s ease-out;
+    border: 1px solid rgba($color-on-primary, 0.22);
+    border-radius: $size-height;
+    transition: background-color $motion-duration-standard $motion-ease-standard;
 
     .circle {
       display: block;
@@ -137,11 +155,14 @@ $gap-between-circle-and-text  : $spacing-relative-x-small;
       $centered-top-offset: math.div($size-circle, 2);
       $centered-top: calc(#{$initial-top} - #{$centered-top-offset});
       top: $centered-top;
+      left: $padding-horizontal;
       width: $size-circle;
       height: $size-circle;
       border-radius: 50%;
       background-color: $color-toggle-unchecked;
-      transition: left 0.3s ease-out;
+      transition:
+        background-color $motion-duration-fast $motion-ease-standard,
+        transform $motion-duration-emphasized $motion-ease-out;
     }
   }
 
@@ -150,16 +171,19 @@ $gap-between-circle-and-text  : $spacing-relative-x-small;
     flex-direction: row-reverse;
 
     .circle {
-      $left-offset: calc(100% - #{$size-circle});
-      $padded-left-offset: calc(#{$left-offset} - #{$padding-horizontal});
-      left: $padded-left-offset;
       background-color: $color-toggle-checked;
+      transform: translateX($size-width - $size-circle - (2 * $padding-horizontal));
     }
   }
 
   .label {
+    width: 44px;
+    min-width: 44px;
     font-weight: bold;
-    transition: all 0.3s ease-out, color 0s;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    transition: color $motion-duration-fast $motion-ease-standard;
     &.label-off {
       @include locateNearCircle('left');
       padding-right: $padding-horizontal;
@@ -171,6 +195,12 @@ $gap-between-circle-and-text  : $spacing-relative-x-small;
       @include locateNearCircle('right');
       padding-left: $padding-horizontal;
     }
+  }
+}
+
+@media (pointer: coarse) {
+  .toggle-switch {
+    min-height: 44px;
   }
 }
 </style>

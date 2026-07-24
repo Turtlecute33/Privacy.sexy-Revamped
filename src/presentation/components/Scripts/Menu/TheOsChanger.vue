@@ -1,5 +1,5 @@
 <template>
-  <MenuOptionList>
+  <MenuOptionList label="System">
     <MenuOptionListItem
       v-for="os in allOses"
       :key="os.name"

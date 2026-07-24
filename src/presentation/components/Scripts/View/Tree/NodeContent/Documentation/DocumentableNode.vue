@@ -4,58 +4,34 @@
       <div class="content">
         <slot />
       </div>
-      <ToggleDocumentationButton
+      <DocumentationTooltip
         v-if="docs && docs.length > 0"
-        @show="isExpanded = true"
-        @hide="isExpanded = false"
+        class="info-action"
+        :docs="docs"
       />
-    </div>
-    <ExpandCollapseTransition>
       <div
-        v-if="docs && docs.length > 0 && isExpanded"
-        class="docs"
-        :class="{
-          'docs-expanded': isExpanded,
-          'docs-collapsed': !isExpanded,
-        }"
+        v-if="$slots.action"
+        class="row-action"
       >
-        <DocumentationText
-          :docs="docs"
-          class="text"
-          :class="{
-            expanded: isExpanded,
-            collapsed: !isExpanded,
-          }"
-        />
+        <slot name="action" />
       </div>
-    </ExpandCollapseTransition>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, type PropType } from 'vue';
-import ExpandCollapseTransition from '@/presentation/components/Shared/ExpandCollapse/ExpandCollapseTransition.vue';
-import DocumentationText from './DocumentationText.vue';
-import ToggleDocumentationButton from './ToggleDocumentationButton.vue';
+import { defineComponent, type PropType } from 'vue';
+import DocumentationTooltip from './DocumentationTooltip.vue';
 
 export default defineComponent({
   components: {
-    DocumentationText,
-    ToggleDocumentationButton,
-    ExpandCollapseTransition,
+    DocumentationTooltip,
   },
   props: {
     docs: {
       type: Array as PropType<readonly string[]>,
       required: true,
     },
-  },
-  setup() {
-    const isExpanded = ref(false);
-
-    return {
-      isExpanded,
-    };
   },
 });
 </script>
@@ -71,26 +47,26 @@ export default defineComponent({
 
   .header {
     display: flex;
+    align-items: center;
     flex-direction: row;
-    gap: $spacing-relative-small; // Adjusts spacing between documentation button and adjacent text to prevent visual crowding.
+    gap: 6px;
+    min-height: 36px;
+
     .content {
-      flex: 1; // Expands the content to fill available width, aligning the documentation button to the right.
+      flex: 0 1 auto;
+      min-width: 0;
+      overflow: hidden;
     }
-  }
-  .docs {
-    color: $color-on-primary;
-    background: $color-primary-darkest;
 
-    margin-left: $spacing-absolute-small;
-    margin-top: $spacing-relative-x-small;
-    padding: $spacing-absolute-medium;
+    .info-action {
+      flex: 0 0 auto;
+    }
 
-    text-transform: none;
-    cursor: auto;
-    user-select: text;
-
-    &-collapsed {
-      display: none;
+    .row-action {
+      display: flex;
+      flex: 0 0 84px;
+      justify-content: flex-end;
+      margin-left: auto;
     }
   }
 }

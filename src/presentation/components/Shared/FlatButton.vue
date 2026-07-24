@@ -4,8 +4,12 @@
     v-non-collapsing
     type="button"
     class="flat-button"
+    :disabled="disabled || undefined"
+    :aria-disabled="disabled || undefined"
+    :aria-pressed="pressed"
     :class="{
       disabled,
+      'is-pressed': pressed,
     }"
     @click="onClicked"
   >
@@ -34,6 +38,17 @@ export default defineComponent({
       default: false,
       required: false,
     },
+    /**
+     * Toggle state for buttons that act as a selectable option (e.g. OS/preset
+     * pickers). When set, exposes `aria-pressed` so assistive tech announces the
+     * button as "pressed"/"selected" rather than "unavailable". Leave undefined
+     * for regular (non-toggle) buttons so no `aria-pressed` is emitted.
+     */
+    pressed: {
+      type: Boolean,
+      default: undefined,
+      required: false,
+    },
     icon: {
       type: String as PropType<IconName | undefined>,
       default: undefined,
@@ -60,13 +75,58 @@ export default defineComponent({
 @use "@/presentation/assets/styles/main" as *;
 
 .flat-button {
+  @include reset-button;
+  @include clickable;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
   display: inline-flex;
-  gap: $spacing-relative-small;
-  &.disabled {
-    @include flat-button($disabled: true);
+  gap: 7px;
+  font-size: $font-size-absolute-small;
+  line-height: 1.2;
+  transition:
+    color $motion-duration-fast $motion-ease-standard,
+    background-color $motion-duration-fast $motion-ease-standard,
+    border-color $motion-duration-fast $motion-ease-standard,
+    transform $motion-duration-standard $motion-ease-out;
+
+  // Selected/active toggle option (e.g. current OS or preset).
+  &.is-pressed {
+    border-color: rgba($color-secondary, 0.45);
+    background: rgba($color-secondary, 0.16);
+    color: $color-secondary-light;
+    opacity: 1;
   }
-  &:not(.disabled) {
-    @include flat-button($disabled: false);
+
+  // Genuinely unavailable option: dimmed and non-interactive.
+  &.disabled {
+    color: rgba($color-on-primary, 0.4);
+    cursor: not-allowed;
+  }
+
+  &:not(.disabled):not(.is-pressed) {
+    color: inherit;
+
+    @include hover-or-touch {
+      border-color: rgba($color-on-primary, 0.12);
+      background: rgba($color-on-primary, 0.07);
+      color: $color-on-primary;
+      transform: translateY(-1px);
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid $color-secondary;
+    outline-offset: 2px;
+  }
+}
+
+@media (pointer: coarse) {
+  .flat-button {
+    min-height: 44px;
   }
 }
 </style>

@@ -6,8 +6,6 @@ export const IconNames = [
   'github',
   'face-smile',
   'xmark',
-  'battery-half',
-  'battery-full',
   'folder',
   'folder-open',
   'left-right',

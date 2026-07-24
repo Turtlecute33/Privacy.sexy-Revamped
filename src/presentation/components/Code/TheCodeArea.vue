@@ -3,12 +3,22 @@
     v-non-collapsing
     @size-changed="sizeChanged()"
   >
-    <!-- `data-test-highlighted-range` is a test hook for assessing highlighted text range -->
     <div
-      :id="editorId"
-      :data-test-highlighted-range="highlightedRange"
-      class="code-area"
-    />
+      class="code-area-shell"
+      :class="{ 'is-loading': isLoading }"
+      :aria-busy="isLoading"
+    >
+      <!-- `data-test-highlighted-range` is a test hook for assessing highlighted text range -->
+      <div
+        :id="editorId"
+        :data-test-highlighted-range="highlightedRange"
+        class="code-area"
+      />
+      <div v-if="isLoading" class="code-area-loading" role="status">
+        <span class="code-area-loading__indicator" aria-hidden="true" />
+        Preparing script preview
+      </div>
+    </div>
   </SizeObserver>
 </template>
 
@@ -25,8 +35,9 @@ import { CodeBuilderFactory } from '@/application/Context/State/Code/Generation/
 import SizeObserver from '@/presentation/components/Shared/SizeObserver.vue';
 import { NonCollapsing } from '@/presentation/components/Scripts/View/Cards/NonCollapsingDirective';
 import type { ProjectDetails } from '@/domain/Project/ProjectDetails';
-import { initializeAceEditor } from './Ace/AceCodeEditorFactory';
-import type { SupportedSyntaxLanguage, CodeEditor, CodeEditorStyleHandle } from './CodeEditorFactory';
+import type {
+  SupportedSyntaxLanguage, CodeEditor, CodeEditorFactory, CodeEditorStyleHandle,
+} from './CodeEditorFactory';
 
 export default defineComponent({
   components: {
@@ -42,23 +53,34 @@ export default defineComponent({
 
     const editorId = 'codeEditor';
     const highlightedRange = ref(0);
+    const isLoading = ref(true);
 
     let editor: CodeEditor | undefined;
     let currentMarker: CodeEditorStyleHandle | undefined;
+    let createEditor: CodeEditorFactory | undefined;
+    let isMounted = false;
 
     onUnmounted(() => {
+      isMounted = false;
       destroyEditor();
     });
 
-    onMounted(() => { // allow editor HTML to render
+    onMounted(async () => { // allow the interface to paint before parsing the editor bundle
+      isMounted = true;
+      const { initializeAceEditor } = await import('./Ace/AceCodeEditorFactory');
+      if (!isMounted) {
+        return;
+      }
+      createEditor = initializeAceEditor;
       onStateChange((newState) => {
         handleNewState(newState);
       }, { immediate: true });
+      isLoading.value = false;
     });
 
     function handleNewState(newState: IReadOnlyCategoryCollectionState) {
       destroyEditor();
-      editor = initializeAceEditor({
+      editor = createEditor?.({
         editorContainerElementId: editorId,
         language: getLanguage(newState.collection.scriptMetadata.language),
       });
@@ -123,6 +145,7 @@ export default defineComponent({
     return {
       editorId,
       highlightedRange,
+      isLoading,
       sizeChanged,
     };
   },
@@ -168,16 +191,61 @@ function getDefaultCode(language: ScriptLanguage, project: ProjectDetails): stri
 @use "@/presentation/assets/styles/main" as *;
 
 :deep() {
+  .code-area-shell {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 540px;
+    background: $color-primary-darkest;
+  }
+
   .code-area {
-    min-height: 200px;
+    min-height: 540px;
     width: 100%;
     height: 100%;
     // `overflow: auto` creates duplicate scrollbars with the editor's built-in scrolling mechanism on some edge case screen sizes
     font-size: $font-size-absolute-small;
     font-family: $font-family-monospace;
     &__highlight {
-      background-color: $color-secondary-light;
+      background-color: rgba($color-secondary, 0.24);
       position: absolute;
+    }
+  }
+}
+
+.code-area-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 12px;
+  color: rgba($color-on-primary, 0.64);
+  font-family: $font-family-monospace;
+  font-size: $font-size-absolute-x-small;
+  letter-spacing: 0.04em;
+}
+
+.code-area-loading__indicator {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba($color-on-primary, 0.14);
+  border-top-color: $color-secondary;
+  border-radius: 50%;
+  animation: code-area-loading-spin 800ms linear infinite;
+}
+
+@keyframes code-area-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media screen and (max-width: $media-vertical-view-breakpoint) {
+  :deep() {
+    .code-area-shell,
+    .code-area {
+      min-height: 420px;
     }
   }
 }

@@ -55,7 +55,7 @@ export default defineComponent({
 
 .button-wrapper {
   position: relative;
-  height: 70px;
+  height: 44px;
   .button {
     position: absolute;
     width: 100%;
@@ -73,36 +73,34 @@ export default defineComponent({
   background-color: $color-secondary;
   color: $color-on-secondary;
 
-  border: none;
-  transition-duration: 0.4s;
+  border: 1px solid $color-secondary;
+  transition:
+    background-color $motion-duration-fast $motion-ease-standard,
+    color $motion-duration-fast $motion-ease-standard,
+    border-color $motion-duration-fast $motion-ease-standard,
+    transform $motion-duration-standard $motion-ease-out;
   overflow: hidden;
-  box-shadow: 0 3px 9px $color-primary-darkest;
-  border-radius: 4px;
+  box-shadow: none;
+  border-radius: 12px;
 
   @include clickable;
 
   .button__icon {
-    font-size: $font-size-absolute-x-large;
+    margin-right: 9px;
+    font-size: $font-size-absolute-normal;
   }
 
   @include hover-or-touch {
-    background: $color-surface;
-    box-shadow: 0px 2px 10px 5px $color-secondary;
-    .button__text {
-      display: block;
-    }
-    .button__icon {
-      display: none;
-    }
+    background: rgba($color-on-primary, 0.06);
+    color: $color-on-primary;
+    border-color: rgba($color-secondary, 0.7);
+    transform: translateY(-1px);
   }
+
   .button__text {
-    display: none;
-    font-family: $font-family-cursive;
-    font-size: $font-size-absolute-large;
-    color: $color-primary;
-    @include hover-or-touch {
-      display: block;
-    }
+    display: block;
+    font-size: $font-size-absolute-small;
+    font-weight: 700;
   }
 }
 </style>

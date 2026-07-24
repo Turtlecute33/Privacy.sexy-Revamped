@@ -1,6 +1,6 @@
-// Keep the amount of fonts minimal. No more than 3 (except logo and monospace)
-// for visual consistency and readability.
-$font-family-main       : 'Roboto Slab', serif;
+// A single system sans-serif family keeps rendering fast and the hierarchy calm.
+// Source Code Pro remains the only downloaded font because code readability benefits from it.
+$font-family-main       : ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 $font-family-logo       : 'Slabo 27px', serif;
 $font-family-monospace  : 'Source Code Pro', monospace;
 $font-family-cursive    : 'Yesteryear', cursive;

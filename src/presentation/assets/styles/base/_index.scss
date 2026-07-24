@@ -20,17 +20,59 @@
 }
 
 html {
+  scroll-behavior: smooth;
   @include prevent-scrollbar-layout-shift;
 }
 
 body {
-  background: $color-background;
+  margin: 0;
+  padding: 0;
+  background: $color-surface;
   @include base-font-style;
   @include apply-uniform-spacing;
+  color: $color-on-surface;
+  line-height: 1.55;
+  min-width: 320px;
+  min-height: 100vh;
+  min-height: 100dvh; // Dynamic viewport unit avoids the mobile URL-bar jump; falls back to 100vh above.
+  -webkit-font-smoothing: antialiased;
 }
 
 input {
   font-family: unset; // Reset browser default
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid $color-secondary;
+  outline-offset: 3px;
+}
+
+::selection {
+  background: $color-secondary-light;
+  color: $color-primary-darkest;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 blockquote {

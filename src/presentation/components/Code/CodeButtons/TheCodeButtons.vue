@@ -37,11 +37,11 @@ export default defineComponent({
   display: flex;
   flex-direction: row;
   justify-content: center;
-  gap: $spacing-absolute-xx-large;
+  gap: 12px;
 }
 
 .code-button {
-  width: 10%;
-  min-width: 90px;
+  width: 140px;
+  max-width: calc(50% - 6px);
 }
 </style>

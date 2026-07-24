@@ -21,12 +21,12 @@ $arrow-size: $font-size-absolute-normal;
   position: relative;
   .arrow {
     position: absolute;
-    left: calc(50% - $arrow-size * 1.5);
+    left: 50%;
     top: calc(-0.35 * $arrow-size);
-    border: solid $color-primary-darker;
+    border: solid rgba($color-on-primary, 0.4);
     border-width: 0 $arrow-size $arrow-size 0;
     padding: $arrow-size;
-    transform: rotate(-135deg);
+    transform: translateX(-50%) rotate(-135deg);
   }
 }
 </style>

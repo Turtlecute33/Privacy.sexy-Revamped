@@ -1,5 +1,6 @@
 @use "@/presentation/assets/styles/colors" as *;
 @use "@/presentation/assets/styles/typography" as *;
+@use "@/presentation/assets/styles/motion" as *;
 
 @mixin hover-or-touch($selector-suffix: '', $selector-prefix: '&') {
   @media (hover: hover) {
@@ -37,7 +38,7 @@
 @mixin fade-transition($name) {
   .#{$name}-enter-active,
   .#{$name}-leave-active {
-    transition: opacity 0.3s ease;
+    transition: opacity $motion-duration-standard $motion-ease-standard;
   }
 
   .#{$name}-enter-from,
@@ -50,7 +51,9 @@
 
   .#{$name}-enter-active,
   .#{$name}-leave-active {
-    transition: all $duration;
+    transition:
+      opacity $duration $motion-ease-standard,
+      transform $duration $motion-ease-out;
   }
 
   .#{$name}-leave-active,

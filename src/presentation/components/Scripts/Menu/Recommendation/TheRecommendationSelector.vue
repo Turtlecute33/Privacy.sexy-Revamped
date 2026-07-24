@@ -1,5 +1,5 @@
 <template>
-  <MenuOptionList label="Select">
+  <MenuOptionList label="Preset">
     <TooltipWrapper>
       <!-- None -->
       <MenuOptionListItem

@@ -1,10 +1,14 @@
 <template>
   <div
     class="checkbox"
+    role="checkbox"
+    tabindex="-1"
+    :aria-checked="ariaChecked"
     :class="{
       checked,
       indeterminate,
     }"
+    @click.stop="toggleCheck"
   />
 </template>
 
@@ -40,9 +44,22 @@ export default defineComponent({
       () => state.value.checkState === TreeNodeCheckState.Indeterminate,
     );
 
+    const ariaChecked = computed<'true' | 'false' | 'mixed'>(() => {
+      if (checked.value) {
+        return 'true';
+      }
+      return indeterminate.value ? 'mixed' : 'false';
+    });
+
+    function toggleCheck() {
+      currentNode.value.state.toggleCheck();
+    }
+
     return {
       indeterminate,
       checked,
+      ariaChecked,
+      toggleCheck,
       currentNode,
     };
   },
@@ -53,7 +70,7 @@ export default defineComponent({
 @use "@/presentation/assets/styles/main" as *;
 @use "./../tree-colors" as *;
 
-$side-size-in-px: $font-size-absolute-x-large;
+$side-size-in-px: 22px;
 
 .checkbox {
   position: relative;
@@ -63,9 +80,20 @@ $side-size-in-px: $font-size-absolute-x-large;
 
   box-sizing: border-box;
   border: 1px solid $color-node-checkbox-border-unchecked;
-  border-radius: 2px;
-  transition: border-color .25s, background-color .25s;
+  border-radius: 6px;
+  transition:
+    border-color $motion-duration-standard $motion-ease-standard,
+    background-color $motion-duration-standard $motion-ease-standard;
   background: $color-node-checkbox-bg-unchecked;
+  cursor: pointer;
+
+  // The parent reserves a 44px interaction area while the visual checkbox stays compact.
+  &:before {
+    position: absolute;
+    display: block;
+    content: "";
+    inset: -11px;
+  }
 
   &:after {
     position: absolute;
@@ -102,7 +130,7 @@ $side-size-in-px: $font-size-absolute-x-large;
       width: $side-size-in-px * 0.25;
 
       transform: rotate(45deg) scaleY(1);
-      transition: transform .25s;
+      transition: transform $motion-duration-standard $motion-ease-out;
       transform-origin: center;
     }
   }

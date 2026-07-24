@@ -1,0 +1,10 @@
+/*
+  Shared motion tokens keep the interface feeling consistent and make it easy
+  to tune animation without scattering one-off timing values across components.
+*/
+$motion-duration-fast: 140ms;
+$motion-duration-standard: 220ms;
+$motion-duration-emphasized: 300ms;
+
+$motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+$motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);

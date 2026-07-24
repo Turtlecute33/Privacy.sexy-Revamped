@@ -7,14 +7,26 @@
     <div
       ref="triggeringElement"
       class="tooltip__trigger"
+      @mouseenter="showTooltip"
+      @mouseleave="scheduleTooltipHide"
+      @focusin="showTooltip"
+      @focusout="scheduleTooltipHide"
     >
       <slot />
     </div>
-    <div class="tooltip__overlay">
+    <div
+      class="tooltip__overlay"
+      :class="{ 'tooltip__overlay--visible': isTooltipVisible }"
+      :aria-hidden="!isTooltipVisible"
+    >
       <div
         ref="tooltipDisplayElement"
         class="tooltip__display"
         :style="displayStyles"
+        @mouseenter="showTooltip"
+        @mouseleave="hideTooltip"
+        @focusin="showTooltip"
+        @focusout="scheduleTooltipHide"
       >
         <div class="tooltip__content">
           <slot name="tooltip" />
@@ -33,7 +45,9 @@
 import {
   useFloating, arrow, shift, flip, type Placement, offset, autoUpdate,
 } from '@floating-ui/vue';
-import { defineComponent, shallowRef, computed } from 'vue';
+import {
+  defineComponent, shallowRef, computed, ref, onUnmounted,
+} from 'vue';
 import { useResizeObserverPolyfill } from '@/presentation/components/Shared/Hooks/Resize/UseResizeObserverPolyfill';
 import { throttle } from '@/application/Common/Timing/Throttle';
 import { type TargetEventListener } from '@/presentation/components/Shared/Hooks/UseAutoUnsubscribedEventListener';
@@ -45,6 +59,14 @@ const GAP_BETWEEN_TOOLTIP_AND_TRIGGER_IN_PX = 2;
 const ARROW_SIZE_IN_PX = 4;
 
 const DEFAULT_PLACEMENT: Placement = 'top';
+const POINTER_HANDOFF_DELAY_IN_MS = 75;
+
+interface ActiveTooltip {
+  readonly identifier: symbol;
+  readonly hide: () => void;
+}
+
+let activeTooltip: ActiveTooltip | undefined;
 
 export default defineComponent({
   setup() {
@@ -92,6 +114,47 @@ export default defineComponent({
       arrowSizeInPx: ARROW_SIZE_IN_PX,
     }));
 
+    const isTooltipVisible = ref(false);
+    const tooltipIdentifier = Symbol('tooltip');
+    let hideTimer: ReturnType<typeof setTimeout> | undefined;
+
+    function clearScheduledHide() {
+      if (hideTimer === undefined) {
+        return;
+      }
+      clearTimeout(hideTimer);
+      hideTimer = undefined;
+    }
+
+    function hideTooltip() {
+      clearScheduledHide();
+      isTooltipVisible.value = false;
+      if (activeTooltip?.identifier === tooltipIdentifier) {
+        activeTooltip = undefined;
+      }
+    }
+
+    function showTooltip() {
+      clearScheduledHide();
+      if (activeTooltip?.identifier !== tooltipIdentifier) {
+        activeTooltip?.hide();
+        activeTooltip = {
+          identifier: tooltipIdentifier,
+          hide: hideTooltip,
+        };
+      }
+      isTooltipVisible.value = true;
+    }
+
+    function scheduleTooltipHide() {
+      clearScheduledHide();
+      hideTimer = setTimeout(hideTooltip, POINTER_HANDOFF_DELAY_IN_MS);
+    }
+
+    onUnmounted(() => {
+      hideTooltip();
+    });
+
     return {
       tooltipDisplayElement,
       triggeringElement,
@@ -99,6 +162,10 @@ export default defineComponent({
       arrowStyles,
       arrowElement,
       placement,
+      isTooltipVisible,
+      showTooltip,
+      scheduleTooltipHide,
+      hideTooltip,
     };
   },
 });
@@ -120,30 +187,10 @@ function setupTransitionEndEvents(
 <style scoped lang="scss">
 @use "@/presentation/assets/styles/main" as *;
 
-$color-tooltip-background: $color-primary-darkest;
+$color-tooltip-background: $color-primary-dark;
 
 .tooltip {
   display: inline-flex;
-}
-
-@mixin set-visibility($isVisible: true) {
-  /*
-    Visibility is controlled through CSS rather than JavaScript. This allows better CSS
-    consistency by reusing `hover-or-touch` mixin. Using vue directives such as `v-if` and
-    `v-show` require JavaScript tracking of touch/hover without reuse of `hover-or-touch`.
-    The `visibility` property is toggled because:
-      - Using the `display` property doesn't support smooth transitions (e.g., fading out).
-      - Keeping invisible tooltips in the DOM is a best practice for accessibility (screen readers).
-  */
-  $animation-duration: 0.5s;
-  transition: opacity $animation-duration, visibility $animation-duration;
-  @if $isVisible {
-    visibility: visible;
-    opacity: 1;
-  } @else {
-    visibility: hidden;
-    opacity: 0;
-  }
 }
 
 @mixin fixed-fullscreen {
@@ -173,7 +220,7 @@ $color-tooltip-background: $color-primary-darkest;
   pointer-events: none;
   overflow: hidden;
   > * { // Restore styles in children
-    pointer-events: unset;
+    pointer-events: auto;
     overflow: unset;
   }
 }
@@ -192,26 +239,32 @@ $color-tooltip-background: $color-primary-darkest;
   */
   white-space: normal;
 
-  @include set-visibility(false);
-  @include fixed-fullscreen;
-}
+  visibility: hidden;
+  opacity: 0;
 
-.tooltip__trigger {
-  @include hover-or-touch {
-    + .tooltip__overlay {
-      @include set-visibility(true);
-    }
+  @include fixed-fullscreen;
+
+  &--visible {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 150ms ease-out;
   }
 }
 
 .tooltip__content {
   background: $color-tooltip-background;
   color: $color-on-primary;
+  border: 1px solid rgba($color-primary-light, 0.35);
   border-radius: 16px;
   padding: $spacing-absolute-large $spacing-absolute-medium;
+  box-shadow: 0 16px 38px rgba($color-primary-darkest, 0.28);
+  overflow: auto;
+  overscroll-behavior: contain;
 
   // Explicitly set font styling for tooltips to prevent inconsistent appearances due to style inheritance from trigger elements.
   @include base-font-style;
+  font-size: $font-size-absolute-small;
+  line-height: 1.55;
 
   /*
     This margin creates a visual buffer between the tooltip and the edges of the document.
@@ -222,18 +275,27 @@ $color-tooltip-background: $color-primary-darkest;
   margin-left: $spacing-absolute-xx-small;
   margin-right: $spacing-absolute-xx-small;
 
-  // Setting max-width increases readability and consistency reducing overlap and clutter.
-  @include set-property-ch-value-with-fallback(
-    $property: max-width,
-    /*
-      Research in typography suggests that an optimal line length for text readability is between 50-75 characters per line.
-      Tooltips should be brief, so aiming for the for the lower end of this range (around 50 characters).
-    */
-    $value-in-ch: 50,
-  )
+  /*
+    Keep long documentation readable without allowing it to cover the page.
+    Content remains complete and scrollable, including links and code blocks.
+  */
+  max-width: min(50ch, calc(100vw - #{$spacing-absolute-xx-large}));
+  max-height: min(65vh, 32rem);
+
+  :deep(a[href]) {
+    color: $color-secondary-light;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
 }
 
 .tooltip__arrow {
   background: $color-tooltip-background;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tooltip__overlay--visible {
+    transition: none;
+  }
 }
 </style>

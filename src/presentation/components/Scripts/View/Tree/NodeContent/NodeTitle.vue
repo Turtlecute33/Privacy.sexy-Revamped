@@ -1,5 +1,8 @@
 <template>
-  <MarkdownText :text="title" class="node-title" />
+  <MarkdownText
+    :text="title"
+    class="node-title"
+  />
 </template>
 
 <script lang="ts">
@@ -23,6 +26,11 @@ export default defineComponent({
 @use "@/presentation/assets/styles/main" as *;
 
 .node-title {
-  font-size: $font-size-absolute-large;
+  display: block;
+  color: rgba($color-on-primary, 0.92);
+  font-size: $font-size-absolute-small;
+  line-height: 1.35;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 </style>

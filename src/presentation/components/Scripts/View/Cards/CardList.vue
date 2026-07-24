@@ -125,12 +125,7 @@ function isClickable(element: Element) {
   display: flex;
   flex-flow: row wrap;
   gap: $card-gap;
-  /*
-    Padding is used to allow scale animation (growing size) for cards on hover.
-    It ensures that there's room to grow, so the animation is shown without overflowing
-    with scrollbars.
-  */
-  padding: $spacing-absolute-medium;
+  padding: 16px;
 }
 
 .error {

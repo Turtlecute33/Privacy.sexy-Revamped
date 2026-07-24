@@ -86,11 +86,11 @@ $padding-vertical   : $spacing-absolute-x-large;
 
   flex: 1; // Expands the container to fill available horizontal space, enabling alignment of child items.
 
-  padding-bottom: $padding-vertical;
-  padding-left: $padding-horizontal;
-  padding-right: $padding-horizontal;
+  padding-bottom: 16px;
+  padding-left: 16px;
+  padding-right: 16px;
   &.top-padding {
-    padding-top: $padding-vertical;
+    padding-top: 16px;
   }
 }
 </style>

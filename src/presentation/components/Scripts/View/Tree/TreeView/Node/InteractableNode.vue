@@ -1,11 +1,12 @@
 <template>
   <div
-    class="clickable-node focusable-node"
+    class="focusable-node"
     tabindex="-1"
     :class="{
       'keyboard-focus': hasKeyboardFocus,
+      'is-expandable': isBranchNode,
     }"
-    @click.stop="toggleCheckState"
+    @click.stop="onRowClick"
     @focus="onNodeFocus"
   >
     <slot />
@@ -49,15 +50,23 @@ export default defineComponent({
       props.treeRoot.focus.setSingleFocus(currentNode.value);
     };
 
-    function toggleCheckState() {
-      currentNode.value.state.toggleCheck();
+    const isBranchNode = computed<boolean>(() => currentNode.value.hierarchy.isBranchNode);
+
+    // Clicking the row/title expands or collapses a section; individual scripts
+    // (leaf nodes) are selected only via their checkbox, so a row click is a no-op.
+    function onRowClick() {
+      if (!isBranchNode.value) {
+        return;
+      }
+      currentNode.value.state.toggleExpand();
     }
 
     return {
       onNodeFocus,
-      toggleCheckState,
+      onRowClick,
       currentNode,
       hasKeyboardFocus,
+      isBranchNode,
     };
   },
 });
@@ -65,19 +74,19 @@ export default defineComponent({
 
 <style scoped lang="scss">
 @use "@/presentation/assets/styles/main" as *;
-@use "./../tree-colors" as *;
-
-.clickable-node {
-  @include clickable;
-  @include hover-or-touch {
-    background: $color-node-highlight-bg;
-  }
-}
 
 .focusable-node {
+  border-radius: 8px;
   outline: none; // We handle keyboard focus through own styling
+
+  // Only expandable rows (sections) are clickable; leaf rows are not.
+  &.is-expandable {
+    @include clickable;
+  }
+
   &.keyboard-focus {
-    background: $color-node-highlight-bg;
+    outline: 2px solid rgba($color-secondary, 0.6);
+    outline-offset: -2px;
   }
 }
 </style>

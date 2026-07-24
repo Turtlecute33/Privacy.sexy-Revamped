@@ -1,10 +1,11 @@
 <template>
   <div id="app">
+    <a class="skip-link" href="#main-content">Skip to privacy controls</a>
     <div class="app__wrapper">
-      <TheHeader class="app__row" />
-      <TheSearchBar class="app__row" />
-      <TheScriptArea class="app__row" />
-      <TheCodeButtons class="app__row app__code-buttons" />
+      <TheHeader />
+      <main id="main-content" class="app__main">
+        <TheScriptArea />
+      </main>
       <TheFooter />
     </div>
     <component
@@ -20,16 +21,12 @@ import {
 } from 'vue';
 import TheHeader from '@/presentation/components/TheHeader.vue';
 import TheFooter from '@/presentation/components/TheFooter/TheFooter.vue';
-import TheCodeButtons from '@/presentation/components/Code/CodeButtons/TheCodeButtons.vue';
 import TheScriptArea from '@/presentation/components/Scripts/TheScriptArea.vue';
-import TheSearchBar from '@/presentation/components/TheSearchBar.vue';
 
 export default defineComponent({
   components: {
     TheHeader,
-    TheCodeButtons,
     TheScriptArea,
-    TheSearchBar,
     TheFooter,
   },
   setup() {
@@ -47,7 +44,8 @@ export default defineComponent({
 
 function getOptionalDevToolkitComponent(): Component | undefined {
   const isDevelopment = process.env.NODE_ENV !== 'production';
-  if (!isDevelopment) {
+  const isExplicitlyRequested = new URLSearchParams(window.location.search).has('devtools');
+  if (!isDevelopment || !isExplicitlyRequested) {
     return undefined;
   }
   return defineAsyncComponent(() => import('@/presentation/components/DevToolkit/DevToolkit.vue'));
@@ -56,50 +54,56 @@ function getOptionalDevToolkitComponent(): Component | undefined {
 
 <style lang="scss">
 @use "@/presentation/assets/styles/main" as *;
-@use 'sass:math';
+#app {
+  width: 100%;
+  min-height: 100dvh;
 
-@mixin responsive-spacing {
-  // Avoid using percentage-based values for spacing the avoid unintended layout shifts.
-  margin-left: $spacing-absolute-medium;
-  margin-right: $spacing-absolute-medium;
-  padding: $spacing-absolute-xx-large;
-  @media screen and (max-width: $media-screen-big-width) {
-    margin-left: $spacing-absolute-small;
-    margin-right: $spacing-absolute-small;
-    padding: $spacing-absolute-x-large;
+  .app__wrapper {
+    display: flex;
+    flex-direction: column;
+    background-color: $color-surface;
+    color: $color-on-surface;
+    min-height: 100dvh;
   }
-  @media screen and (max-width: $media-screen-medium-width) {
-    margin-left: $spacing-absolute-x-small;
-    margin-right: $spacing-absolute-x-small;
-    padding: $spacing-absolute-medium;
-  }
-  @media screen and (max-width: $media-screen-small-width) {
-    margin-left: 0;
-    margin-right: 0;
-    padding: $spacing-absolute-small;
+
+  .app__main {
+    width: min(1440px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 8px 0 32px;
   }
 }
 
-#app {
-  margin-right: auto;
-  margin-left: auto;
-  max-width: 1600px;
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1000;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: $color-primary-darkest;
+  color: $color-on-primary;
+  transform: translateY(-150%);
+  transition: transform $motion-duration-standard $motion-ease-out;
 
-  .app__wrapper {
-    display:flex;
-    flex-direction: column;
+  &:focus {
+    transform: translateY(0);
+  }
+}
 
-    background-color: $color-surface;
-    color: $color-on-surface;
-    box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.06);
-
-    @include responsive-spacing;
-
-    .app__row {
-      margin-bottom: $spacing-absolute-large;
+@media screen and (max-width: $media-screen-medium-width) {
+  #app {
+    .app__main {
+      width: min(100% - 32px, 1440px);
+      padding-top: 4px;
     }
-    .app__code-buttons {
-      padding-bottom: $spacing-absolute-medium;
+
+  }
+}
+
+@media screen and (max-width: $media-screen-small-width) {
+  #app {
+    .app__main {
+      width: min(100% - 20px, 1440px);
     }
   }
 }

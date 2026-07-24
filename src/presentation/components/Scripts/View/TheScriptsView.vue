@@ -21,10 +21,10 @@
           </div>
         </div>
         <div v-if="!searchHasMatches" class="search-no-matches">
-          <div>Sorry, no matches for "{{ trimmedSearchQuery }}" 😞</div>
+          <div>No matches for "{{ trimmedSearchQuery }}"</div>
           <div>
-            Feel free to extend the scripts
-            <a :href="repositoryUrl" class="child github" target="_blank" rel="noopener noreferrer">here</a> ✨
+            Try a broader term, or help us extend the scripts
+            <a :href="repositoryUrl" class="child github" target="_blank" rel="noopener noreferrer">on GitHub</a>.
           </div>
         </div>
       </div>
@@ -129,25 +129,23 @@ export default defineComponent({
 @use "@/presentation/assets/styles/main" as *;
 
 .scripts-view {
-  @media screen and (min-width: $media-vertical-view-breakpoint) {
-    // so the current code is always visible
-    overflow: auto;
-    max-height: 70vh;
-  }
+  min-width: 0;
+  overflow: visible;
 }
 
 .search {
   display: flex;
   flex-direction: column;
   background-color: $color-scripts-bg;
-  padding-top: $spacing-absolute-large;
-  padding-bottom:$spacing-absolute-large;
+  padding: 18px 22px;
+
   .search__query {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     flex-direction: row;
     align-items: center;
     color: $color-primary-light;
+
     .search__query__close-button {
       font-size: $font-size-absolute-large;
       margin-left: $spacing-relative-x-small;
@@ -158,12 +156,18 @@ export default defineComponent({
     flex-direction: column;
     word-break:break-word;
     color: $color-on-primary;
-    font-size: $font-size-absolute-large;
-    padding: $spacing-absolute-medium;
-    text-align:center;
+    font-size: $font-size-absolute-normal;
+    padding: 36px 16px;
+    text-align: left;
     gap: $spacing-relative-small;
+
+    > :first-child {
+      font-size: $font-size-absolute-large;
+      font-weight: 700;
+    }
+
     a {
-      color: $color-primary;
+      color: $color-secondary;
     }
   }
 }

@@ -9,27 +9,30 @@
 @use 'sass:color';
 
 // --- Primary | The color displayed most frequently across screens and components
-$color-primary              : #3a65ab;
-$color-primary-light        : color.adjust($color-primary, $lightness: 30%);
-$color-primary-dark         : color.adjust($color-primary, $lightness: -18%);
-$color-primary-darker       : color.adjust($color-primary, $lightness: -32%);
-$color-primary-darkest      : color.adjust($color-primary, $lightness: -44%);
+$color-primary              : #3867d6;
+$color-primary-light        : #dbe7ff;
+$color-primary-dark         : #234ba9;
+$color-primary-darker       : #14294e;
+$color-primary-darkest      : #0b1730;
 // Text/iconography color that is usable on top of primary color
-$color-on-primary           : #e4f1fe;
+$color-on-primary           : #f8fbff;
 
 // --- Secondary | Accent color, should be applied sparingly to accent select parts of UI
-$color-secondary            : #00D1AD;
-$color-secondary-light      : color.adjust($color-secondary, $lightness: 48%);
+$color-secondary            : #20c9a1;
+$color-secondary-light      : #bff5e7;
 // Text/iconography color that is usable on top of secondary color
-$color-on-secondary         : #005051;
+$color-on-secondary         : #052e2b;
 
 // --- Surface | Affect surfaces of components, such as cards, sheets, and menus.
-$color-surface              : #fff;
+$color-surface              : #f9fbff;
+$color-surface-elevated     : #ffffff;
 // Text/iconography color that is usable on surface
-$color-on-surface           : #4d5156;
+$color-on-surface           : #172033;
+$color-on-surface-muted     : #65708a;
+$color-border               : #dce4f2;
 
 // Background | Appears behind scrollable content.
-$color-background           : #e6ecf4;
+$color-background           : #edf2fa;
 
 $color-success  : #4CAF50;
 $color-danger   : #F44336;
@@ -41,5 +44,5 @@ $color-caution  : #FFC107;
     Use these colors to ensure consistent styling across components. When adding new colors, reference existing theme colors.
     This approach maintains a cohesive look and feel and simplifies theme adjustments.
 */
-$color-scripts-bg: $color-primary-darker;
+$color-scripts-bg: #101c33;
 $color-highlight: $color-primary;

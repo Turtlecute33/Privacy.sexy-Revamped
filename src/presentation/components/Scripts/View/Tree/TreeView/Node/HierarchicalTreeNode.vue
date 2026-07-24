@@ -140,7 +140,8 @@ export default defineComponent({
 
   .leaf-node {
     flex: 1; // Expands the node horizontally, allowing its content to utilize full width for child item alignment, such as icons and text.
-    overflow: auto; // Prevents horizontal expansion of inner content (e.g., when a code block is shown)
+    min-width: 0;
+    overflow: visible;
   }
 
   .expand-collapse-caret {
@@ -180,7 +181,7 @@ export default defineComponent({
           rotate(-45deg)
           translateY(-50%)
           translateX($caret-dimension * 0.2);
-        transition: transform .25s;
+        transition: transform $motion-duration-standard $motion-ease-out;
         transform-origin: center;
       }
       &.expanded:after {

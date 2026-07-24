@@ -1,7 +1,7 @@
 import ace, { AceRange } from './ace-importer';
 import type { CodeEditorFactory, SupportedSyntaxLanguage } from '../CodeEditorFactory';
 
-const CodeEditorTheme = 'xcode';
+const CodeEditorTheme = 'tomorrow_night';
 
 export const initializeAceEditor: CodeEditorFactory = (options) => {
   const editor = ace.edit(options.editorContainerElementId);

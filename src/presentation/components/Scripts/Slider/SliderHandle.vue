@@ -3,6 +3,9 @@
     ref="handleElementRef"
     class="handle"
     type="button"
+    aria-label="Resize panels"
+    aria-orientation="vertical"
+    @keydown="onKeydown"
   >
     <div class="line" />
     <AppIcon
@@ -41,10 +44,25 @@ export default defineComponent({
       emit('resized', value);
     });
 
+    const keyboardStepPx = 32;
+
+    function onKeydown(event: KeyboardEvent) {
+      const step = {
+        ArrowLeft: -keyboardStepPx,
+        ArrowRight: keyboardStepPx,
+      }[event.key];
+      if (step === undefined) {
+        return;
+      }
+      event.preventDefault();
+      emit('resized', step);
+    }
+
     return {
       handleElementRef,
       isDragging,
       cursorCssValue,
+      onKeydown,
     };
   },
 });
@@ -53,11 +71,12 @@ export default defineComponent({
 <style lang="scss" scoped>
 @use "@/presentation/assets/styles/main" as *;
 
-$color          : $color-primary-dark;
-$color-hover    : $color-primary;
+$color          : rgba($color-on-primary, 0.3);
+$color-hover    : $color-secondary;
 $cursor         : v-bind(cursorCssValue);
 
 .handle {
+  position: relative;
   cursor: $cursor;
 
   @include reset-button;
@@ -66,27 +85,38 @@ $cursor         : v-bind(cursorCssValue);
   flex-direction: column;
   align-items: center;
 
-  margin-right: $spacing-absolute-small;
-  margin-left: $spacing-absolute-small;
+  width: 20px;
+  margin: 0;
+  padding: 0 7px;
+  background: $color-primary-darkest;
 
   @include clickable($cursor: $cursor);
+
+  &::before {
+    position: absolute;
+    inset: 0 -12px;
+    content: "";
+  }
 
   @include hover-or-touch {
     .line {
       background: $color-hover;
     }
-    .image {
+    .icon {
       color: $color-hover;
     }
   }
 
   .line {
+    position: relative;
     flex: 1;
     background: $color;
-    width: 3px;
+    width: 1px;
   }
   .icon {
+    position: relative;
     color: $color;
+    font-size: $font-size-absolute-x-small;
   }
 }
 </style>

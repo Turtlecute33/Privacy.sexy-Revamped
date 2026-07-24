@@ -3,6 +3,7 @@
     v-model="isReverted"
     :stop-click-propagation="true"
     label="Revert"
+    off-label="Apply"
   />
 </template>
 

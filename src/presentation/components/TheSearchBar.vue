@@ -1,13 +1,19 @@
 <template>
-  <div v-non-collapsing class="search">
-    <input
-      v-model="searchQuery"
-      type="search"
-      class="search-term"
-      :placeholder="searchPlaceholder"
-    >
-    <div class="icon-wrapper">
-      <AppIcon icon="magnifying-glass" />
+  <div class="search-field">
+    <!-- Kept for screen readers (labels the search input) but hidden visually. -->
+    <label for="script-search" class="visually-hidden">Search privacy tweaks</label>
+    <div v-non-collapsing class="search">
+      <div class="icon-wrapper" aria-hidden="true">
+        <AppIcon icon="magnifying-glass" />
+      </div>
+      <input
+        id="script-search"
+        v-model="searchQuery"
+        type="search"
+        class="search-term"
+        :placeholder="searchPlaceholder"
+        autocomplete="off"
+      >
     </div>
   </div>
 </template>
@@ -92,40 +98,69 @@ export default defineComponent({
 <style scoped lang="scss">
 @use "@/presentation/assets/styles/main" as *;
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 .search {
-  width: 100%;
   position: relative;
   display: flex;
-  input {
-    background: inherit;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid $color-border;
+  border-radius: 12px;
+  background: $color-surface-elevated;
+  box-shadow: 0 8px 24px rgba($color-primary-darkest, 0.055);
+  transition:
+    border-color $motion-duration-fast $motion-ease-standard,
+    box-shadow $motion-duration-standard $motion-ease-standard;
+
+  &:focus-within {
+    border-color: rgba($color-primary, 0.65);
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
   }
 }
 
 .search-term {
   width: 100%;
   min-width: 60px;
-  border: 1.5px solid $color-primary;
-  border-right: none;
-  border-radius: 3px 0 0 3px;
-  padding-left: $spacing-absolute-medium;
-  padding-right: $spacing-absolute-medium;
-  outline: none;
-  color: $color-primary;
+  min-height: 42px;
+  padding: 0 18px 0 54px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: $color-primary-darkest;
   font-size: $font-size-absolute-normal;
-  &:focus {
-    color: $color-primary-darker;
+
+  &::placeholder {
+    color: $color-on-surface-muted;
+    opacity: 1;
+  }
+
+  &::-webkit-search-cancel-button {
+    cursor: pointer;
   }
 }
 
 .icon-wrapper {
-  width: 40px;
-  height: 36px;
-  border: 1px solid $color-primary;
-  background: $color-primary;
-  text-align: center;
-  color: $color-on-primary;
-  border-radius: 0 5px 5px 0;
-  font-size: $font-size-absolute-large;
-  padding: $spacing-absolute-x-small;
+  position: absolute;
+  left: 18px;
+  z-index: 1;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  color: $color-primary;
+  font-size: $font-size-absolute-normal;
+  pointer-events: none;
 }
 </style>
