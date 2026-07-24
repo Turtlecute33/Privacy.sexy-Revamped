@@ -6,6 +6,26 @@ import type { IExpression } from './Expression/IExpression';
 import type { IExpressionParser } from './Parser/IExpressionParser';
 
 export class ExpressionsCompiler implements IExpressionsCompiler {
+  /*
+    Every script that calls a shared function compiles that function's body again, so the
+    same code is scanned for expressions once per call site. Expressions depend only on the
+    code they were parsed from — evaluation takes its context as an argument — so the parse
+    result is reusable, which turns a per-call-site scan of the whole collection into one
+    scan per distinct code snippet.
+  */
+  private readonly expressionsByCode = new Map<string, readonly IExpression[]>();
+
+  private readonly cachingExtractor: IExpressionParser = {
+    findExpressions: (code) => {
+      let expressions = this.expressionsByCode.get(code);
+      if (expressions === undefined) {
+        expressions = this.extractor.findExpressions(code);
+        this.expressionsByCode.set(code, expressions);
+      }
+      return [...expressions];
+    },
+  };
+
   public constructor(
     private readonly extractor: IExpressionParser = new CompositeExpressionParser(),
   ) { }
@@ -18,7 +38,7 @@ export class ExpressionsCompiler implements IExpressionsCompiler {
       return '';
     }
     const context = new ExpressionEvaluationContext(args);
-    const compiledCode = compileRecursively(code, context, this.extractor);
+    const compiledCode = compileRecursively(code, context, this.cachingExtractor);
     return compiledCode;
   }
 }

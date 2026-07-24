@@ -63,11 +63,16 @@ async function generateWebFavicon(sourceImage, faviconFilePath, convertCommand) 
   console.log(`Updating favicon at ${faviconFilePath}.`);
   await ensureFileExists(sourceImage);
   await ensureParentFolderExists(faviconFilePath);
+  /*
+    Only the sizes browsers actually pick out of an `.ico`. Every entry is stored
+    uncompressed, so a 256x256 entry alone costs ~256 KB; high-resolution surfaces are
+    served by `icon.svg` instead, which every browser that asks for them supports.
+  */
   await convertFromSvgToIco(
     convertCommand,
     sourceImage,
     faviconFilePath,
-    [16, 24, 32, 48, 64, 128, 256],
+    [16, 24, 32, 48],
   );
 }
 

@@ -166,10 +166,27 @@ function mergeLinesWithBacktick(code: string) {
 function mergeLinesWithBracketCodeBlocks(code: string): string {
   return code
     // Opening bracket: [whitespace] Opening bracket (newline)
-    .replace(/(?<=.*)\s*{[\r\n][\s\r\n]*/g, ' { ')
+    .replace(/\s*{[\r\n][\s\r\n]*/g, ' { ')
     // Closing bracket: [whitespace] Closing bracket (newline) (continuation keyword)
     .replace(/\s*}[\r\n][\s\r\n]*(?=elseif|else|catch|finally|until)/g, ' } ')
-    .replace(/(?<=do\s*{.*)[\r\n\s]*}[\r\n][\r\n\s]*(?=while)/g, ' } '); // Do-While
+    .replace(closingBracketBeforeWhile, (match, offset: number, whole: string) => (
+      // Do-While: only inline the brace when the block it closes was opened by `do`.
+      isPrecededByDoBlock(whole, offset) ? ' } ' : match
+    ));
+}
+
+/*
+  A variable-length lookbehind (`(?<=do\s*{.*)`) expresses this in one expression, but V8
+  re-scans backwards from every position in the input, which made this regex alone cost
+  over a second of main-thread time when compiling the Windows collection. Matching the
+  bracket first and checking the preceding text only for the few real matches is
+  equivalent and proportional to the number of matches instead of the input length.
+*/
+const closingBracketBeforeWhile = /[\r\n\s]*}[\r\n][\r\n\s]*(?=while)/g;
+const doBlockOnPrecedingLine = /do\s*{[^\r\n]*$/;
+
+function isPrecededByDoBlock(code: string, matchOffset: number): boolean {
+  return doBlockOnPrecedingLine.test(code.slice(0, matchOffset));
 }
 
 function mergeNewLines(code: string) {
