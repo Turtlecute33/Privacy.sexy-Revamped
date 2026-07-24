@@ -25,6 +25,7 @@ const INDEX_FILE = join(DIST_DIR, 'index.html');
 const PORT = Number(process.env.PRERENDER_PORT ?? 4319);
 const ORIGIN = `http://127.0.0.1:${PORT}`;
 const READY_TIMEOUT_MS = 60_000;
+const APP_CONTENT_SELECTOR = '#app .app__wrapper';
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -86,11 +87,15 @@ async function prerender() {
     await page.goto(ORIGIN + '/', { waitUntil: 'domcontentloaded', timeout: READY_TIMEOUT_MS });
     // The app removes the splash screen once it has mounted (the `app-ready` event).
     await page.waitForFunction(
-      () => !document.getElementById('splash-screen') && !!document.querySelector('#main-content'),
+      (appContentSelector) => (
+        !document.getElementById('splash-screen')
+        && !!document.querySelector(appContentSelector)
+      ),
       { timeout: READY_TIMEOUT_MS },
+      APP_CONTENT_SELECTOR,
     );
     const html = await page.content();
-    if (!html.includes('id="main-content"')) {
+    if (!html.includes('app__wrapper')) {
       throw new Error('Prerendered HTML is missing app content; aborting to avoid deploying an empty page.');
     }
     await writeFile(INDEX_FILE, html, 'utf8');

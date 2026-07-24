@@ -1,17 +1,24 @@
-# Privacy.sexy Revamped
+# privacy.sexy Revamped
 
-> Build privacy and security scripts for Windows, macOS, and Linux.
+> Free, open-source tool to build privacy and security scripts that debloat and
+> harden Windows, macOS, and Linux.
 
-Privacy.sexy Revamped is a web-first tool for building privacy and security
-scripts. Choose the changes you want, inspect the commands, then copy or
-download the generated script.
+**privacy.sexy Revamped** is a web-based script builder for operating-system
+hardening. Pick the tweaks you want — debloat Windows, disable telemetry and
+tracking, remove preinstalled bloatware, and tighten macOS and Linux privacy —
+inspect the exact commands, then copy or download a script to run yourself.
+There is no account, no install, and nothing runs without your review.
 
-Website: **privacy.turtlecute.org**. HTTPS certificate provisioning is in progress.
+It is an actively maintained fork of the original
+[privacy.sexy](https://github.com/undergroundwires/privacy.sexy), rebuilt and
+updated for current operating systems.
+
+**➡️ Try it now: [privacy.turtlecute.org](https://privacy.turtlecute.org)**
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](./LICENSE)
-[![Original project](https://img.shields.io/badge/based_on-privacy.sexy-e91e63.svg)](https://github.com/undergroundwires/privacy.sexy)
+[![Based on privacy.sexy](https://img.shields.io/badge/based_on-privacy.sexy-e91e63.svg)](https://github.com/undergroundwires/privacy.sexy)
 
-[![Privacy.sexy interface](img/screenshot.png)](img/screenshot.png)
+[![privacy.sexy Revamped interface: build privacy and debloat scripts for Windows, macOS, and Linux](img/screenshot.png)](https://privacy.turtlecute.org)
 
 ## Why I revived this
 
@@ -64,14 +71,17 @@ browser, and the website does not execute system changes for you.
 
 ## Features
 
-- **Windows, macOS, and Linux support**
-- **A searchable library of privacy and security tweaks**
-- **Plain-language documentation and source links**
-- **Standard and strict recommendation levels**
-- **Full visibility into every generated command**
-- **Revert commands for supported changes**
-- **Copy or download scripts without an account**
-- **Open-source code, scripts, tests, and build process**
+- **Windows, macOS, and Linux** privacy and security tweaks in one place
+- **Debloat Windows 10 and Windows 11** — remove preinstalled apps and bloatware
+- **Disable telemetry and tracking**, including modern Windows AI features such
+  as Recall, Click to Do, and Copilot
+- **Harden macOS and Linux** privacy and security settings
+- **Searchable catalog** with plain-language documentation and source links
+- **Standard and strict** recommendation presets
+- **Full visibility** into every generated command before you run it
+- **Revert commands** for supported changes
+- **Copy or download** scripts with no account and no install
+- **Fully open source** — code, scripts, tests, and build process
 
 ## A note on safety
 
