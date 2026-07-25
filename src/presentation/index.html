@@ -331,6 +331,8 @@
       .splash-screen__logo {
         width: auto;
         height: var(--splash-size-logo);
+        position: relative;
+        /* Paints above the absolutely positioned spinner, whose box covers the logo */
       }
 
       .splash-screen--js-only {
