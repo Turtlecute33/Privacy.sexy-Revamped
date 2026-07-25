@@ -669,7 +669,7 @@ actions:
                 docs: This script clears the temporary cache and does not cause any user data loss.
                 code: |-
                   # Global installation
-                  rm -rfv /.cache/epiphany/*
+                  rm -rfv ~/.cache/epiphany/*
                   # Flatpak installation
                   rm -rfv ~/.var/app/org.gnome.Epiphany/cache/*
                   # Snap installation
@@ -929,6 +929,34 @@ actions:
             code: |-
               sudo rm -rfv /var/crash/*
               sudo rm -rfv /var/lib/systemd/coredump/
+          -
+            name: Clear system logs (`journald`)
+            docs: |-
+              journald is the part of systemd that captures, queries, and removes logs when needed [1].
+              It allows removing logs by setting `--vacuum-time` [2].
+
+              systemd is also known as "System and Service Manager" and is a suite of basic building blocks for a Linux system [3].
+              systemd keeps files in two places: `/var/log/journal/` (persistently) and `/run/log/journal/` (volatilely, the data is lost when the system is rebooted) [4].
+
+              > **Caution:** This action cannot be undone. System logs are the primary source for diagnosing boot failures,
+              > service crashes and hardware faults, so clear them only when you no longer need them for troubleshooting.
+
+              [1]: https://web.archive.org/web/20221029211624/https://docs.google.com/document/pub?id=1IC9yOXj7j6cdLLxWEBAGRL6wl97tFxgjLUEHIX3MSTs&pli=1 "Paper announcing journald | docs.google.com"
+              [2]: https://web.archive.org/web/20221029150611/https://wiki.archlinux.org/title/Systemd/Journal#Clean_journal_files_manually "systemd/Journal - ArchWiki | Arch Linux documentation | archlinux.org | wiki.archlinux.org"
+              [3]: https://web.archive.org/web/20221026211029/https://systemd.io/ "Systemd Homepage | systemd.io"
+              [4]: https://web.archive.org/web/20221029150659/https://www.freedesktop.org/software/systemd/man/systemd-journald.service.html "systemd-journald.service | freedesktop.org"
+            call:
+              -
+                function: RunIfCommandExists
+                parameters:
+                  command: journalctl
+                  code: sudo journalctl --vacuum-time=1s
+              -
+                function: RunInlineCode
+                parameters:
+                  code: |-
+                    sudo rm -rfv /run/log/journal/*
+                    sudo rm -rfv /var/log/journal/*
       -
         category: Clear recently used files list
         docs: |-
@@ -955,7 +983,7 @@ actions:
               [5]: https://web.archive.org/web/20221029151534/https://github.com/electron/electron/issues/2927 "Consider replacing GTK2 w GTK3 in Linux builds · Issue #2927 · electron/electron | GitHub"
             code: |-
               # From global installations
-              rm -fv /.recently-used.xbel
+              rm -fv ~/.recently-used.xbel
               rm -fv ~/.local/share/recently-used.xbel*
               # From snap packages
               rm -fv ~/snap/*/*/.local/share/recently-used.xbel
@@ -1003,6 +1031,29 @@ actions:
           rm -rfv ~/snap/*/*/.local/share/Trash/*
           # Empty Flatpak trash (apps may not choose to use Portal API)
           rm -rfv ~/.var/app/*/data/Trash/*
+      -
+        name: Clear global temporary folders
+        docs: |-
+          A temporary folder or temporary directory is a directory used to hold temporary files [1].
+
+          In Unix and Linux, the global temporary directories are `/tmp` [2] and `/var/tmp` [1]. Typically,
+          `/var/tmp` is for persistent files (as it may be preserved over reboots), and `/tmp` is for more
+          temporary files [1].
+
+          Programs do not assume that any files or directories in temporary folders are preserved between
+          invocations of the program, and these files may be deleted after reboot and in a site-specific manner [2].
+
+          > **Caution:** Running applications may be using files in these directories. Clearing them while a
+          > session is active can make running programs misbehave until they are restarted. Running this
+          > script right after a reboot avoids that.
+
+          See also: [Filesystem Hierarchy Standard](https://web.archive.org/web/20221029152204/https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch03s18.html).
+
+          [1]: https://web.archive.org/web/20221029152135/https://en.wikipedia.org/wiki/Temporary_folder "Temporary folder | Wikipedia | en.wikipedia.org"
+          [2]: https://web.archive.org/web/20221029152204/https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch03s18.html "Filesystem Hierarchy Standard | LinuxFoundation.org"
+        code: |-
+          sudo rm -rfv /tmp/*
+          sudo rm -rfv /var/tmp/*
       -
         category: Clear package manager data
         docs: |-
@@ -1185,6 +1236,22 @@ actions:
                   [2]: https://web.archive.org/web/20221029154335/https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=775163 "#775163 - apt pigs out in /var, particularly with multi-arch - Debian Bug report logs | bugs.debian.org"
                 code: sudo rm -rfv /var/lib/apt/lists/*
               -
+                name: Clear orphaned APT package dependencies
+                recommend: standard
+                docs: |-
+                  This script runs the `autoremove` command, which removes packages that were automatically installed
+                  to satisfy dependencies for other packages and are now no longer needed [1].
+
+                  This script also purges removed packages, which means that the configuration files of the removed
+                  packages are deleted too [1].
+
+                  [1]: https://web.archive.org/web/20221029153705/https://manpages.ubuntu.com/manpages/jammy/en/man8/apt-get.8.html "Ubuntu Manpage: apt-get - APT package handling utility | manpages.ubuntu.com"
+                call:
+                  function: RunIfCommandExists
+                  parameters:
+                    command: apt-get
+                    code: sudo apt-get -y autoremove --purge
+              -
                 name: Clear cache for APT packages
                 docs: |-
                   This script runs the `clean` command. It clears out the local repository of retrieved package files [1],
@@ -1325,6 +1392,131 @@ actions:
       Data collection and telemetry is not always a bad thing, and can help developers provide
       better software that can compete with proprietary and much more privacy-invasive alternatives.
     children:
+      -
+        category: Disable GNOME data collection
+        docs: |-
+          GNOME is the default desktop environment of many Linux distributions, including Debian, Fedora,
+          Ubuntu and Red Hat Enterprise Linux [1].
+
+          It exposes privacy-related preferences through GSettings [2], a configuration system that stores
+          per-user settings in a database called dconf [2]. These scripts change those preferences for the
+          user who runs the script.
+
+          Settings that do not exist on the current system are skipped, so these scripts are safe to run on
+          systems that do not use GNOME.
+
+          [1]: https://web.archive.org/web/20240720021226/https://en.wikipedia.org/wiki/GNOME "GNOME - Wikipedia | en.wikipedia.org"
+          [2]: https://web.archive.org/web/20240404013714/https://manpages.ubuntu.com/manpages/jammy/man1/gsettings.1.html "gsettings manual page | manpages.ubuntu.com"
+        children:
+          -
+            name: Disable GNOME software usage statistics
+            recommend: standard
+            docs: |-
+              This script stops GNOME from collecting and sending statistics about which software you use.
+
+              When enabled, GNOME Software submits a report of installed and used applications to a central
+              server [1]. The data is used to produce popularity information for the software catalogue [1].
+
+              Some distributions, notably Ubuntu, enable this setting by default [1].
+
+              If you do not run this script, your application usage continues to be reported.
+
+              [1]: https://web.archive.org/web/20240523104715/https://gitlab.gnome.org/GNOME/gnome-software/-/blob/main/data/org.gnome.software.gschema.xml "org.gnome.software.gschema.xml | GNOME GitLab | gitlab.gnome.org"
+            call:
+              function: SetGnomeSetting
+              parameters:
+                schema: org.gnome.desktop.privacy
+                key: send-software-usage-stats
+                value: 'false'
+                defaultValue: 'true'
+          -
+            name: Disable GNOME technical problem reports
+            recommend: standard
+            docs: |-
+              This script stops GNOME from automatically sending technical problem reports.
+
+              When enabled, crashes and other technical problems are submitted to the distribution vendor,
+              along with information about your system and the program that failed [1]. Crash reports can
+              contain memory contents, file paths and command-line arguments.
+
+              This setting is enabled by default [1].
+
+              If you do not run this script, technical problem reports continue to be submitted automatically.
+
+              [1]: https://web.archive.org/web/20240523105320/https://gitlab.gnome.org/GNOME/gsettings-desktop-schemas/-/blob/master/schemas/org.gnome.desktop.privacy.gschema.xml.in "org.gnome.desktop.privacy.gschema.xml.in | GNOME GitLab | gitlab.gnome.org"
+            call:
+              function: SetGnomeSetting
+              parameters:
+                schema: org.gnome.desktop.privacy
+                key: report-technical-problems
+                value: 'false'
+                defaultValue: 'true'
+          -
+            name: Disable GNOME location services
+            recommend: standard
+            docs: |-
+              This script disables the GNOME geolocation service.
+
+              When enabled, applications can ask GNOME for your physical location, which is determined using
+              nearby Wi-Fi networks and your IP address through the Mozilla Location Service [1].
+
+              If you do not run this script, applications can continue to request your location. Individual
+              applications still need your permission, but the service itself remains available.
+
+              [1]: https://web.archive.org/web/20240523105945/https://gitlab.gnome.org/GNOME/gsettings-desktop-schemas/-/blob/master/schemas/org.gnome.system.location.gschema.xml.in "org.gnome.system.location.gschema.xml.in | GNOME GitLab | gitlab.gnome.org"
+            call:
+              function: SetGnomeSetting
+              parameters:
+                schema: org.gnome.system.location
+                key: enabled
+                value: 'false'
+                defaultValue: 'true'
+          -
+            name: Disable GNOME recent files history
+            recommend: strict # Removes the "Recent" file list, which some users rely on
+            docs: |-
+              This script stops GNOME from recording the files you have recently opened.
+
+              GNOME keeps a list of recently used files and shows it in the "Recent" section of the Files
+              application and in the file chooser of many programs [1]. The list reveals which documents you
+              opened and when.
+
+              This setting is enabled by default [1]. Use it together with *Clear recently used files list* to
+              also remove the entries that were already recorded.
+
+              > **Consideration:** After running this script, the "Recent" list stays empty and applications can
+              > no longer offer your recently opened documents.
+
+              [1]: https://web.archive.org/web/20240523105320/https://gitlab.gnome.org/GNOME/gsettings-desktop-schemas/-/blob/master/schemas/org.gnome.desktop.privacy.gschema.xml.in "org.gnome.desktop.privacy.gschema.xml.in | GNOME GitLab | gitlab.gnome.org"
+            call:
+              function: SetGnomeSetting
+              parameters:
+                schema: org.gnome.desktop.privacy
+                key: remember-recent-files
+                value: 'false'
+                defaultValue: 'true'
+          -
+            name: Disable GNOME application usage history
+            recommend: strict # Reduces the quality of application search results
+            docs: |-
+              This script stops GNOME from recording which applications you use and how often.
+
+              GNOME keeps application usage data to order search results and to populate the list of frequently
+              used applications [1]. This builds a profile of your habits on the local system.
+
+              This setting is enabled by default [1].
+
+              > **Consideration:** After running this script, application search results are no longer ordered by
+              > how often you use them.
+
+              [1]: https://web.archive.org/web/20240523105320/https://gitlab.gnome.org/GNOME/gsettings-desktop-schemas/-/blob/master/schemas/org.gnome.desktop.privacy.gschema.xml.in "org.gnome.desktop.privacy.gschema.xml.in | GNOME GitLab | gitlab.gnome.org"
+            call:
+              function: SetGnomeSetting
+              parameters:
+                schema: org.gnome.desktop.privacy
+                key: remember-app-usage
+                value: 'false'
+                defaultValue: 'true'
       -
         category: Disable Debian telemetry
         docs: |-
@@ -1813,6 +2005,69 @@ actions:
                       if [ -f /etc/default/whoopsie ] ; then
                         sudo sed -i 's/report_crashes=false/report_crashes=true/' /etc/default/whoopsie
                       fi
+      -
+        name: Disable connectivity checks (breaks Captive Portal detection)
+        docs: |-
+          [NetworkManager](https://web.archive.org/web/20221029223230/https://developer-old.gnome.org/NetworkManager/stable/NetworkManager.conf.html) can try
+          to reach a web server after connecting to a network in order to determine if it is, e.g., behind a captive portal [1].
+
+          Disabling connectivity protects against privacy leaks [1], but breaks captive portal detection.
+
+          Connectivity URLs differ depending on the Linux distribution, e.g.:
+          - Arch Linux: `http://ping.archlinux.org/nm-check.txt` (in `/usr/lib/NetworkManager/conf.d/20-connectivity.conf`) [1].
+          - Ubuntu: `http://connectivity-check.ubuntu.com` [2] (in `/usr/lib/NetworkManager/conf.d/20-connectivity-ubuntu.conf` [3]).
+          - Pop!_OS: `http://204.pop-os.org/` in `20-connectivity-pop.conf` [4].
+          - Fedora: `http://fedoraproject.org/static/hotspot.txt` [5] in `/usr/lib/NetworkManager/conf.d/20-connectivity-fedora.conf` [6].
+          - …
+
+          This script disables connectivity checks by adding a global rule that will override Linux distribution-specific configuration.
+          This is the recommended way to disable connectivity checks [1].
+
+          > **Caution:** Captive portal detection is what makes the "sign in to this network" page appear on
+          > public Wi-Fi. With connectivity checks off, those networks will look connected but carry no traffic
+          > until you open the portal page yourself. This is why the script is not part of any recommendation preset.
+
+          [1]: https://web.archive.org/web/20221029165948/https://wiki.archlinux.org/title/NetworkManager "NetworkManager - ArchWiki | wiki.archlinux.org"
+          [2]: https://web.archive.org/web/20221029170031/https://launchpad.net/ubuntu/jammy/+package/network-manager-config-connectivity-ubuntu "network-manager-config-connectivity-ubuntu : Jammy (22.04) : Ubuntu | launchpad.net/ubuntu"
+          [3]: https://web.archive.org/web/20221029170026/https://packages.ubuntu.com/bionic/all/network-manager-config-connectivity-ubuntu/filelist "Ubuntu - File list of package network-manager-config-connectivity-ubuntu/bionic/all | packages.ubuntu.com"
+          [4]: https://web.archive.org/web/20221029170108/https://github.com/pop-os/connectivity/blob/master/debian/20-connectivity-pop.conf "connectivity/20-connectivity-pop.conf at master · pop-os/connectivity | github.com"
+          [5]: https://web.archive.org/web/20221029170202/https://cgit.freedesktop.org/NetworkManager/NetworkManager/tree/contrib/fedora/rpm/20-connectivity-fedora.conf "20-connectivity-fedora.conf\rpm\fedora\contrib - NetworkManager/NetworkManager - Network connection manager and user applications | reedesktop.org"
+          [6]: https://archive.ph/2023.12.06-185917/https://pkgs.org/download/NetworkManager-config-connectivity-fedora "Networkmanager-config-connectivity-fedora Download (RPM) | pkgs.org"
+        call:
+          function: RunIfCommandExists
+          parameters:
+            command: /usr/sbin/NetworkManager
+            code: |-
+              file='/etc/NetworkManager/conf.d/20-disable-connectivity-privacy-sexy.conf'
+              content=$'# Created by privacy.sexy\n[connectivity]\nenabled=false'
+              directory="${file%/*}"
+              sudo mkdir -p "$directory"
+              if [ -f "$file" ]; then
+                echo "Skipping, connectivity checks are already disabled through $file."
+              else
+                echo -n "$content" | sudo tee "$file" > /dev/null
+                echo 'Successfully disabled connectivity checks.'
+              fi
+              if command -v 'nmcli' &> /dev/null; then
+                sudo nmcli general reload
+                echo 'Successfully reloaded configuration.'
+              else
+                echo 'It will take effect after reboot.'
+              fi
+            revertCode: |-
+              file='/etc/NetworkManager/conf.d/20-disable-connectivity-privacy-sexy.conf'
+              if [ ! -f "$file" ]; then
+                echo 'Skipping, connectivity checks are not disabled.'
+              else
+                sudo rm -fv "$file"
+                echo 'Successfully restored connectivity checks.'
+              fi
+              if command -v 'nmcli' &> /dev/null; then
+                sudo nmcli general reload
+                echo 'Successfully reloaded configuration.'
+              else
+                echo 'It will take effect after reboot.'
+              fi
   -
     category: Configure programs
     docs: |-
@@ -1936,6 +2191,38 @@ actions:
                       jsonValue: >-
                         false
             -
+              name: Disable Visual Studio Code automatic updates in favor of manual updates
+              docs: |-
+                By default, VS Code is configured to automatically update when new versions are released [1].
+                Automatic updates reduce your control over privacy by sending data to Microsoft servers.
+
+                On Linux, updates are often handled by the system package manager, rendering this
+                setting redundant [1].
+
+                To opt out of auto-updates, the Update: Mode (`update.mode`) setting is changed from default
+                to none [1]. `update.mode` has replaced the older `update.channel` setting [2] [3].
+
+                > **Caution:** With updates turned off you no longer receive security fixes for the editor
+                > itself. Update manually on a regular basis. This is why the script is not part of any
+                > recommendation preset.
+
+                [1]: https://web.archive.org/web/20221029171537/https://github.com/microsoft/vscode-docs/blob/9a900b380e11530376104ffc83a004b82553728e/docs/supporting/faq.md#how-do-i-opt-out-of-vs-code-auto-updates "vscode-docs/faq.md at 9a900b380e11530376104ffc83a004b82553728e · microsoft/vscode-docs · GitHub | github.com"
+                [2]: https://web.archive.org/web/20221029171549/https://github.com/microsoft/vscode/blob/8e2ec5a7ee1ae5500c645c05145359f2a814611c/src/vs/platform/update/common/update.config.contribution.ts#L36-L42 "vscode/update.config.contribution.ts at 8e2ec5a7ee1ae5500c645c05145359f2a814611c · microsoft/vscode · GitHub | github.com"
+                [3]: https://web.archive.org/web/20221029171607/https://github.com/microsoft/vscode/issues/70084 'VS Code 1.31.1 does not respect "update.channel": "none" · Issue #70084 · microsoft/vscode · GitHub | github.com'
+              call:
+                -
+                  function: SetVsCodeSetting
+                  parameters:
+                      setting: update.mode
+                      jsonValue: >-
+                          "none"
+                -
+                  function: SetVsCodeSetting
+                  parameters:
+                      setting: update.channel
+                      jsonValue: >-
+                          "none"
+            -
               name: Disable fetching release notes from Microsoft servers after an update
               docs: |-
                 This script prevents Visual Studio Code from displaying release notes after an update [1].
@@ -1952,6 +2239,90 @@ actions:
                       setting: update.showReleaseNotes
                       jsonValue: >-
                         false
+            -
+              category: Configure auto-update settings for Visual Studio Code extensions
+              docs: |-
+                These scripts control the automatic update behavior of extensions.
+                Updates are fetched from Microsoft servers [1] [2].
+
+                Use of online Microsoft services can disclose information about you and your behavior.
+
+                > **Caution:** Extensions receive security fixes through these updates. Turning the updates off
+                > means you must check for extension updates yourself, so none of these scripts are part of a
+                > recommendation preset.
+
+                [1]: https://web.archive.org/web/20221029171704/https://github.com/microsoft/vscode/blob/b784e0514d4608cc20a0e7ce62baf7bc8131158c/src/vs/workbench/contrib/extensions/browser/extensions.contribution.ts#L135-L150 "vscode/extensions.contribution.ts at b784e0514d4608cc20a0e7ce62baf7bc8131158c · microsoft/vscode · GitHub | github.com"
+                [2]: https://web.archive.org/web/20221029171719/https://github.com/microsoft/vscode-docs/blob/9a900b380e11530376104ffc83a004b82553728e/docs/editor/extension-marketplace.md#extension-auto-update "vscode-docs/extension-marketplace.md at 9a900b380e11530376104ffc83a004b82553728e · microsoft/vscode-docs · GitHub | github.com"
+              children:
+                -
+                  name: Disable automatic Visual Studio Code extension updates
+                  docs: |-
+                    By default, Visual Studio Code automatically downloads and installs updates for all
+                    extensions [1]. These updates are fetched from a Microsoft online service [1].
+
+                    This script disables the automatic updating of installed extensions.
+                    It accomplishes this by setting `extensions.autoUpdate` to `false` [2].
+
+                    [1]: https://web.archive.org/web/20221029171704/https://github.com/microsoft/vscode/blob/b784e0514d4608cc20a0e7ce62baf7bc8131158c/src/vs/workbench/contrib/extensions/browser/extensions.contribution.ts#L135-L150 "vscode/extensions.contribution.ts at b784e0514d4608cc20a0e7ce62baf7bc8131158c · microsoft/vscode · GitHub | github.com"
+                    [2]: https://web.archive.org/web/20221029171719/https://github.com/microsoft/vscode-docs/blob/9a900b380e11530376104ffc83a004b82553728e/docs/editor/extension-marketplace.md#extension-auto-update "vscode-docs/extension-marketplace.md at 9a900b380e11530376104ffc83a004b82553728e · microsoft/vscode-docs · GitHub | github.com"
+                  call:
+                      function: SetVsCodeSetting
+                      parameters:
+                          setting: extensions.autoUpdate
+                          jsonValue: >-
+                            false
+                -
+                  name: Disable Visual Studio Code automatic extension update checks
+                  docs: |-
+                    By default, Visual Studio Code automatically checks extensions for updates [1].
+                    If an update for an extension is available, it is marked as outdated in the Extensions view [1].
+                    These updates are fetched from a Microsoft online service [1].
+
+                    This script disables the automatic checking of updates for extensions.
+                    It achieves this by setting `extensions.autoCheckUpdates` to `false` [2].
+
+                    [1]: https://web.archive.org/web/20221029171704/https://github.com/microsoft/vscode/blob/b784e0514d4608cc20a0e7ce62baf7bc8131158c/src/vs/workbench/contrib/extensions/browser/extensions.contribution.ts#L152-L158 "vscode/extensions.contribution.ts at b784e0514d4608cc20a0e7ce62baf7bc8131158c · microsoft/vscode | github.com"
+                    [2]: https://web.archive.org/web/20221029171719/https://github.com/microsoft/vscode-docs/blob/9a900b380e11530376104ffc83a004b82553728e/docs/editor/extension-marketplace.md#extension-auto-update "vscode-docs/extension-marketplace.md at 9a900b380e11530376104ffc83a004b82553728e · microsoft/vscode-docs · GitHub | github.com"
+                  call:
+                      function: SetVsCodeSetting
+                      parameters:
+                          setting: extensions.autoCheckUpdates
+                          jsonValue: >-
+                            false
+                -
+                  name: Disable automatic fetching of Microsoft recommendations in Visual Studio Code
+                  # Not part of a preset: every script under this category is opt-in.
+                  docs: |-
+                    Visual Studio Code, by default, fetches extension recommendations from online Microsoft
+                    servers [1]. This script stops those requests, so recommendations are no longer pulled in
+                    the background.
+
+                    Two settings are written because the setting was renamed:
+
+                    - `extensions.ignoreRecommendations` is the current setting and suppresses the
+                      recommendation notifications [2].
+                    - `extensions.showRecommendationsOnlyOnDemand` is the older setting [1] [3]. It is written
+                      as well so that older Visual Studio Code versions are covered.
+
+                    This script does not turn off updates or security fixes; it only stops the editor from
+                    reaching out for suggestions.
+
+                    [1]: https://web.archive.org/web/20221029171704/https://github.com/microsoft/vscode/blob/b784e0514d4608cc20a0e7ce62baf7bc8131158c/src/vs/workbench/contrib/extensions/browser/extensions.contribution.ts#L164-L169 "vscode/extensions.contribution.ts at b784e0514d4608cc20a0e7ce62baf7bc8131158c · microsoft/vscode · GitHub | github.com"
+                    [2]: https://web.archive.org/web/20221029171719/https://github.com/microsoft/vscode-docs/blob/9a900b380e11530376104ffc83a004b82553728e/docs/editor/extension-marketplace.md#extension-auto-update "vscode-docs/extension-marketplace.md at 9a900b380e11530376104ffc83a004b82553728e · microsoft/vscode-docs · GitHub | github.com"
+                    [3]: https://web.archive.org/web/20221029171802/https://github.com/microsoft/vscode/issues/94416 "Combine extensions.ignoreRecommendations and extensions.showRecommendationsOnlyOnDemand · Issue #94416 · microsoft/vscode · GitHub | github.com"
+                  call:
+                      -
+                        function: SetVsCodeSetting
+                        parameters:
+                            setting: extensions.ignoreRecommendations
+                            jsonValue: >-
+                              true
+                      -
+                        function: SetVsCodeSetting
+                        parameters:
+                            setting: extensions.showRecommendationsOnlyOnDemand
+                            jsonValue: >-
+                              true
             -
               name: Disable automatic fetching of remote repositories in Visual Studio Code
               docs: |-
@@ -2021,7 +2392,7 @@ actions:
                 a feature that fetches `@types` packages from npm to improve IntelliSense for external libraries [1].
 
                 Although this feature is disabled by default [2], you can ensure it's off by setting
-                `typescript.disableAutomaticTypeAcquisition` to `false` [2].
+                `typescript.disableAutomaticTypeAcquisition` to `true` [2].
 
                 [1]: https://web.archive.org/web/20221029172348/https://github.com/microsoft/vscode/blob/3c37a5a8d7768ea068acf578594f9b71cfbe81e1/extensions/typescript-language-features/package.nls.json#L13 "vscode/package.nls.json at 3c37a5a8d7768ea068acf578594f9b71cfbe81e1 · microsoft/vscode · GitHub | github.com"
                 [2]: https://web.archive.org/web/20221029172429/https://github.com/microsoft/vscode/blob/29e985eca0713c8458ae8349c1742d6fb75719e4/extensions/typescript-language-features/package.json "vscode/package.json at 29e985eca0713c8458ae8349c1742d6fb75719e4 · microsoft/vscode · GitHub | github.com"
@@ -2030,7 +2401,7 @@ actions:
                 parameters:
                     setting: typescript.disableAutomaticTypeAcquisition
                     jsonValue: >-
-                      false
+                      true
             -
               name: Disable Visual Studio Code Edit Sessions
               docs: |-
@@ -2726,6 +3097,291 @@ actions:
                   parameters:
                     prefName: toolkit.telemetry.pioneerId
                     jsonValue: '""'
+          -
+            name: Disable connection tests (breaks automatic Wi-Fi login)
+            docs: |-
+              This script turns off the Firefox Captive Portal detection feature.
+
+              Firefox uses this feature to determine if a network connection requires a login, such as a
+              public Wi-Fi hotspot [1]. The test involves initiating an outgoing connection to Mozilla servers [1].
+
+              By default, these connection attempts occur at regular intervals [2][3].
+
+              This functionality could potentially expose your usage habits [4]. For instance, a public venue
+              like a hotel or restaurant might require you to input a password for internet access. If such a
+              portal is in place and blocking traffic, this feature prevents all other connection attempts,
+              possibly revealing your usage habits.
+
+              See also: [Captive portal | Wikipedia](https://web.archive.org/web/20221029163002/https://en.wikipedia.org/wiki/Captive_portal).
+
+              This script sets `network.captive-portal-service.enabled` to 'false', thereby disabling automatic
+              connections [1].
+
+              > **Caution:** Firefox will no longer offer to open the sign-in page of a public Wi-Fi network,
+              > so you have to navigate to it yourself. This is why the script is not part of any
+              > recommendation preset.
+
+              [1]: https://web.archive.org/web/20221025194630/https://support.mozilla.org/en-US/kb/how-stop-firefox-making-automatic-connections#w_network-detection "How to stop Firefox from making automatic connections | Firefox Help | support.mozilla.org"
+              [2]: https://web.archive.org/web/20221025201801/https://bugzilla.mozilla.org/show_bug.cgi?id=1363651 "1363651 - http://detectportal.firefox.com/ is hammering our firewalls | bugzilla.mozilla.org"
+              [3]: https://web.archive.org/web/20221025201846/https://bugzilla.mozilla.org/show_bug.cgi?id=1359697#c3 "1359697 - Don't poll for captive portal detection | bugzilla.mozilla.org"
+              [4]: https://web.archive.org/web/20221025162743/https://wiki.archlinux.org/title/Firefox/Privacy "Firefox/Privacy - ArchWiki | wiki.archlinux.org"
+            call:
+              function: AddFirefoxPrefs
+              parameters:
+                prefName: network.captive-portal-service.enabled
+                jsonValue: 'false'
+          -
+            category: Disable Firefox Phishing Protection (Safe Browsing) (decreases security)
+            docs: |-
+              Firefox's Safe Browsing feature, now referred to as Phishing Protection, is still internally
+              recognized as "Safe Browsing" [1].
+
+              To provide protection against phishing and malware, Firefox transmits the following data:
+
+              1. Partial address information for visited webpages [2].
+              2. Details such as name, origin, size, and hash of contents for downloaded files [2].
+
+              This data is sent to Google Safe Browsing [2] to aid in issuing warnings for downloaded files and
+              visited sites [2].
+
+              While Phishing Protection bolsters your security, it may decrease your privacy as it involves
+              sending data about the websites you visit and files you download to Google [1][2].
+
+              There have been concerns about the potential for Google Safe Browsing to be used for censorship
+              in the future, although this has not occurred as of yet [3].
+
+              > **Caution:** Turning these protections off removes Firefox's warnings about phishing sites and
+              > malicious downloads. None of these scripts belong to a recommendation preset; select them only
+              > if you understand and accept the trade-off.
+
+              [1]: https://web.archive.org/web/20221026164502/https://wiki.mozilla.org/Security/Safe_Browsing "Security/Safe Browsing - MozillaWiki | wiki.mozilla.org"
+              [2]: https://web.archive.org/web/20221025193000/https://support.mozilla.org/en-US/kb/how-does-phishing-and-malware-protection-work#w_what-information-is-sent-to-mozilla-or-its-partners-when-phishing-and-malware-protection-is-enabled
+              [3]: https://web.archive.org/web/20221025192516/https://www.usnews.com/opinion/articles/2016-06-22/google-is-the-worlds-biggest-censor-and-its-power-must-be-regulated "Google Is the World's Biggest Censor and Its Power Must Be Regulated | usnews.com"
+            children:
+              -
+                name: Disable blocking of unstable plugins in Firefox
+                docs: |-
+                  This script sets `browser.safebrowsing.blockedURIs.enabled` to 'false', thereby disabling plugin
+                  stability blocking [1].
+
+                  Disabling this feature might have mixed implications:
+
+                  - Disabling the blocking of unstable plugins can potentially expose the user to vulnerabilities associated with these plugins.
+                  These plugins may include malware, which would compromise user privacy and data.
+                  - It removes the need for data communication via Mozilla servers `addons.mozilla.org` for list retrieval [2]. This feature requires
+                  frequent requests to download large amount of data.
+
+                  If this blocking is removed, the user should be knowledgeable about the potential risks and will take precautions.
+
+                  [1]: https://web.archive.org/web/20221026164502/https://wiki.mozilla.org/Security/Safe_Browsing#Prefs "Security/Safe Browsing - MozillaWiki | wiki.mozilla.org"
+                  [2]: https://web.archive.org/web/20230811024650/https://blog.mozilla.org/addons/2020/08/24/introducing-a-scalable-add-ons-blocklist/ "Introducing a scalable add-ons blocklist | Mozilla Add-ons Community Blog"
+                call:
+                  function: AddFirefoxPrefs
+                  parameters:
+                    prefName: browser.safebrowsing.blockedURIs.enabled
+                    jsonValue: 'false'
+              -
+                name: Disable Firefox application reputation checks for downloads
+                docs: |-
+                  This script pertains to a feature that safeguards users from malware downloads [1].
+
+                  This protective measure operates by transmitting downloaded URL and file data to
+                  Google's servers [3].
+
+                  The script modifies `browser.safebrowsing.downloads.enabled` to a disabled state.
+                  This adjustment consequently disables application reputation checks for downloaded files [1] [2].
+                  Inhibiting this feature concurrently disables remote lookups
+                  (`browser.safebrowsing.downloads.remote.enabled`) [1].
+
+                  Read more: [Security/Features/Application Reputation Design Doc | wiki.mozilla.org](https://web.archive.org/web/20221025204612/https://wiki.mozilla.org/Security/Features/Application_Reputation_Design_Doc)
+
+                  [1]: https://web.archive.org/web/20221025204436/https://wiki.mozilla.org/Security/Download_Protection "Security/Download Protection - MozillaWiki | wiki.mozilla.org"
+                  [2]: https://web.archive.org/web/20221025162743/https://wiki.archlinux.org/title/Firefox/Privacy#Disable_.27Safe_Browsing.27_service "Firefox/Privacy - ArchWiki | wiki.archlinux.org"
+                  [3]: https://web.archive.org/web/20221025204612/https://wiki.mozilla.org/Security/Features/Application_Reputation_Design_Doc "Security/Features/Application Reputation Design Doc - MozillaWiki | wiki.mozilla.org"
+                call:
+                  function: AddFirefoxPrefs
+                  parameters:
+                    prefName: browser.safebrowsing.downloads.enabled
+                    jsonValue: 'false'
+              -
+                name: Disable Firefox malware protection
+                docs: |-
+                  Mozilla Firefox maintains a list of known malware, and checks user downloads against
+                  this list [1]. If the user downloads a file that matches an entry in the list, a warning
+                  can be displayed [1].
+
+                  This script modifies `browser.safebrowsing.malware.enabled` to a disabled state.
+                  This preference dictates whether to enable malware checks [1].
+                  Disabling it halts the downloading of malware blacklists and ceases checks on downloads [1].
+                  It is active by default [1].
+
+                  Note that disabling this protection disrupts application reputation checks for downloaded files,
+                  since it relies on this feature [2].
+
+                  [1]: https://web.archive.org/web/20221025211950/https://kb.mozillazine.org/Browser.safebrowsing.malware.enabled "Browser.safebrowsing.malware.enabled - MozillaZine Knowledge Base | kb.mozillazine.org"
+                  [2]: https://web.archive.org/web/20221025204436/https://wiki.mozilla.org/Security/Download_Protection "Security/Download Protection - MozillaWiki | wiki.mozilla.org"
+                call:
+                  function: AddFirefoxPrefs
+                  parameters:
+                    prefName: browser.safebrowsing.malware.enabled
+                    jsonValue: 'false'
+              -
+                name: Disable Firefox phishing protection
+                docs: |-
+                  This script modifies `browser.safebrowsing.phishing.enabled` to a disabled state.
+                  This preference determines whether to enable phishing protection [1] [2].
+
+                  It is active by default [2].
+
+                  [1]: https://web.archive.org/web/20221026164502/https://wiki.mozilla.org/Security/Safe_Browsing#Prefs "Security/Safe Browsing - MozillaWiki | wiki.mozilla.org"
+                  [2]: https://web.archive.org/web/20221029173442/https://github.com/mozilla/policy-templates/blob/master/README.md#preferences "policy-templates/README.md at master · mozilla/policy-templates · GitHub | github.com"
+                call:
+                  function: AddFirefoxPrefs
+                  parameters:
+                    prefName: browser.safebrowsing.phishing.enabled
+                    jsonValue: 'false'
+  -
+    category: Security improvements
+    docs: |-
+      These scripts harden the system against attacks that try to read information they should not have
+      access to, and reduce the amount of information the system exposes about itself.
+
+      They configure kernel parameters through `sysctl` [1]. Values are written to a dedicated file in
+      `/etc/sysctl.d/` so that files owned by your distribution are never modified, and are applied to the
+      running kernel immediately [2].
+
+      [1]: https://web.archive.org/web/20240523090109/https://man7.org/linux/man-pages/man5/sysctl.d.5.html "sysctl.d manual page | man7.org"
+      [2]: https://web.archive.org/web/20240418183746/https://man7.org/linux/man-pages/man8/sysctl.8.html "sysctl manual page | man7.org"
+    children:
+      -
+        category: Improve network privacy
+        children:
+          -
+            name: Enable IPv6 privacy extensions
+            recommend: standard
+            docs: |-
+              This script makes your computer use temporary, randomly generated IPv6 addresses for outgoing
+              connections.
+
+              By default, many systems build an IPv6 address from a stable interface identifier. Because that
+              identifier does not change, every website you visit over IPv6 can link your requests together and
+              recognise your device across networks and over long periods of time [1].
+
+              Privacy extensions add a temporary address that is regenerated periodically and used for outgoing
+              connections instead [1] [2]. Setting the value to `2` enables them and prefers the temporary
+              address [2].
+
+              If you do not run this script, your IPv6 traffic may continue to carry a stable, device-specific
+              address.
+
+              [1]: https://web.archive.org/web/20240523111426/https://www.rfc-editor.org/rfc/rfc8981.html "RFC 8981: Temporary Address Extensions for Stateless Address Autoconfiguration in IPv6 | www.rfc-editor.org"
+              [2]: https://web.archive.org/web/20240523112038/https://www.kernel.org/doc/html/latest/networking/ip-sysctl.html "IP sysctl | The Linux Kernel documentation | www.kernel.org"
+            call:
+              -
+                function: SetKernelParameter
+                parameters:
+                  key: net.ipv6.conf.all.use_tempaddr
+                  value: '2'
+                  defaultValue: '0'
+              -
+                function: SetKernelParameter
+                parameters:
+                  key: net.ipv6.conf.default.use_tempaddr
+                  value: '2'
+                  defaultValue: '0'
+      -
+        category: Harden the kernel
+        children:
+          -
+            name: Disable unprivileged access to kernel logs
+            recommend: standard
+            docs: |-
+              This script restricts the kernel message buffer so that only administrators can read it.
+
+              The kernel log, readable with `dmesg`, can expose information about your hardware, connected
+              devices, file system paths and memory layout [1]. This information helps an attacker who already
+              has limited access on the system to learn more about it.
+
+              When this setting is `0`, any user can read the kernel log. Setting it to `1` restricts access to
+              users with the `CAP_SYSLOG` capability [1]. Some distributions, including Ubuntu, already use `1`.
+
+              If you do not run this script, any local user may be able to read the kernel log.
+
+              [1]: https://web.archive.org/web/20240523112610/https://www.kernel.org/doc/html/latest/admin-guide/sysctl/kernel.html "Documentation for /proc/sys/kernel/ | The Linux Kernel documentation | www.kernel.org"
+            call:
+              function: SetKernelParameter
+              parameters:
+                key: kernel.dmesg_restrict
+                value: '1'
+                defaultValue: '0'
+          -
+            name: Disable exposure of kernel memory addresses
+            recommend: standard
+            docs: |-
+              This script hides kernel memory addresses from files in `/proc` and from other interfaces.
+
+              Kernel pointers printed in `/proc` reveal where code and data live in memory. An attacker can use
+              them to defeat kernel address space layout randomisation and to build a reliable exploit [1].
+
+              When this setting is `0`, addresses are printed as-is. Setting it to `1` replaces them with zeros
+              for unprivileged users [1].
+
+              If you do not run this script, kernel memory addresses may remain readable by unprivileged users.
+
+              [1]: https://web.archive.org/web/20240523112610/https://www.kernel.org/doc/html/latest/admin-guide/sysctl/kernel.html "Documentation for /proc/sys/kernel/ | The Linux Kernel documentation | www.kernel.org"
+            call:
+              function: SetKernelParameter
+              parameters:
+                key: kernel.kptr_restrict
+                value: '1'
+                defaultValue: '0'
+          -
+            name: Disable process debugging by unrelated processes
+            recommend: strict # Prevents debuggers and profilers from attaching to already-running processes
+            docs: |-
+              This script prevents a program from inspecting the memory of another program unless it started it.
+
+              The `ptrace` interface lets one process read and modify another process's memory [1]. Malicious
+              software abuses it to steal passwords, session cookies and encryption keys directly out of the
+              memory of programs you are already running.
+
+              When this setting is `0`, any process running as your user can attach to any other process of
+              yours. Setting it to `1` allows attaching only to direct descendants [1]. Some distributions,
+              including Ubuntu, already use `1`.
+
+              > **Consideration:** Debuggers and profilers can no longer attach to an already-running process,
+              > for example `gdb --pid`. Starting a program from inside the debugger continues to work.
+
+              [1]: https://web.archive.org/web/20240523113523/https://www.kernel.org/doc/html/latest/admin-guide/LSM/Yama.html "Yama | The Linux Kernel documentation | www.kernel.org"
+            call:
+              function: SetKernelParameter
+              parameters:
+                key: kernel.yama.ptrace_scope
+                value: '1'
+                defaultValue: '0'
+          -
+            name: Disable unprivileged eBPF access
+            recommend: strict # Prevents unprivileged use of tracing and profiling tools that rely on eBPF
+            docs: |-
+              This script prevents unprivileged users from loading eBPF programs into the kernel.
+
+              eBPF lets user programs run code inside the kernel, which is used for tracing, profiling and
+              network filtering [1]. Because these programs run in the kernel, flaws in the verifier that checks
+              them have repeatedly been used to escalate privileges.
+
+              Setting this value to `1` requires administrator privileges to load eBPF programs [1]. Newer
+              kernels use `2` as their default, which already restricts unprivileged access.
+
+              > **Consideration:** Tracing and profiling tools that rely on eBPF need to be run as an
+              > administrator after this change.
+
+              [1]: https://web.archive.org/web/20240523112610/https://www.kernel.org/doc/html/latest/admin-guide/sysctl/kernel.html "Documentation for /proc/sys/kernel/ | The Linux Kernel documentation | www.kernel.org"
+            call:
+              function: SetKernelParameter
+              parameters:
+                key: kernel.unprivileged_bpf_disabled
+                value: '1'
+                defaultValue: '0'
 functions:
   -
     name: RunInlineCode
@@ -3227,6 +3883,7 @@ functions:
         echo "Skipping, \"$job_name\" cronjob is not found."
       fi
     revertCode: |-
+      job_name='{{ $jobName }}'
       cronjob_path="/etc/cron.daily/$job_name"
       if [[ -f "$cronjob_path" ]]; then
         if [[ -x "$cronjob_path" ]]; then
@@ -3430,3 +4087,151 @@ functions:
           code: |-
             glob_pattern="{{ $directoryGlob }}/*"
             {{ with $grantPermissions }}sudo {{ end }}rm -rfv $glob_pattern
+  -
+    name: RunAsTargetUser
+    # 💡 Purpose:
+    #   The generated script re-executes itself as root, but some settings are stored per-user (such as
+    #   GSettings/dconf values). Running those commands as root would write them to root's profile instead
+    #   of the profile of the person running the script.
+    #   This function defines a `run_as_target_user` helper that executes a command as the invoking user,
+    #   with access to their session bus when one is available.
+    # References:
+    #   - https://web.archive.org/web/20240705015216/https://man7.org/linux/man-pages/man1/sudo.1.html
+    #   - https://web.archive.org/web/20240523113114/https://dbus.freedesktop.org/doc/dbus-launch.1.html
+    parameters:
+      - name: code
+      - name: revertCode
+        optional: true
+    code: |-
+      target_user_id="$(id -u "$target_user" 2>/dev/null)"
+      if [ -z "$target_user_id" ]; then
+        >&2 echo "Failed to resolve the user ID of \"$target_user\"."
+      else
+        target_user_bus="/run/user/$target_user_id/bus"
+        run_as_target_user() {
+          if [ -S "$target_user_bus" ]; then
+            sudo -u "$target_user" env \
+              "XDG_RUNTIME_DIR=/run/user/$target_user_id" \
+              "DBUS_SESSION_BUS_ADDRESS=unix:path=$target_user_bus" \
+              "$@"
+          else
+            sudo -u "$target_user" env "XDG_RUNTIME_DIR=/run/user/$target_user_id" "$@"
+          fi
+        }
+        {{ $code }}
+      fi
+    revertCode: |-
+      {{ with $revertCode }}
+        target_user_id="$(id -u "$target_user" 2>/dev/null)"
+        if [ -z "$target_user_id" ]; then
+          >&2 echo "Failed to resolve the user ID of \"$target_user\"."
+        else
+          target_user_bus="/run/user/$target_user_id/bus"
+          run_as_target_user() {
+            if [ -S "$target_user_bus" ]; then
+              sudo -u "$target_user" env \
+                "XDG_RUNTIME_DIR=/run/user/$target_user_id" \
+                "DBUS_SESSION_BUS_ADDRESS=unix:path=$target_user_bus" \
+                "$@"
+            else
+              sudo -u "$target_user" env "XDG_RUNTIME_DIR=/run/user/$target_user_id" "$@"
+            fi
+          }
+          {{ . }}
+        fi
+      {{ end }}
+  -
+    name: SetGnomeSetting
+    # 💡 Purpose:
+    #   Configures a GNOME desktop setting through `gsettings` for the user running the script.
+    #   Settings that are not present on the current system are skipped instead of failing, so the script
+    #   remains safe to run on non-GNOME desktops.
+    # References:
+    #   - https://web.archive.org/web/20240404013714/https://manpages.ubuntu.com/manpages/jammy/man1/gsettings.1.html
+    parameters:
+      - name: schema
+      - name: key
+      - name: value
+      - name: defaultValue
+    call:
+      function: RunAsTargetUser
+      parameters:
+        code: |-
+          gnome_schema='{{ $schema }}'
+          gnome_key='{{ $key }}'
+          gnome_value='{{ $value }}'
+          if ! run_as_target_user gsettings writable "$gnome_schema" "$gnome_key" > /dev/null 2>&1; then
+            echo "Skipping, \"$gnome_schema $gnome_key\" is not available on this system."
+          elif run_as_target_user gsettings set "$gnome_schema" "$gnome_key" "$gnome_value"; then
+            echo "Successfully set \"$gnome_schema $gnome_key\" to \"$gnome_value\"."
+          else
+            >&2 echo "Failed to set \"$gnome_schema $gnome_key\" to \"$gnome_value\"."
+          fi
+        revertCode: |-
+          gnome_schema='{{ $schema }}'
+          gnome_key='{{ $key }}'
+          gnome_default_value='{{ $defaultValue }}'
+          if ! run_as_target_user gsettings writable "$gnome_schema" "$gnome_key" > /dev/null 2>&1; then
+            echo "Skipping, \"$gnome_schema $gnome_key\" is not available on this system."
+          elif run_as_target_user gsettings set "$gnome_schema" "$gnome_key" "$gnome_default_value"; then
+            echo "Successfully restored \"$gnome_schema $gnome_key\" to its default \"$gnome_default_value\"."
+          else
+            >&2 echo "Failed to restore \"$gnome_schema $gnome_key\" to \"$gnome_default_value\"."
+          fi
+  -
+    name: SetKernelParameter
+    # 💡 Purpose:
+    #   Configures a kernel parameter (`sysctl`) so that it applies immediately and persists across reboots.
+    #   The value is stored in a dedicated drop-in file so that distribution-owned configuration files are
+    #   never modified. Reverting removes the entry and restores the documented default value.
+    # References:
+    #   - https://web.archive.org/web/20240523090109/https://man7.org/linux/man-pages/man5/sysctl.d.5.html
+    #   - https://web.archive.org/web/20240418183746/https://man7.org/linux/man-pages/man8/sysctl.8.html
+    parameters:
+      - name: key
+      - name: value
+      - name: defaultValue
+    code: |-
+      kernel_key='{{ $key }}'
+      kernel_value='{{ $value }}'
+      config_file='/etc/sysctl.d/60-privacy-sexy.conf'
+      if ! command -v sysctl > /dev/null 2>&1; then
+        >&2 echo 'Cannot configure kernel parameters because "sysctl" is not found.'
+      else
+        if ! [ -e "$config_file" ] && ! sudo install --mode=644 /dev/null "$config_file"; then
+          >&2 echo "Failed to create \"$config_file\"."
+        elif ! sudo sed --in-place "\|^[[:space:]]*$kernel_key[[:space:]]*=|d" "$config_file"; then
+          >&2 echo "Failed to update \"$config_file\"."
+        elif ! printf '%s = %s\n' "$kernel_key" "$kernel_value" | sudo tee -a "$config_file" > /dev/null; then
+          >&2 echo "Failed to write \"$kernel_key\" to \"$config_file\"."
+        else
+          echo "Successfully persisted \"$kernel_key = $kernel_value\" in \"$config_file\"."
+        fi
+        if sudo sysctl --write "$kernel_key=$kernel_value" > /dev/null 2>&1; then
+          echo "Successfully applied \"$kernel_key = $kernel_value\" to the running kernel."
+        else
+          >&2 echo "Failed to apply \"$kernel_key\" to the running kernel; it applies after a reboot."
+        fi
+      fi
+    revertCode: |-
+      kernel_key='{{ $key }}'
+      kernel_default_value='{{ $defaultValue }}'
+      config_file='/etc/sysctl.d/60-privacy-sexy.conf'
+      if ! [ -e "$config_file" ]; then
+        echo "Skipping, \"$config_file\" does not exist."
+      elif ! sudo sed --in-place "\|^[[:space:]]*$kernel_key[[:space:]]*=|d" "$config_file"; then
+        >&2 echo "Failed to remove \"$kernel_key\" from \"$config_file\"."
+      else
+        echo "Successfully removed \"$kernel_key\" from \"$config_file\"."
+        if ! [ -s "$config_file" ]; then
+          sudo rm --force "$config_file"
+          echo "Removed \"$config_file\" because it no longer configures anything."
+        fi
+      fi
+      if ! command -v sysctl > /dev/null 2>&1; then
+        >&2 echo 'Cannot restore the kernel parameter because "sysctl" is not found.'
+      elif sudo sysctl --write "$kernel_key=$kernel_default_value" > /dev/null 2>&1; then
+        echo "Successfully restored \"$kernel_key\" to its default \"$kernel_default_value\"."
+      else
+        >&2 echo "Failed to restore \"$kernel_key\" to \"$kernel_default_value\"."
+      fi
