@@ -54,6 +54,14 @@ function getOptionalDevToolkitComponent(): Component | undefined {
 
 <style lang="scss">
 @use "@/presentation/assets/styles/main" as *;
+
+/*
+ * Emitted here, once, rather than from main.scss, which every component `@use`s and which would
+ * therefore duplicate these @font-face blocks per component. This style block is global (not
+ * scoped), and App.vue is always present, so this is the single place they reach the bundle.
+ */
+@use "@/presentation/assets/styles/fonts";
+
 #app {
   width: 100%;
   min-height: 100dvh;

@@ -128,6 +128,28 @@ async function stripRuntimeInjectedPreloads(page, builtHtml) {
   }
 }
 
+/*
+ * Ace injects its theme and editor stylesheets straight into `document.head` when the code
+ * editor chunk loads, so capturing the page after mount bakes ~36 KB of Ace CSS into the
+ * static HTML. Ace re-injects the same CSS at runtime when it actually loads, so the baked
+ * copy is dead weight on every cold load. Anything the build did not emit is runtime-injected
+ * and does not belong in the shipped HTML.
+ */
+async function stripRuntimeInjectedStyles(page, builtHtml) {
+  const buildEmittedStyles = [...builtHtml.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)]
+    .map(([, content]) => content.trim());
+  const removedBytes = await page.evaluate((allowedContents) => {
+    const styles = [...document.querySelectorAll('style')]
+      .filter((style) => !allowedContents.includes(style.textContent.trim()));
+    const bytes = styles.reduce((sum, style) => sum + style.textContent.length, 0);
+    styles.forEach((style) => style.remove());
+    return bytes;
+  }, buildEmittedStyles);
+  if (removedBytes > 0) {
+    console.log(`Removed ${Math.round(removedBytes / 1024)} KB of runtime-injected <style> CSS.`);
+  }
+}
+
 async function prerender() {
   if (!existsSync(INDEX_FILE)) {
     throw new Error(`Build output not found at ${INDEX_FILE}. Run the build first.`);
@@ -152,7 +174,9 @@ async function prerender() {
       APP_CONTENT_SELECTOR,
     );
     await assertPrerenderedOperatingSystem(page);
-    await stripRuntimeInjectedPreloads(page, await readFile(INDEX_FILE, 'utf8'));
+    const builtHtml = await readFile(INDEX_FILE, 'utf8');
+    await stripRuntimeInjectedPreloads(page, builtHtml);
+    await stripRuntimeInjectedStyles(page, builtHtml);
     const html = await page.content();
     if (!html.includes('app__wrapper')) {
       throw new Error('Prerendered HTML is missing app content; aborting to avoid deploying an empty page.');
