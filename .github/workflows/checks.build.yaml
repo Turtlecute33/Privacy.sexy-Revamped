@@ -41,7 +41,7 @@ jobs:
     strategy:
       matrix:
         os:
-          - macos-13 # Downgraded due to lack of nested virtualization support in ARM-based runners (See: actions/runner-images#9460, actions/runner-images#9741, abiosoft/colima#1023)
+          - macos-15-intel # Intel image, because ARM-based runners lack nested virtualization support (See: actions/runner-images#9460, actions/runner-images#9741, abiosoft/colima#1023). Replaces the retired macos-13, whose jobs never got a runner.
           - ubuntu-latest
           # - windows-latest # Windows runners do not support Linux containers
       fail-fast: false # Allows to see results from other combinations
@@ -74,4 +74,4 @@ jobs:
         run: >-
           node ./scripts/verify-web-server-status.js \
             --url http://localhost:8080  \
-            --max-retries ${{ matrix.os == 'macos' && '90' || '30' }}
+            --max-retries ${{ contains(matrix.os, 'macos') && '90' || '30' }}
