@@ -1529,7 +1529,7 @@ actions:
                             -
                                 name: Clear Webpage Icons
                                 recommend: standard
-                                docs: https://www.sans.org/blog/safari-browser-forensics/
+                                docs: https://web.archive.org/web/20250122175316/https://www.sans.org/blog/safari-browser-forensics/
                                 call:
                                     - # Windows XP
                                         function: DeleteFiles
@@ -6839,7 +6839,7 @@ actions:
                         recommend: standard
                         docs:
                             - https://web.archive.org/web/20230929130219/https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/rds-vdi-recommendations-2004
-                            - https://www.blogsdna.com/28017/how-to-disable-turn-off-suggested-content-on-windows-10-setting-app.htm
+                            - https://web.archive.org/web/20260209022138/https://www.blogsdna.com/28017/how-to-disable-turn-off-suggested-content-on-windows-10-setting-app.htm
                         call:
                             -
                                 function: SetRegistryValue
