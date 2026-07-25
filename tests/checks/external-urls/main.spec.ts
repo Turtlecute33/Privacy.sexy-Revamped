@@ -20,6 +20,16 @@ function main() {
       // Drops HEAD/GET requests via fetch/curl, responding to Postman/Chromium.
       // Matches both domains the same archive serves under.
       /^https:\/\/archive\.(ph|today)/,
+      /*
+        Wayback Machine snapshots are immutable permalinks: they do not rot the way the live
+        pages they preserve do, so failures here are rate limiting rather than broken docs.
+        They also outnumber every other URL by an order of magnitude, and same-domain requests
+        are serialized, which alone pushed the check past the CI job time limit.
+      */
+      /^https:\/\/web\.archive\.org/,
+      // Serves a Cloudflare interactive challenge (`cf-mitigated: challenge`) to any
+      // non-browser client, which no user agent or TLS impersonation can pass.
+      /^https:\/\/www\.thewindowsclub\.com/,
     ],
     application: app,
   });
@@ -35,6 +45,11 @@ function main() {
       requestTimeoutInMs: 60 /* sec */ * 1000,
       additionalHeaders: { referer: app.projectDetails.homepage },
       randomizeTlsFingerprint: true,
+      forceHttpGetForUrlPatterns: [
+        // Reject HEAD with `403` but serve `200` for GET.
+        /^https:\/\/apps\.microsoft\.com/,
+        /^https:\/\/thehackernews\.com/,
+      ],
     },
     followOptions: {
       followRedirects: true,

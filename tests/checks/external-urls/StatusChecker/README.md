@@ -78,6 +78,13 @@ console.log(`Status code: ${status.code}`);
   - Additional HTTP headers to send along with the default headers. Overrides default headers if specified.
 - **`requestTimeoutInMs`**  (*number*), default: `60000` (60 seconds)
   - Time limit to abort the request if no response is received within the specified time frame.
+- **`forceHttpGetForUrlPatterns`** (*array*), default: `[]`
+  - Specifies URL patterns that should always use an HTTP GET request instead of the default HTTP HEAD.
+  - This is useful for websites that do not respond to HEAD requests, such as those behind certain CDN or web application firewalls.
+  - Provide patterns as regular expressions (`RegExp`), allowing them to match any part of a URL.
+  - Examples:
+    - To match any URL starting with `https://example.com/api`: `/^https:\/\/example\.com\/api/`
+    - To match any domain ending with `cloudflare.com`: `/^https:\/\/.*\.cloudflare\.com\//`
 
 ### `fetchFollow`
 
@@ -100,10 +107,3 @@ console.log(`Status code: ${status.code}`);
 - **`enableCookies`** (*boolean*), default: `true`
   - Enables cookie storage to facilitate seamless navigation through login or other authentication challenges.
   - 💡 Helps to over-come sign-in challenges with callbacks.
-- **`forceHttpGetForUrlPatterns`** (*array*), default: `[]`
-  - Specifies URL patterns that should always use an HTTP GET request instead of the default HTTP HEAD.
-  - This is useful for websites that do not respond to HEAD requests, such as those behind certain CDN or web application firewalls.
-  - Provide patterns as regular expressions (`RegExp`), allowing them to match any part of a URL.
-  - Examples:
-    - To match any URL starting with `https://example.com/api`: `/^https:\/\/example\.com\/api/`
-    - To match any domain ending with `cloudflare.com`: `/^https:\/\/.*\.cloudflare\.com\//`
