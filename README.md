@@ -95,6 +95,13 @@ transparent tools and better defaults; the final decision is yours.
 For vulnerabilities in the application itself, read the
 [security policy](SECURITY.md).
 
+## On AI use
+
+I use AI assistance in developing this fork, including code, script research, and
+documentation. Nothing is merged unreviewed: generated changes are checked against
+vendor documentation and the test suite first. That matters most for the script
+catalog, where a wrong claim has consequences on someone's computer.
+
 ## Credits
 
 This project is based on
