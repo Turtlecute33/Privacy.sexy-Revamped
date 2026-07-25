@@ -1,6 +1,10 @@
 import { expectExists } from '@tests/shared/Assertions/ExpectExists';
 import { formatAssertionMessage } from '@tests/shared/FormatAssertionMessage';
-import { openCategory, selectFirstVisibleScript } from './support/interactions/category';
+import {
+  RevertToggleSelector,
+  openCategory,
+  selectFirstVisibleReversibleScript,
+} from './support/interactions/category';
 
 describe('revert toggle', () => {
   context('toggle switch', () => {
@@ -10,8 +14,8 @@ describe('revert toggle', () => {
         categoryIndex: 1, // the first one is often cleanup, which may lack revertible scripts
       });
       // Selecting first pins down the starting state, so the "Apply" assertion is unambiguous.
-      selectFirstVisibleScript();
-      cy.get('.toggle-switch')
+      selectFirstVisibleReversibleScript();
+      cy.get(RevertToggleSelector)
         .first()
         .as('toggleSwitch');
     });
