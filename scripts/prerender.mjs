@@ -161,6 +161,19 @@ async function prerender() {
   });
   try {
     const page = await browser.newPage();
+    /*
+     * The snapshot is produced by really loading the page, so the analytics tracker would run
+     * here and report a pageview for every build. Blocking the request keeps build machines out
+     * of the stats; nothing in the rendered output depends on it.
+     */
+    await page.setRequestInterception(true);
+    page.on('request', (request) => {
+      if (new URL(request.url()).origin === ORIGIN) {
+        request.continue();
+      } else {
+        request.abort();
+      }
+    });
     await page.setUserAgent(PRERENDER_USER_AGENT);
     await page.setViewport({ width: 1280, height: 900 });
     await page.goto(ORIGIN + '/', { waitUntil: 'domcontentloaded', timeout: READY_TIMEOUT_MS });

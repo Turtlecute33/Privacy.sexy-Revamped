@@ -68,7 +68,8 @@
   ">
   <meta name="referrer" content="no-referrer">
   <!-- Optional analytics must never block application startup or DOM readiness. -->
-  <script async src="https://umami.priorato.org/priorato"
+  <!-- The extension matters: the host serves the tracker at /priorato.js and returns 403 for /priorato. -->
+  <script async src="https://umami.priorato.org/priorato.js"
     data-website-id="9b0fe58d-35b1-4222-98f9-d7c0798eff18"></script>
 
   <!-- Structured data for search engines and AI answer engines -->
