@@ -30,6 +30,11 @@ function main() {
       // Serves a Cloudflare interactive challenge (`cf-mitigated: challenge`) to any
       // non-browser client, which no user agent or TLS impersonation can pass.
       /^https:\/\/www\.thewindowsclub\.com/,
+      // Answers `403` to GitHub runners: the block tracks the datacenter address rather
+      // than the request, so `forceHttpGetForUrlPatterns` cannot work around it. Every
+      // cited answer responds `200` from a residential connection, over both HEAD and
+      // GET, which makes a failure here a report on the runner, not a dead page.
+      /^https:\/\/stackoverflow\.com/,
     ],
     application: app,
   });
