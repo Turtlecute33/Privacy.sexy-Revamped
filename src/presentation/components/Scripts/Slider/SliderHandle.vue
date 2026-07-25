@@ -4,7 +4,6 @@
     class="handle"
     type="button"
     aria-label="Resize panels"
-    aria-orientation="vertical"
     @keydown="onKeydown"
   >
     <div class="line" />

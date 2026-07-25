@@ -106,7 +106,12 @@ export default defineComponent({
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: rgba($color-on-primary, 0.38);
+  /*
+   * 11px bold counts as normal-sized text for WCAG, so this needs 4.5:1 against the rail's
+   * $color-primary-darkest panel. 0.38 measured 3.45:1 and failed the audit; 0.55 gives 5.7:1
+   * while staying dimmer than the item labels above it, which sit at 0.72.
+   */
+  color: rgba($color-on-primary, 0.55);
 }
 
 .rail__list {
