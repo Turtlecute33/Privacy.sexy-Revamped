@@ -17,7 +17,9 @@ function main() {
   let urls = extractDocumentationUrls({
     logger: Logger,
     urlExclusionPatterns: [
-      /^https:\/\/archive\.ph/, // Drops HEAD/GET requests via fetch/curl, responding to Postman/Chromium.
+      // Drops HEAD/GET requests via fetch/curl, responding to Postman/Chromium.
+      // Matches both domains the same archive serves under.
+      /^https:\/\/archive\.(ph|today)/,
     ],
     application: app,
   });
