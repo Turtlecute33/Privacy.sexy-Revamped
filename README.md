@@ -1,19 +1,20 @@
 # privacy.sexy Revamped
 
-> Free, open-source tool to build privacy and security scripts that debloat and
-> harden Windows, macOS, and Linux.
+> Free, open-source script builder that debloats and hardens Windows, macOS,
+> and Linux.
 
-**privacy.sexy Revamped** is a web-based script builder for operating-system
-hardening. Pick the tweaks you want — debloat Windows, disable telemetry and
-tracking, remove preinstalled bloatware, and tighten macOS and Linux privacy —
-inspect the exact commands, then copy or download a script to run yourself.
-There is no account, no install, and nothing runs without your review.
+privacy.sexy Revamped builds privacy and security scripts for your operating
+system. Pick what you want changed: remove preinstalled Windows bloatware,
+disable telemetry and tracking, or tighten macOS and Linux privacy settings.
+Read the exact commands, then copy or download the script and run it yourself.
 
-It is an actively maintained fork of the original
-[privacy.sexy](https://github.com/undergroundwires/privacy.sexy), rebuilt and
-updated for current operating systems.
+You never create an account, and no script runs until you run it.
 
-**➡️ Try it now: [privacy.turtlecute.org](https://privacy.turtlecute.org)**
+This is an actively maintained fork of
+[privacy.sexy](https://github.com/undergroundwires/privacy.sexy), updated for
+current versions of Windows, macOS, and Linux.
+
+**[Open privacy.turtlecute.org](https://privacy.turtlecute.org)**
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](./LICENSE)
 [![Based on privacy.sexy](https://img.shields.io/badge/based_on-privacy.sexy-e91e63.svg)](https://github.com/undergroundwires/privacy.sexy)
@@ -97,10 +98,10 @@ For vulnerabilities in the application itself, read the
 
 ## On AI use
 
-I use AI assistance in developing this fork, including code, script research, and
-documentation. Nothing is merged unreviewed: generated changes are checked against
-vendor documentation and the test suite first. That matters most for the script
-catalog, where a wrong claim has consequences on someone's computer.
+I use AI assistance to develop this fork, including code, script research, and
+documentation. I review what it produces before merging, checking changes against
+vendor documentation and the test suite. This matters most in the script catalog,
+where a wrong claim can break someone's computer.
 
 ## Credits
 
