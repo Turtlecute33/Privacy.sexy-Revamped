@@ -34,7 +34,9 @@ function main() {
       // than the request, so `forceHttpGetForUrlPatterns` cannot work around it. Every
       // cited answer responds `200` from a residential connection, over both HEAD and
       // GET, which makes a failure here a report on the runner, not a dead page.
-      /^https:\/\/stackoverflow\.com/,
+      // The whole Stack Exchange network sits behind the same edge, so scoping this to
+      // `stackoverflow.com` only moved the failure to the next cited site.
+      /^https:\/\/(?:[a-z]+\.)?(?:stackoverflow|stackexchange|serverfault|superuser|askubuntu)\.com(?=[/?#]|$)/,
     ],
     application: app,
   });
