@@ -8,6 +8,10 @@ const PluginOptions = {
     'scoop.sh',
     'localhost',
     'web.archive.org',
+    // Answers `429` to GitHub runners, whose shared addresses exhaust the anonymous rate limit
+    // before the check runs. `dead-or-alive` never retries a 4xx, so `maxRetries` cannot absorb
+    // it, and a failure here reports the runner's address rather than a dead article.
+    'en.wikipedia.org',
   ].map(buildUrlPattern),
 };
 
