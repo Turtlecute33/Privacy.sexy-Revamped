@@ -1,15 +1,19 @@
 /* This class is not supposed to more than forwarding other styles */
 
 /*
- * "./fonts" is deliberately NOT forwarded here. Every component `@use`s this file from its own
- * `<style>` block, and each block is a separate Sass compilation unit, so anything that emits
- * CSS rules gets duplicated once per component. The @font-face blocks used to ship 34 times in
- * the built stylesheet. They are emitted once from App.vue's global style block instead.
+ * "./fonts" and "./base" are deliberately NOT forwarded here. Every component `@use`s this file
+ * from its own `<style>` block, and each block is a separate Sass compilation unit, so anything
+ * that emits CSS rules gets duplicated once per component. The @font-face blocks used to ship 34
+ * times in the built stylesheet; the element defaults in "./base" shipped 32 times, scoped to a
+ * `[data-v-*]` attribute that only narrowed rules the global copy already applies. Both are
+ * emitted once from App.vue's global style block instead.
+ *
+ * Only rule-emitting partials are affected. "./base" declares no mixins, functions, or variables
+ * of its own and forwards nothing, so dropping it here removes no API from `@use "main" as *`.
  */
 @forward "./typography";
 @forward "./media";
 @forward "./colors";
-@forward "./base";
 @forward "./spacing";
 @forward "./mixins";
 @forward "./motion";
