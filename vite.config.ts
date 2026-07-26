@@ -20,6 +20,20 @@ export function createVueConfig(options?: {
     build: {
       outDir: resolve(getSelfDirectoryAbsolutePath(), distDirs.web),
       emptyOutDir: true,
+      modulePreload: {
+        /*
+          Collection chunks are large (the Windows one dominates the bundle) and every visit
+          statically imports all three, so Vite preloads all of them at highest priority. That
+          competes with the stylesheet and entry chunk for bandwidth during the first round trip,
+          delaying the paint of the prerendered snapshot that `scripts/prerender.mjs` bakes in.
+          Dropping the hint does not remove the requests, only their head start: the module graph
+          still pulls each chunk in once the entry is parsed. Keep the hints for every other
+          dependency, which are small enough to be worth fetching early.
+        */
+        resolveDependencies: (_, dependencies) => dependencies.filter(
+          (dependency) => !isCollectionChunk(dependency),
+        ),
+      },
       rollupOptions: {
         output: {
           manualChunks(id) {
@@ -71,6 +85,11 @@ export default defineConfig(createVueConfig({
 function getCollectionChunkName(id: string): string | undefined {
   const collectionMatch = id.match(/\/collections\/(windows|macos|linux)\.yaml$/);
   return collectionMatch?.[1];
+}
+
+/* Matches the emitted file names of the chunks `manualChunks` above names `collection-<os>`. */
+function isCollectionChunk(fileName: string): boolean {
+  return /(?:^|\/)collection-(?:windows|macos|linux)-[^/]*\.js$/.test(fileName);
 }
 
 function getStaticHtmlMinificationOptions(): Parameters<typeof ViteMinifyPlugin>[0] {
