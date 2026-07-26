@@ -67,10 +67,23 @@
         block-all-mixed-content;
   ">
   <meta name="referrer" content="no-referrer">
-  <!-- Optional analytics must never block application startup or DOM readiness. -->
-  <!-- The extension matters: the host serves the tracker at /priorato.js and returns 403 for /priorato. -->
-  <script async src="https://umami.priorato.org/priorato.js"
-    data-website-id="9b0fe58d-35b1-4222-98f9-d7c0798eff18"></script>
+  <!--
+      Optional analytics must never block application startup, DOM readiness, or the `load` event.
+      Marking the tag `async` is not enough: a still-pending `async` script keeps delaying `load`,
+      so a slow or unreachable tracker host holds the event open for as long as the request hangs.
+      Injecting the element once `load` has fired keeps the tracker off the document's load path
+      entirely, because dynamically inserted scripts never delay it.
+      The extension matters: the host serves the tracker at /priorato.js and returns 403 for /priorato.
+    -->
+  <script>
+    addEventListener('load', () => {
+      const tracker = document.createElement('script');
+      tracker.async = true;
+      tracker.src = 'https://umami.priorato.org/priorato.js';
+      tracker.dataset.websiteId = '9b0fe58d-35b1-4222-98f9-d7c0798eff18';
+      document.head.appendChild(tracker);
+    }, { once: true });
+  </script>
 
   <!-- Structured data for search engines and AI answer engines -->
   <script type="application/ld+json">
