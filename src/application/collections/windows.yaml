@@ -8711,8 +8711,19 @@ actions:
                                 rundll32 "%PROGRAMFILES%\NVIDIA Corporation\Installer2\InstallerCore\NVI2.DLL",UninstallPackage NvTelemetry
                             )
                     -
-                        name: Remove Nvidia telemetry components
-                        recommend: standard
+                        name: Remove Nvidia telemetry components (breaks the NVIDIA app)
+                        recommend: strict
+                        docs: |-
+                            This script renames the telemetry libraries installed under `NVIDIA Corporation\NvTelemetry`.
+
+                            `nvcontainer.exe` (NVIDIA Container, which the NVIDIA app depends on) links `NvTelemetryAPI64.dll` and `NvTelemetryBridge64.dll` from
+                            this directory, and `NVDisplay.Container.exe` links `NvTelemetryAPI64.dll` as well. These are loaded as ordinary dependencies rather
+                            than optional plugins, so removing them stops the container from starting. Already-running services keep working after the rename,
+                            because Windows keeps a renamed file reachable through handles that are already open, which makes the breakage surface only on the next
+                            service restart or reboot.
+
+                            For a removal that does not affect the NVIDIA app, prefer `Remove Nvidia telemetry packages`, which hands the uninstall to NVIDIA's own
+                            installer, or `Disable participation in Nvidia telemetry`, which only writes registry values and touches no files.
                         call:
                             -
                                 function: SoftDeleteFiles
@@ -8727,12 +8738,20 @@ actions:
                     -
                         name: Disable Nvidia telemetry drivers
                         recommend: standard
+                        docs: |-
+                            This script renames the telemetry libraries that ship inside the NVIDIA driver packages held in the Windows driver store.
+
+                            Unlike `Remove Nvidia telemetry components`, these copies are not mapped at runtime: no running process loads a `NvTelemetry*.dll` from
+                            `System32\DriverStore\FileRepository`, so renaming them leaves the NVIDIA app and the display container unaffected. The driver store is
+                            the source Windows installs drivers from, so a driver update or repair can restore the files.
+
+                            The files are owned by `TrustedInstaller`, so `grantPermissions` is required; without it the rename fails with "Access is denied".
                         call:
                             function: SoftDeleteFiles
                             parameters:
                                 fileGlob: '%SYSTEMROOT%\System32\DriverStore\FileRepository\NvTelemetry*.dll'
                                 recurse: 'true'
-                                grantPermissions: 'true' # 🔒️ Protected on Windows 11 Pro (24H2): owned by `TrustedInstaller`, so renaming fails with "Access is denied" without this | Not tested on Windows 10
+                                grantPermissions: 'true' # 🔒️ Protected on Windows 11 Pro (24H2): owned by `TrustedInstaller` | Not tested on Windows 10
                     -
                         name: Disable participation in Nvidia telemetry
                         recommend: standard
