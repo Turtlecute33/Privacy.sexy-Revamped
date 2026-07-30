@@ -29,7 +29,7 @@ The steps:
 
 **❗ DON'T:**
 
-- Do not update the versions, current version is [set by the maintainer](./docs/ci-cd.md#gitops) and updated automatically by [bump-everywhere](https://github.com/undergroundwires/bump-everywhere).
+- Do not update the version in `package.json`; the maintainer sets it.
 
 Automated pipelines will run to control your PR and they will publish your code once the maintainer merges your PR.
 
@@ -69,7 +69,9 @@ There are two main types of releases:
 
 2. **Feature Releases:** These releases bring significant updates that change how users interact with privacy.sexy. They include major UI enhancements, the introduction of new scripts, and features. For these updates, we increment the minor number in the `MAJOR.MINOR.PATCH`.
 
-Maintainers tag specific commits with a version number to trigger a release, and [bump-everywhere](https://github.com/undergroundwires/bump-everywhere) automates the release process including updating version numbers throughout the project.
+There is no tagged release process: everything merged to `master` is built and deployed to the live site
+automatically. The version numbers above describe the *kind* of change a pull request makes, which is
+useful for writing its description, rather than a release it will ship in.
 
 ## Refactoring
 
