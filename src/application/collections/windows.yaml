@@ -1738,7 +1738,15 @@ actions:
                                     -
                                         name: Clear Windows Update Medic Service logs
                                         recommend: standard
-                                        docs: https://web.archive.org/web/20231206191736/https://answers.microsoft.com/en-us/windows/forum/all/what-is-this-waasmedic-and-why-it-required-to/e5e55a95-d5bb-4bf4-a7ce-4783df371de4
+                                        docs: |-
+                                            This script clears the log directory of the Windows Update Medic Service (`WaaSMedicSvc`), which repairs Windows Update components [1].
+
+                                            Known limitation: the `.etl` files in this directory are Event Tracing for Windows (ETW) trace files, held open by an active tracing session
+                                            rather than by the service process. They remain locked even when `WaaSMedicSvc` is stopped and disabled, so stopping the service beforehand
+                                            does not help. Locked files are skipped with a warning and the remaining contents are still cleared; clearing every file requires the tracing
+                                            session to be stopped first (for example from an offline or boot-time context).
+
+                                            [1]: https://web.archive.org/web/20231206191736/https://answers.microsoft.com/en-us/windows/forum/all/what-is-this-waasmedic-and-why-it-required-to/e5e55a95-d5bb-4bf4-a7ce-4783df371de4 "What is this waasmedic and why it required to ... | answers.microsoft.com"
                                         call:
                                             function: ClearDirectoryContents
                                             parameters:
@@ -1918,7 +1926,14 @@ actions:
                             -
                                 name: Clear user web cache database
                                 recommend: standard
-                                docs: https://web.archive.org/web/20240314130843/https://learn.microsoft.com/en-us/troubleshoot/windows-server/performance/performance-issues-custom-default-user-profile
+                                docs: |-
+                                    This script clears the WebCache database, which stores browsing history, cookies and cache metadata for WinINet consumers such as Internet Explorer [1].
+
+                                    Known limitation: `WebCacheV01.dat` and its transaction logs (`WebCacheV01.jfm`, `V01.log`) are held open for the lifetime of the interactive user
+                                    session, so they cannot be deleted while signed in. Locked files are skipped with a warning and the rest of the directory is still cleared; removing
+                                    them entirely requires running before the session starts or from another account.
+
+                                    [1]: https://web.archive.org/web/20240314130843/https://learn.microsoft.com/en-us/troubleshoot/windows-server/performance/performance-issues-custom-default-user-profile "Performance issues with a custom default user profile | Microsoft Learn"
                                 call:
                                     function: ClearDirectoryContents
                                     parameters:
@@ -2637,7 +2652,19 @@ actions:
             -
                 name: Remove associations of default apps
                 recommend: standard
-                code: dism /online /Remove-DefaultAppAssociations
+                docs: |-
+                    This script removes the OEM default application associations that Windows applies to new user profiles, which are stored in
+                    `%SYSTEMROOT%\System32\OEMDefaultAssociations.xml`.
+
+                    The file is only present when the installation ships OEM associations, and `dism` deletes it once removed. Running `dism /online
+                    /Remove-DefaultAppAssociations` when the file is absent exits with `Error: 2` ("The system cannot find the file specified"), so the
+                    call is guarded by an existence check to keep re-runs idempotent and free of misleading errors.
+                code: |-
+                    if exist "%SYSTEMROOT%\System32\OEMDefaultAssociations.xml" (
+                        dism /online /Remove-DefaultAppAssociations
+                    ) else (
+                        echo Skipping, no OEM default app associations file found.
+                    )
             -
                 name: Clear System Resource Usage Monitor (SRUM) data
                 recommend: standard
@@ -8705,6 +8732,7 @@ actions:
                             parameters:
                                 fileGlob: '%SYSTEMROOT%\System32\DriverStore\FileRepository\NvTelemetry*.dll'
                                 recurse: 'true'
+                                grantPermissions: 'true' # 🔒️ Protected on Windows 11 Pro (24H2): owned by `TrustedInstaller`, so renaming fails with "Access is denied" without this | Not tested on Windows 10
                     -
                         name: Disable participation in Nvidia telemetry
                         recommend: standard
