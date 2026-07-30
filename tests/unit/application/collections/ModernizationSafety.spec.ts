@@ -154,6 +154,34 @@ describe('modernized collection safety boundaries', () => {
     );
   });
 
+  it('does not recommend scripts whose target product no longer ships', () => {
+    /*
+      These configure EdgeHTML policies or Flash directories that are absent from current systems,
+      so a preset would only add lines that cannot do anything. They stay available for anyone
+      cleaning up an older installation.
+    */
+    const discontinuedTargets = [
+      'Disable outdated Edge metrics data sending',
+      'Disable outdated Edge site information sending',
+      'Disable outdated Edge automatic image enhancement',
+      'Disable Edge (Legacy) Live Tile data collection',
+      'Disable Edge (Legacy) search suggestions',
+      'Disable Edge (Legacy) Books telemetry',
+      'Clear Flash Player traces',
+    ];
+    const scripts = getCategories(OperatingSystem.Windows)
+      .flatMap((category) => category.scripts);
+
+    for (const name of discontinuedTargets) {
+      const script = scripts.find((candidate: Script) => candidate.name === name);
+      expect(script, `Missing script "${name}"`).to.not.equal(undefined);
+      expect(script?.level).to.equal(undefined, formatAssertionMessage([
+        `"${name}" targets a product that no longer ships, so it must be opt-in.`,
+        'Remove its `recommend` key.',
+      ]));
+    }
+  });
+
   it('does not reintroduce cleanup scripts for the removed desktop application', () => {
     for (const { fileName, content } of collectionFiles) {
       expect(

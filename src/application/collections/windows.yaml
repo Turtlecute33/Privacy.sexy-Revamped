@@ -752,7 +752,8 @@ actions:
                                 directoryGlob: '%APPDATA%\Sun\Java\Deployment\cache'
                     -
                         name: Clear Flash Player traces
-                        recommend: standard
+                        # Not part of a preset: Flash Player reached end of life in 2020 and the directory is
+                        # absent on current systems.
                         call:
                             function: ClearDirectoryContents
                             parameters:
@@ -8290,6 +8291,7 @@ actions:
                                     valueName: DisableStartLayoutSettingSyncUserOverride
                                     dataType: REG_DWORD
                                     data: "1"
+                                    deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
                     -
                         name: Disable "Web Browser" setting synchronization
                         recommend: standard
@@ -8309,6 +8311,7 @@ actions:
                                     valueName: DisableWebBrowserSettingSyncUserOverride
                                     dataType: REG_DWORD
                                     data: "1"
+                                    deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
                     -
                         name: Disable "Windows" setting synchronization
                         recommend: standard
@@ -9505,7 +9508,8 @@ actions:
                                                 function: ShowEdgeRestartSuggestion
                                     -
                                         name: Disable outdated Edge metrics data sending
-                                        recommend: standard
+                                        # Not part of a preset: the policy only applies to Edge 77-89 and is
+                                        # deprecated in current versions, so it has no effect on them.
                                         docs: |- # refactor-with-variables: • Chromium Policy Caution • "Disabling this telemetry.."
                                             This script stops Edge from reporting metrics data.
 
@@ -9537,7 +9541,8 @@ actions:
                                                 function: ShowEdgeRestartSuggestion
                                     -
                                         name: Disable outdated Edge site information sending
-                                        recommend: standard
+                                        # Not part of a preset: the policy only applies to Edge 77-89 and is
+                                        # deprecated in current versions, so it has no effect on them.
                                         docs: |- # refactor-with-variables: • Chromium Policy Caution • "Disabling this telemetry.." 
                                             This script prevents Edge from sending site-related information.
 
@@ -11024,7 +11029,8 @@ actions:
                                         dwordData: '0'
                             -
                                 name: Disable outdated Edge automatic image enhancement
-                                recommend: standard # Removed feature
+                                # Not part of a preset: the feature was removed from Edge, so the policy has
+                                # nothing left to turn off.
                                 docs: |- # refactor-with-variables: • Chromium Policy Caution
                                     This script disables the automatic image enhancement feature.
 
@@ -11517,7 +11523,8 @@ actions:
                         children:
                             -
                                 name: Disable Edge (Legacy) Live Tile data collection
-                                recommend: standard
+                                # Not part of a preset: Edge (Legacy) is no longer shipped and Live Tiles were
+                                # replaced by Widgets in Windows 11, so nothing reads this setting.
                                 docs: |- # refactor-with-variables: Same • live tiles • Performance + Privacy • Edge (Legacy) only
                                     This script disables Live Tile data collection in Edge (Legacy).
 
@@ -11551,7 +11558,8 @@ actions:
                                         dwordData: "1"
                             -
                                 name: Disable Edge (Legacy) search suggestions
-                                recommend: standard
+                                # Not part of a preset: Edge (Legacy) is no longer shipped, so nothing reads
+                                # this setting.
                                 docs: |- # refactor-with-variables: Same • Performance + Privacy • Edge (Legacy) only
                                     This script disables the search suggestions feature in the Address bar of Edge (Legacy).
 
@@ -11581,7 +11589,8 @@ actions:
                                         dwordData: "0"
                             -
                                 name: Disable Edge (Legacy) Books telemetry
-                                recommend: standard
+                                # Not part of a preset: Edge (Legacy) is no longer shipped and its Books feature
+                                # was discontinued, so nothing reads this setting.
                                 docs: |- # refactor-with-variables: • Edge (Legacy) only
                                     This script prevents Microsoft Edge (Legacy) from sending additional telemetry data from the Books tab.
 
