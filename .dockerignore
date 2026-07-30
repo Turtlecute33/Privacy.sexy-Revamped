@@ -1,9 +1,7 @@
 node_modules
-dist
-dist_electron
+dist-*
 .vs
 .vscode
 .github
 .git
 docs
-docker
