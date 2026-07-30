@@ -6,15 +6,11 @@ export const IconNames = [
   'github',
   'face-smile',
   'xmark',
-  'folder',
-  'folder-open',
   'left-right',
   'file-arrow-down',
   'lightbulb',
   'square-check',
   'triangle-exclamation',
-  'rotate-left',
-  'shield',
 ] as const;
 
 export type IconName = typeof IconNames[number];
