@@ -130,6 +130,56 @@ describe('compiled collection regressions', () => {
       expect(script.code.execute).to.include('run_as_target_user defaults write');
       expect(script.code.revert).to.include('run_as_target_user defaults write');
     });
+
+    it('never writes a per-user preference domain as root', () => {
+      /*
+        This is the collection-wide version of the assertion above: the script runs as root, so any
+        `defaults` call naming a preference domain (rather than an absolute plist path) has to go
+        through `run_as_target_user`, or the value lands in root's preferences.
+      */
+      const domainCall = /\bdefaults\s+(?:write|delete)\s+('[^']*'|"[^"]*"|\S+)/g;
+      const isPath = (domain: string): boolean => {
+        const unquoted = domain.replace(/^['"]|['"]$/g, '');
+        return unquoted.startsWith('/') || unquoted.startsWith('~') || unquoted.startsWith('$');
+      };
+
+      const offenders = getScripts(OperatingSystem.macOS).flatMap((script) => (
+        (`${script.code.execute}\n${script.code.revert ?? ''}`)
+          .split('\n')
+          .filter((line) => !line.includes('run_as_target_user'))
+          .flatMap((line) => Array.from(line.matchAll(domainCall), (match) => match[1]))
+          .filter((domain) => !isPath(domain))
+          .map((domain) => `${script.name}: ${domain}`)
+      ));
+
+      expect(offenders).to.deep.equal([], formatAssertionMessage([
+        'A preference domain is written as root, so the value lands in root\'s preferences.',
+        'Use `SetUserPreference` or wrap the command in `RunAsTargetUser`:',
+        ...offenders,
+      ]));
+    });
+
+    it('targets per-user launchctl domains with the invoking user instead of $UID', () => {
+      // The script re-executes itself as root, so `$UID` is `0` and `user/$UID` / `gui/$UID`
+      // address root's domains rather than the domains of the person running the script.
+      const offenders = getScripts(OperatingSystem.macOS)
+        .filter((script) => /(user|gui)\/\$UID/.test(script.code.execute + (script.code.revert ?? '')))
+        .map((script) => script.name);
+
+      expect(offenders).to.deep.equal([], formatAssertionMessage([
+        'A per-user launchctl domain is addressed with $UID, which is root:',
+        ...offenders,
+      ]));
+    });
+
+    it('stops rather than starts the automatic reactivation of Gatekeeper', () => {
+      // `GKAutoRearm` defaults to enabled, so writing `true` re-armed the 30-day timer that the
+      // script promises to disable, and reverting turned it off.
+      const script = getScript(OperatingSystem.macOS, "Disable Gatekeeper's automatic reactivation");
+
+      expect(script.code.execute).to.include('GKAutoRearm -bool false');
+      expect(script.code.revert).to.include('GKAutoRearm -bool true');
+    });
   });
 
   describe('Linux', () => {
