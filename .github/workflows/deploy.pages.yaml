@@ -39,7 +39,7 @@ jobs:
         run: npm run build
       -
         name: Cache Puppeteer browser
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/puppeteer
           key: puppeteer-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
@@ -51,10 +51,10 @@ jobs:
         run: npm run prerender
       -
         name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       -
         name: Upload website
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: dist-web
 
@@ -68,4 +68,4 @@ jobs:
       -
         name: Deploy
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
