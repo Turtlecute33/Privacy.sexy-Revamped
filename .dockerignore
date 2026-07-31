@@ -1,5 +1,6 @@
 node_modules
 dist-*
+!dist-dirs.json
 .vs
 .vscode
 .github
