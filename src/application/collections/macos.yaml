@@ -1249,8 +1249,14 @@ actions:
             -
                 name: Disable Microsoft Office telemetry
                 recommend: standard
-                code: defaults write com.microsoft.office DiagnosticDataTypePreference -string ZeroDiagnosticData
-                revertCode: defaults delete com.microsoft.office DiagnosticDataTypePreference
+                call:
+                    function: SetUserPreference
+                    parameters:
+                        domain: com.microsoft.office
+                        key: DiagnosticDataTypePreference
+                        valueType: string
+                        value: ZeroDiagnosticData
+                        deleteOnRevert: 'true'
             -
                 name: Remove Google Software Update service
                 recommend: strict
@@ -1324,12 +1330,23 @@ actions:
 
                             [1]: https://web.archive.org/web/20240314062932/https://forum.parallels.com/threads/unable-to-process-the-upgrade-request.345603/ "Unable to process the upgrade request | Parallels Forums | forum.parallels.com"
                             [2]: https://web.archive.org/web/20221012151800/https://kb.parallels.com/114422 "How do I turn off notifications in Parallels Desktop and Parallels Access? | Knowledge Base | parallels.com"
-                        code: |-
-                            defaults write 'com.parallels.Parallels Desktop' 'ProductPromo.ForcePromoOff' -bool yes
-                            defaults write 'com.parallels.Parallels Desktop' 'WelcomeScreenPromo.PromoOff' -bool yes
-                        revertCode: |-
-                            defaults write 'com.parallels.Parallels Desktop' 'ProductPromo.ForcePromoOff' -bool no
-                            defaults write 'com.parallels.Parallels Desktop' 'WelcomeScreenPromo.PromoOff' -bool yes
+                        call:
+                            -
+                                function: SetUserPreference
+                                parameters:
+                                    domain: com.parallels.Parallels Desktop
+                                    key: ProductPromo.ForcePromoOff
+                                    valueType: bool
+                                    value: 'yes'
+                                    defaultValue: 'no'
+                            -
+                                function: SetUserPreference
+                                parameters:
+                                    domain: com.parallels.Parallels Desktop
+                                    key: WelcomeScreenPromo.PromoOff
+                                    valueType: bool
+                                    value: 'yes'
+                                    defaultValue: 'yes' # Pre-configured to disabled, so revert keeps it disabled
     -
         category: Configure OS
         children:
@@ -1491,8 +1508,14 @@ actions:
                             rm -r ~/Library/Containers/com.apple.RemoteDesktop
             -
                 name: Disable online spell correction
-                code: defaults write NSGlobalDomain WebAutomaticSpellingCorrectionEnabled -bool false
-                revertCode: defaults delete NSGlobalDomain WebAutomaticSpellingCorrectionEnabled
+                call:
+                    function: SetUserPreference
+                    parameters:
+                        domain: NSGlobalDomain
+                        key: WebAutomaticSpellingCorrectionEnabled
+                        valueType: bool
+                        value: 'false'
+                        deleteOnRevert: 'true'
             -
                 name: Disable remote Apple events
                 recommend: strict
@@ -1502,18 +1525,36 @@ actions:
                 name: Disable automatic storage of documents in iCloud Drive
                 docs: https://web.archive.org/web/20250313122513/https://macos-defaults.com/finder/nsdocumentsavenewdocumentstocloud.html
                 recommend: standard
-                code: defaults write NSGlobalDomain NSDocumentSaveNewDocumentsToCloud -bool false
-                revertCode: defaults delete NSGlobalDomain NSDocumentSaveNewDocumentsToCloud
+                call:
+                    function: SetUserPreference
+                    parameters:
+                        domain: NSGlobalDomain
+                        key: NSDocumentSaveNewDocumentsToCloud
+                        valueType: bool
+                        value: 'false'
+                        deleteOnRevert: 'true'
             -
                 name: Disable display of recent applications on Dock
                 docs: https://web.archive.org/web/20210516210037/https://developer.apple.com/documentation/devicemanagement/dock
-                code: defaults write com.apple.dock show-recents -bool false
-                revertCode: defaults delete com.apple.dock show-recents
+                call:
+                    function: SetUserPreference
+                    parameters:
+                        domain: com.apple.dock
+                        key: show-recents
+                        valueType: bool
+                        value: 'false'
+                        deleteOnRevert: 'true'
             -
                 name: Disable AirDrop file sharing
                 recommend: strict
-                code: defaults write com.apple.NetworkBrowser DisableAirDrop -bool true
-                revertCode: defaults write com.apple.NetworkBrowser DisableAirDrop -bool false
+                call:
+                    function: SetUserPreference
+                    parameters:
+                        domain: com.apple.NetworkBrowser
+                        key: DisableAirDrop
+                        valueType: bool
+                        value: 'true'
+                        defaultValue: 'false'
             -
                 category: Configure Siri
                 docs: |-
@@ -1531,16 +1572,28 @@ actions:
                                 name: Disable "Ask Siri"
                                 recommend: strict
                                 docs: https://web.archive.org/web/20250313121650/https://derflounder.wordpress.com/2016/09/20/blocking-siri-on-macos-sierra/
-                                code: defaults write com.apple.assistant.support 'Assistant Enabled' -bool false
-                                revertCode: defaults write com.apple.assistant.support 'Assistant Enabled' -bool true
+                                call:
+                                    function: SetUserPreference
+                                    parameters:
+                                        domain: com.apple.assistant.support
+                                        key: Assistant Enabled
+                                        valueType: bool
+                                        value: 'false'
+                                        defaultValue: 'true'
                             -
                                 name: Disable Siri voice feedback
                                 recommend: strict
                                 docs:
                                     - https://web.archive.org/web/20250313121706/https://github.com/privacysexy-forks/starter/blob/master/system/siri.sh
                                     - https://web.archive.org/web/20201002133713/https://machippie.github.io/system/
-                                code: defaults write com.apple.assistant.backedup 'Use device speaker for TTS' -int 3
-                                revertCode: defaults write com.apple.assistant.backedup 'Use device speaker for TTS' -int 2
+                                call:
+                                    function: SetUserPreference
+                                    parameters:
+                                        domain: com.apple.assistant.backedup
+                                        key: Use device speaker for TTS
+                                        valueType: int
+                                        value: '3'
+                                        defaultValue: '2'
                             -
                                 name: Disable Siri services (Siri and assistantd)
                                 # Not part of a preset: the system-wide part requires System Integrity Protection to be
@@ -1550,26 +1603,32 @@ actions:
                                     - https://archive.ph/2024.03.14-055010/https://community.jamf.com/t5/jamf-pro/kill-siri/td-p/171543
                                     - https://web.archive.org/web/20240314060501/https://apple.stackexchange.com/questions/258816/how-to-completely-disable-siri-on-sierra/370426#370426
                                 # To see status: • `launchctl print-disabled system` • `launchctl print-disabled user/$UID` • `launchctl print-disabled gui/$UID`
-                                code: |-
-                                    launchctl disable "user/$UID/com.apple.assistantd"
-                                    launchctl disable "gui/$UID/com.apple.assistantd"
-                                    sudo launchctl disable 'system/com.apple.assistantd'
-                                    launchctl disable "user/$UID/com.apple.Siri.agent"
-                                    launchctl disable "gui/$UID/com.apple.Siri.agent"
-                                    sudo launchctl disable 'system/com.apple.Siri.agent'
-                                    if [ $(/usr/bin/csrutil status | awk '/status/ {print $5}' | sed 's/\.$//') = "enabled" ]; then
-                                        >&2 echo 'The system-wide part of this script requires SIP to be disabled. Read more: https://developer.apple.com/documentation/security/disabling_and_enabling_system_integrity_protection'
-                                    fi
-                                revertCode: |-
-                                    launchctl enable "user/$UID/com.apple.assistantd"
-                                    launchctl enable "gui/$UID/com.apple.assistantd"
-                                    sudo launchctl enable 'system/com.apple.assistantd'
-                                    launchctl enable "user/$UID/com.apple.Siri.agent"
-                                    launchctl enable "gui/$UID/com.apple.Siri.agent"
-                                    sudo launchctl enable 'system/com.apple.Siri.agent'
-                                    if [ $(/usr/bin/csrutil status | awk '/status/ {print $5}' | sed 's/\.$//') = "enabled" ]; then
-                                        >&2 echo 'The system-wide part of this script requires SIP to be disabled. Read more: https://developer.apple.com/documentation/security/disabling_and_enabling_system_integrity_protection'
-                                    fi
+                                # The script runs as root, so `$UID` would be `0` and the per-user domains
+                                # would be root's instead of the invoking user's; `RunAsTargetUser` resolves
+                                # the real user's ID into `$target_user_id`.
+                                call:
+                                    function: RunAsTargetUser
+                                    parameters:
+                                        code: |-
+                                            launchctl disable "user/$target_user_id/com.apple.assistantd"
+                                            launchctl disable "gui/$target_user_id/com.apple.assistantd"
+                                            launchctl disable 'system/com.apple.assistantd'
+                                            launchctl disable "user/$target_user_id/com.apple.Siri.agent"
+                                            launchctl disable "gui/$target_user_id/com.apple.Siri.agent"
+                                            launchctl disable 'system/com.apple.Siri.agent'
+                                            if [ $(/usr/bin/csrutil status | awk '/status/ {print $5}' | sed 's/\.$//') = "enabled" ]; then
+                                                >&2 echo 'The system-wide part of this script requires SIP to be disabled. Read more: https://developer.apple.com/documentation/security/disabling_and_enabling_system_integrity_protection'
+                                            fi
+                                        revertCode: |-
+                                            launchctl enable "user/$target_user_id/com.apple.assistantd"
+                                            launchctl enable "gui/$target_user_id/com.apple.assistantd"
+                                            launchctl enable 'system/com.apple.assistantd'
+                                            launchctl enable "user/$target_user_id/com.apple.Siri.agent"
+                                            launchctl enable "gui/$target_user_id/com.apple.Siri.agent"
+                                            launchctl enable 'system/com.apple.Siri.agent'
+                                            if [ $(/usr/bin/csrutil status | awk '/status/ {print $5}' | sed 's/\.$//') = "enabled" ]; then
+                                                >&2 echo 'The system-wide part of this script requires SIP to be disabled. Read more: https://developer.apple.com/documentation/security/disabling_and_enabling_system_integrity_protection'
+                                            fi
                             -
                                 name: Disable "Do you want to enable Siri?" pop-up
                                 docs: |-
@@ -1586,26 +1645,48 @@ actions:
                                     [2]: https://web.archive.org/web/20240314052600/https://derflounder.wordpress.com/2016/09/20/supressing-siri-pop-up-windows-on-macos-sierra/ "Suppressing Siri pop-up windows on macOS Sierra | Der Flounder"
                                     [3]: https://web.archive.org/web/20240314052901/https://windowsreport.com/mac/siri-keeps-popping-up/ "Siri keeps popping up on Mac? Here's how to easily fix that • MacTips | windowsreport.com"
                                     [4]: https://web.archive.org/web/20240314052247/https://community.jamf.com/t5/jamf-pro/disable-siri-setup-assistant-in-macos-sierra/m-p/205836/highlight/true#M194536 "Solved: Re: Disable Siri setup assistant in macOS Sierra - Jamf Nation Community - 205834 | community.jamf.com"
-                                code: defaults write com.apple.SetupAssistant 'DidSeeSiriSetup' -bool True
-                                revertCode: defaults delete com.apple.SetupAssistant 'DidSeeSiriSetup'
+                                call:
+                                    function: SetUserPreference
+                                    parameters:
+                                        domain: com.apple.SetupAssistant
+                                        key: DidSeeSiriSetup
+                                        valueType: bool
+                                        value: 'True'
+                                        deleteOnRevert: 'true'
                     -
                         category: Remove Siri from user interface
                         children:
                             -
                                 name: Remove Siri from menu bar
                                 recommend: strict
-                                code: defaults write com.apple.systemuiserver 'NSStatusItem Visible Siri' 0
-                                revertCode: defaults write com.apple.systemuiserver 'NSStatusItem Visible Siri' 1
+                                # `SetUserPreference` is not used here because it always passes a type flag, and
+                                # `defaults write` without one stores the value as a string rather than an integer.
+                                call:
+                                    function: RunAsTargetUser
+                                    parameters:
+                                        code: run_as_target_user defaults write com.apple.systemuiserver 'NSStatusItem Visible Siri' 0
+                                        revertCode: run_as_target_user defaults write com.apple.systemuiserver 'NSStatusItem Visible Siri' 1
                             -
                                 name: Remove Siri from status menu
                                 recommend: strict
                                 docs: https://web.archive.org/web/20250313121650/https://derflounder.wordpress.com/2016/09/20/blocking-siri-on-macos-sierra/
-                                code: |-
-                                    defaults write com.apple.Siri 'StatusMenuVisible' -bool false
-                                    defaults write com.apple.Siri 'UserHasDeclinedEnable' -bool true
-                                revertCode: |-
-                                    defaults delete com.apple.Siri 'StatusMenuVisible'
-                                    defaults delete com.apple.Siri 'UserHasDeclinedEnable'
+                                call:
+                                    -
+                                        function: SetUserPreference
+                                        parameters:
+                                            domain: com.apple.Siri
+                                            key: StatusMenuVisible
+                                            valueType: bool
+                                            value: 'false'
+                                            deleteOnRevert: 'true'
+                                    -
+                                        function: SetUserPreference
+                                        parameters:
+                                            domain: com.apple.Siri
+                                            key: UserHasDeclinedEnable
+                                            valueType: bool
+                                            value: 'true'
+                                            deleteOnRevert: 'true'
             -
                 name: Disable Spotlight indexing
                 code: sudo mdutil -i off -d /
@@ -1650,18 +1731,35 @@ actions:
                     [4]: https://web.archive.org/web/20230731155653/https://paper.bobylive.com/Security/CIS/CIS_Apple_macOS_11_0_Big_Sur_Benchmark_v2_0_0.pdf "CIS Apple macOS 11.0 Big Sur Benchmark"
                     [5]: https://web.archive.org/web/20230731155131/https://developer.apple.com/documentation/adsupport/asidentifiermanager/1614151-advertisingidentifier "advertisingIdentifier | Apple Developer Documentation"
                     [6]: https://web.archive.org/web/20230731154840/https://community.jamf.com/t5/jamf-pro/macos-quot-limit-ad-tracking-quot/td-p/217001 'Solved: macOS "Limit Ad Tracking" - Jamf Nation Community - 217001'
-                code: |-
-                    defaults write com.apple.AdLib allowIdentifierForAdvertising -bool false
-                    defaults write com.apple.AdLib allowApplePersonalizedAdvertising -bool false
-                    defaults write com.apple.AdLib forceLimitAdTracking -bool true
                 # Default: (`defaults read com.apple.AdLib`)
                 #   - `defaults read com.apple.AdLib allowApplePersonalizedAdvertising`: true (1)
                 #   - `defaults read com.apple.AdLib allowIdentifierForAdvertising`: true (1)
                 #   - `defaults read com.apple.AdLib forceLimitAdTracking`: non-existing
-                revertCode: |-
-                    defaults write com.apple.AdLib allowIdentifierForAdvertising -bool true
-                    defaults write com.apple.AdLib allowApplePersonalizedAdvertising -bool true
-                    defaults delete com.apple.AdLib forceLimitAdTracking
+                call:
+                    -
+                        function: SetUserPreference
+                        parameters:
+                            domain: com.apple.AdLib
+                            key: allowIdentifierForAdvertising
+                            valueType: bool
+                            value: 'false'
+                            defaultValue: 'true'
+                    -
+                        function: SetUserPreference
+                        parameters:
+                            domain: com.apple.AdLib
+                            key: allowApplePersonalizedAdvertising
+                            valueType: bool
+                            value: 'false'
+                            defaultValue: 'true'
+                    -
+                        function: SetUserPreference
+                        parameters:
+                            domain: com.apple.AdLib
+                            key: forceLimitAdTracking
+                            valueType: bool
+                            value: 'true'
+                            deleteOnRevert: 'true' # The key does not exist on the OS by default
             -
                 name: Disable date and time in screenshot filenames
                 recommend: strict # Minimal privacy benefit, may be inconvenient
@@ -1776,11 +1874,13 @@ actions:
                     [8]: https://web.archive.org/web/20160313164204/http://guides.macrumors.com/SystemUIServer "SystemUIServer - Mac Guides | web.archive.org"
                 call:
                     -
-                        function: RunInlineCode
+                        function: SetUserPreference
                         parameters:
-                            code: defaults write 'com.apple.screencapture' 'include-date' -bool false
-                            revertCode: |-
-                                defaults delete 'com.apple.screencapture' 'include-date'
+                            domain: com.apple.screencapture
+                            key: include-date
+                            valueType: bool
+                            value: 'false'
+                            deleteOnRevert: 'true'
                     -
                         function: RunInlineCode
                         parameters:
@@ -2432,8 +2532,16 @@ actions:
                                     - https://web.archive.org/web/20250313121721/https://apple.stackexchange.com/questions/373176/disable-the-use-of-the-com-apple-quarantine-extended-attribute-on-mojave
                                     - https://web.archive.org/web/20250313121701/https://superuser.com/questions/266176/is-there-some-way-to-disable-the-dialogs-shown-when-opening-an-application-for-t
                                     - https://web.archive.org/web/20250313121540/https://macos-defaults.com/misc/lsquarantine.html
-                                code: sudo defaults write com.apple.LaunchServices 'LSQuarantine' -bool NO
-                                revertCode: sudo defaults delete com.apple.LaunchServices 'LSQuarantine'
+                                # `com.apple.LaunchServices` is a per-user domain, so the preference has to be
+                                # written as the invoking user rather than as root.
+                                call:
+                                    function: SetUserPreference
+                                    parameters:
+                                        domain: com.apple.LaunchServices
+                                        key: LSQuarantine
+                                        valueType: bool
+                                        value: 'NO'
+                                        deleteOnRevert: 'true'
             -
                 category: Disable Gatekeeper (enforces code-signing)
                 # Built on top of File Quarantine, requires code-signing for apps.
@@ -2453,8 +2561,10 @@ actions:
                         docs:
                             - https://web.archive.org/web/20250313121531/https://osxdaily.com/2015/11/05/stop-gatekeeper-auto-rearm-mac-os-x/
                             - https://web.archive.org/web/20230327050142/https://www.cnet.com/tech/computing/how-to-disable-gatekeeper-permanently-on-os-x/
-                        code: sudo defaults write /Library/Preferences/com.apple.security GKAutoRearm -bool true
-                        revertCode: sudo defaults write /Library/Preferences/com.apple.security GKAutoRearm -bool false
+                        # `GKAutoRearm` defaults to enabled; setting it to `false` is what stops the
+                        # 30-day automatic re-enabling of Gatekeeper.
+                        code: sudo defaults write /Library/Preferences/com.apple.security GKAutoRearm -bool false
+                        revertCode: sudo defaults write /Library/Preferences/com.apple.security GKAutoRearm -bool true
                     -
                         name: Disable Gatekeeper
                         docs:

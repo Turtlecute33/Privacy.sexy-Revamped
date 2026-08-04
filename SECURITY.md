@@ -31,35 +31,23 @@ privacy.sexy adopts a defense in depth strategy to protect users on multiple lay
 - **Content Security Policies (CSP):**
   privacy.sexy actively follows security guidelines from the Open Web Application Security Project (OWASP) at strictest level.
   This approach protects against attacks like Cross Site Scripting (XSS) and data injection.
-- **Host System Access Control:**
-  The desktop application segregates and isolates code sections based on their access levels through sandboxing.
-  This provides a critical defense mechanism, prevents attackers from introducing harmful code into the app, known as injection attacks.
-- **Auditing and Transparency:**
-  The desktop application improves security and transparency by logging application activities and retaining files of executed scripts
-  This facilitates detailed auditability and effective troubleshooting, contributing to the integrity and reliability of the application.
-  Recognizing that some users prefer not to keep these logs, privacy.sexy provides specialized scripts for deletion of them.
-- **Privilege Management:**
-  The desktop application operates without persistent administrative or `sudo` privileges, reinforcing its security posture. It requests
-  elevation of privileges for system modifications with explicit user consent and logs every action taken with high privileges. This
-  approach actively minimizes potential security risks by limiting privileged operations and aligning with the principle of least privilege.
-- **Secure Script Execution/Storage:**
-  - **Antivirus scans:**
-    Before executing any script, the desktop application stores a copy to allow antivirus software to perform scans.
-    This step allows confirming that the scripts are secure and safe to use.
-  - **Tamper protection:**
-    The application incorporates integrity checks for tamper protection.
-    If the script file differs from the user's selected script, the application will not execute or save the script, ensuring the processing
-    of authentic scripts.
-    This safeguards against any unwanted modifications.
-  - **Clean-up:**
-    Recognizing that some users prefer not to keep these scripts, privacy.sexy provides specialized scripts for deletion of them.
-    This allows users to maintain their privacy by removing traces of their usage patterns or script preferences.
+- **Client-side only processing:**
+  This is a static site with no backend. Your selections and the scripts generated from them never leave your
+  browser: the script text is assembled locally and saved through a normal browser download.
+- **No script execution:**
+  The application only generates script files; it never runs them and never requests elevated privileges.
+  You review the generated script and choose to run it yourself, which keeps the decision and the audit trail with you.
+- **Minimal third-party surface:**
+  The only network request beyond the site's own static assets is to a self-hosted
+  [Umami](https://umami.is) instance for anonymous, cookie-free page counts. No third-party
+  advertising, tracking, or CDN scripts are loaded.
 
 ### Update Security and Integrity
 
-privacy.sexy benefits from automated update processes including security tests. Automated deployments from source code ensure immediate and secure updates, mirroring the latest source code. This aligns the deployed application with the expected source code, enhancing transparency and trust. For more details, see [CI/CD Documentation](./docs/ci-cd.md).
-
-Every desktop update undergoes a thorough verification process. Updates are cryptographically signed to ensure authenticity and integrity, preventing tampered versions from reaching your device. Version checks are conducted to prevent downgrade attacks.
+privacy.sexy benefits from automated update processes including security tests. Every commit merged to
+`master` is built and deployed straight from source, so the served site always mirrors the published
+source code with no manual step in between. This aligns the deployed application with the expected source
+code, enhancing transparency and trust. For more details, see [CI/CD Documentation](./docs/ci-cd.md).
 
 ### Testing
 

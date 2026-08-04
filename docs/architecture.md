@@ -71,7 +71,7 @@ published source code.
 
 ## GitOps
 
-CI/CD pipelines automate operational tasks based on different Git events. [bump-everywhere](https://github.com/undergroundwires/bump-everywhere) enables this automation.
+CI/CD pipelines automate operational tasks based on different Git events. GitHub Actions enables this automation.
 
 📖 Read more in [`ci-cd.md`](./ci-cd.md#gitops).
 
