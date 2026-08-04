@@ -39,6 +39,7 @@ const optInOnlyCategories: Readonly<Record<number, readonly string[]>> = {
     'Disable Adobe background automatic updates',
     'Disable Dropbox background automatic updates',
     'Disable connectivity checks',
+    'Disable Windows Global Device ID',
   ],
   [OperatingSystem.macOS]: [
     'Privacy over security',

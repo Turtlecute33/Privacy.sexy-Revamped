@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { loadCollections } from '@/application/Application/Loader/Collections/CollectionsLoader';
 import { OperatingSystem } from '@/domain/OperatingSystem';
@@ -99,6 +101,73 @@ describe('compiled collection regressions', () => {
         'A preset recommends turning off a Defender protection:',
         ...recommended,
       ]));
+    });
+
+    it('embeds the complete GDID protection script in both opt-in actions', () => {
+      const source = readFileSync(
+        resolve('src/application/collections/resources/windows/degdid.ps1'),
+        'utf8',
+      );
+      const scenarios = [
+        {
+          name: 'Block creation of Windows Global Device ID (breaks Microsoft account features)',
+          arguments: '-Block',
+        },
+        {
+          name: 'Remove Windows Global Device ID and block its recreation (breaks Microsoft account features)',
+          arguments: '-Protect',
+        },
+      ];
+
+      for (const scenario of scenarios) {
+        const script = getScript(OperatingSystem.Windows, scenario.name);
+        const executePayload = extractEmbeddedBase64Payload(script.code.execute);
+        const revertPayload = extractEmbeddedBase64Payload(script.code.revert ?? '');
+
+        expect(Buffer.from(executePayload, 'base64').toString('utf8')).to.equal(source);
+        expect(Buffer.from(revertPayload, 'base64').toString('utf8')).to.equal(source);
+        expect(script.code.execute).to.include(
+          `-File "%privacy_sexy_embedded_script%" ${scenario.arguments}`,
+        );
+        expect(script.code.revert).to.include(
+          '-File "%privacy_sexy_embedded_script%" -Unblock',
+        );
+        expect(script.level).to.equal(undefined);
+      }
+    });
+
+    it('ignores absent GDID services but fails closed on other inventory errors', () => {
+      const source = readFileSync(
+        resolve('src/application/collections/resources/windows/degdid.ps1'),
+        'utf8',
+      );
+
+      expect(source).to.include("@('wlidsvc', 'CDPSvc', 'TokenBroker', 'CDPUserSvc*')");
+      expect(source).to.include("'CDPUserSvc*'");
+      expect(source).to.match(
+        /Get-Service -Name \$wanted -ErrorAction SilentlyContinue -ErrorVariable serviceErrors/,
+      );
+      expect(source).to.include(
+        "Where-Object { $_.FullyQualifiedErrorId -notlike 'NoServiceFoundForGivenName*' }",
+      );
+      expect(source).to.include('Select-BlockingServiceError -ServiceErrors $serviceErrors');
+      expect(source).to.include('if ($blocking.Count -gt 0)');
+    });
+
+    it('does not count uncorroborated OMADM placeholders as MDM enrollment', () => {
+      const source = readFileSync(
+        resolve('src/application/collections/resources/windows/degdid.ps1'),
+        'utf8',
+      );
+
+      expect(source).to.include('function Test-RealMdmEnrollmentEntry');
+      expect(source).to.include('if ($state -ne 1) { return $false }');
+      expect(source).to.include('return [bool]$Upn -or [bool]$DiscoveryUrl');
+      expect(source).to.include('function Select-CorroboratedOmadmAccount');
+      expect(source).to.include('$n -and $real.ContainsKey($n)');
+      expect(source).to.match(
+        /Select-CorroboratedOmadmAccount\s+`\s+-OmadmAccountIds \$omadmIds\s+`\s+-RealEnrollmentIds @\(\$realEnrollmentIds\)/,
+      );
     });
   });
 
@@ -241,3 +310,7 @@ describe('compiled collection regressions', () => {
     }
   });
 });
+
+function extractEmbeddedBase64Payload(code: string): string {
+  return Array.from(code.matchAll(/^\s*echo\(([A-Za-z0-9+/=]+)$/gm), (match) => match[1]).join('');
+}

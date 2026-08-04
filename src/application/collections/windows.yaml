@@ -2776,6 +2776,97 @@ actions:
                         data: "1"
                         deleteOnRevert: 'true'
             -
+                category: Disable Windows Global Device ID
+                docs: |-
+                    Windows can obtain a Microsoft-issued **Global Device Identifier** (GDID), a persistent identifier
+                    associated with a Windows installation [1] [2]. Microsoft documents `GlobalDeviceId` as an internal
+                    device identifier [1]. A 2026 federal complaint describes Microsoft records that associated one GDID
+                    with visited URLs, timestamps, and IP addresses [2].
+
+                    The identifier can be created even when Windows uses only a local account [3]. Windows stores related
+                    identity state in multiple registry hives, device credentials, and user caches, so deleting a single
+                    registry value does not reliably remove it [3].
+
+                    These scripts use the independently published `deGDID` implementation [3] [4]. They are intentionally
+                    not part of a recommendation preset because blocking Microsoft device registration can break or degrade
+                    Microsoft account sign-in, Microsoft Store and Xbox authentication, OneDrive sign-in, Phone Link,
+                    device synchronization, passkeys, and Windows Hello connected to a Microsoft account [3] [4].
+
+                    > **Caution:**
+                    > These scripts support unmanaged personal installations of Windows 10 22H2 and modern Windows 11.
+                    > They refuse to modify domain-joined, Microsoft Entra-joined, workplace-registered, MDM-enrolled,
+                    > unsupported, or ambiguous multi-profile systems [3] [4]. Only Windows 11 25H2 build 26200 has received
+                    > the upstream project's complete lab validation [3]. On hosts using Hyper-V's Default Switch, WSL2,
+                    > Windows Sandbox, Internet Connection Sharing, or similar host-side NAT, the firewall block can also
+                    > interrupt connectivity for guests or shared clients; reverting the script removes that block [5].
+
+                    No local operation can erase records Microsoft already holds or guarantee that every unknown copy or
+                    unrelated identifier has been removed [3] [4].
+
+                    [1]: https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/ucdostatus "UCDOStatus - Azure Monitor | Microsoft Learn"
+                    [2]: https://www.justice.gov/usao-ndil/media/1450651/dl?inline= "United States v. Peter Stokes - Superseding Criminal Complaint | U.S. Department of Justice"
+                    [3]: https://github.com/yegors/deGDID/blob/068263f4fd9f1e6632c78c365b1a98027f6c2912/README.md "deGDID documentation | GitHub"
+                    [4]: https://github.com/yegors/deGDID/blob/068263f4fd9f1e6632c78c365b1a98027f6c2912/docs/countermeasures.md "deGDID countermeasures and limitations | GitHub"
+                    [5]: https://github.com/yegors/deGDID/issues/3 "Protect mode blocks Windows host-side NAT sharing | GitHub"
+                children:
+                    -
+                        name: Block creation of Windows Global Device ID (breaks Microsoft account features)
+                        docs: |-
+                            This script prevents Windows from obtaining or refreshing a Microsoft Global Device Identifier
+                            through the known DeviceAdd registration path [1]. It does not delete an identifier that already
+                            exists locally; use the full removal script for that purpose.
+
+                            The script:
+
+                            - Adds a managed IPv4 and IPv6 hosts-file block for the known registration endpoints.
+                            - Adds supporting outbound Windows Firewall rules where local firewall policy permits them.
+                            - Verifies that the actual DeviceAdd path is blocked before reporting success.
+                            - Preserves unrelated hosts-file and firewall configuration.
+
+                            Reverting removes only the managed network controls. Once reverted, Windows can create a GDID
+                            again [1].
+
+                            [1]: https://github.com/yegors/deGDID/blob/068263f4fd9f1e6632c78c365b1a98027f6c2912/docs/countermeasures.md#p2---continuous-deviceadd-block "Continuous DeviceAdd blocking | deGDID"
+                        call:
+                            function: RunEmbeddedPowerShellScript
+                            parameters:
+                                resourceName: windows/degdid.ps1
+                                arguments: -Block
+                                revertArguments: -Unblock
+                                codeComment: Block creation of Microsoft Global Device ID
+                                revertCodeComment: Allow Microsoft Global Device ID creation
+                    -
+                        name: Remove Windows Global Device ID and block its recreation (breaks Microsoft account features)
+                        docs: |-
+                            This script removes all known local Microsoft Global Device Identifier state and prevents Windows
+                            from immediately creating or retrieving a replacement [1].
+
+                            It first applies and verifies the DeviceAdd network block. Only after that protection succeeds,
+                            it coordinates the affected identity services and clears known GDID-related state from:
+
+                            - The active user, `.DEFAULT`, and `SYSTEM` IdentityCRL registry locations.
+                            - LID, Immersive Property, Token `DeviceId`, and `DeviceTicket` values.
+                            - Device identity and matching NegativeCache registry entries.
+                            - Target-user and SYSTEM device credentials used to restore device identity.
+                            - TokenBroker and ConnectedDevicesPlatform user caches.
+
+                            The operation then restores service state, waits for identity components to settle, and rejects
+                            success if known real GDID state returns or the registration block becomes ineffective [1].
+
+                            Deleted identity data cannot be reconstructed by privacy.sexy. Reverting this script removes the
+                            managed network controls, but it does not recreate deleted identifiers or credentials. Windows
+                            may create a new GDID after the block is reverted [1].
+
+                            [1]: https://github.com/yegors/deGDID/blob/068263f4fd9f1e6632c78c365b1a98027f6c2912/docs/countermeasures.md#p4---protect-preferred-contaminated-path "GDID removal and protection flow | deGDID"
+                        call:
+                            function: RunEmbeddedPowerShellScript
+                            parameters:
+                                resourceName: windows/degdid.ps1
+                                arguments: -Protect
+                                revertArguments: -Unblock
+                                codeComment: Remove Microsoft Global Device ID and block its recreation
+                                revertCodeComment: Allow Microsoft Global Device ID creation
+            -
                 category: Disable app access to personal information
                 docs: |- # refactor-with-variables: Same • App Access Caution
                     This category enhances your privacy by restricting app access to sensitive personal data.
@@ -40580,6 +40671,82 @@ functions:
                     revertCode: |-
                         {{ with $revertCode }}
                             PowerShell -ExecutionPolicy Unrestricted -Command "{{ . | inlinePowerShell | escapeDoubleQuotes }}"
+                        {{ end }}
+    -
+        name: RunEmbeddedPowerShellScript
+        parameters:
+            - name: resourceName
+            - name: arguments
+            - name: revertArguments
+              optional: true
+            - name: codeComment
+              optional: true
+            - name: revertCodeComment
+              optional: true
+        call:
+            -
+                function: Comment
+                parameters:
+                    codeComment: '{{ with $codeComment }}{{ . }}{{ end }}'
+                    revertCodeComment: '{{ with $revertCodeComment }}{{ . }}{{ end }}'
+            -
+                function: RunInlineCode
+                parameters:
+                    code: |-
+                        set "privacy_sexy_embedded_base=%TEMP%\privacy-sexy-embedded-%RANDOM%-%RANDOM%"
+                        set "privacy_sexy_embedded_payload=%privacy_sexy_embedded_base%.b64"
+                        set "privacy_sexy_embedded_script=%privacy_sexy_embedded_base%.ps1"
+                        if exist "%privacy_sexy_embedded_payload%" (
+                            echo Failed to allocate a temporary payload file. 1>&2
+                            exit /b 1
+                        )
+                        if exist "%privacy_sexy_embedded_script%" (
+                            echo Failed to allocate a temporary script file. 1>&2
+                            exit /b 1
+                        )
+                        > "%privacy_sexy_embedded_payload%" (
+                            {{ $resourceName | embedCollectionResource | toBaseSixtyFourBatchLines }}
+                        )
+                        PowerShell -NoProfile -NonInteractive -Command "$encoded=[System.IO.File]::ReadAllText($env:privacy_sexy_embedded_payload); $bytes=[System.Convert]::FromBase64String($encoded); [System.IO.File]::WriteAllBytes($env:privacy_sexy_embedded_script,$bytes)"
+                        if errorlevel 1 (
+                            del /f /q "%privacy_sexy_embedded_payload%" 2>nul
+                            del /f /q "%privacy_sexy_embedded_script%" 2>nul
+                            echo Failed to prepare the embedded PowerShell script. 1>&2
+                            exit /b 1
+                        )
+                        PowerShell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%privacy_sexy_embedded_script%" {{ $arguments }}
+                        set "privacy_sexy_embedded_exit_code=%ERRORLEVEL%"
+                        del /f /q "%privacy_sexy_embedded_payload%" 2>nul
+                        del /f /q "%privacy_sexy_embedded_script%" 2>nul
+                        if not "%privacy_sexy_embedded_exit_code%"=="0" exit /b %privacy_sexy_embedded_exit_code%
+                    revertCode: |-
+                        {{ with $revertArguments }}
+                            set "privacy_sexy_embedded_base=%TEMP%\privacy-sexy-embedded-%RANDOM%-%RANDOM%"
+                            set "privacy_sexy_embedded_payload=%privacy_sexy_embedded_base%.b64"
+                            set "privacy_sexy_embedded_script=%privacy_sexy_embedded_base%.ps1"
+                            if exist "%privacy_sexy_embedded_payload%" (
+                                echo Failed to allocate a temporary payload file. 1>&2
+                                exit /b 1
+                            )
+                            if exist "%privacy_sexy_embedded_script%" (
+                                echo Failed to allocate a temporary script file. 1>&2
+                                exit /b 1
+                            )
+                            > "%privacy_sexy_embedded_payload%" (
+                                {{ $resourceName | embedCollectionResource | toBaseSixtyFourBatchLines }}
+                            )
+                            PowerShell -NoProfile -NonInteractive -Command "$encoded=[System.IO.File]::ReadAllText($env:privacy_sexy_embedded_payload); $bytes=[System.Convert]::FromBase64String($encoded); [System.IO.File]::WriteAllBytes($env:privacy_sexy_embedded_script,$bytes)"
+                            if errorlevel 1 (
+                                del /f /q "%privacy_sexy_embedded_payload%" 2>nul
+                                del /f /q "%privacy_sexy_embedded_script%" 2>nul
+                                echo Failed to prepare the embedded PowerShell script. 1>&2
+                                exit /b 1
+                            )
+                            PowerShell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%privacy_sexy_embedded_script%" {{ . }}
+                            set "privacy_sexy_embedded_exit_code=%ERRORLEVEL%"
+                            del /f /q "%privacy_sexy_embedded_payload%" 2>nul
+                            del /f /q "%privacy_sexy_embedded_script%" 2>nul
+                            if not "%privacy_sexy_embedded_exit_code%"=="0" exit /b %privacy_sexy_embedded_exit_code%
                         {{ end }}
     -
         name: DisablePerUserService
