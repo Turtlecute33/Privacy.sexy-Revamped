@@ -19,7 +19,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       -
         name: Setup node
         uses: ./.github/actions/setup-node
@@ -35,7 +35,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       -
         name: Scan latest commit for TODO comments
         shell: bash
@@ -58,7 +58,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       -
         name: Setup node
         uses: ./.github/actions/setup-node
@@ -83,7 +83,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       -
         name: Setup node
         uses: ./.github/actions/setup-node

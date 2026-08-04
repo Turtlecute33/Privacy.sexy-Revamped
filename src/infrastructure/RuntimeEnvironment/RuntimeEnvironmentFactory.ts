@@ -16,5 +16,3 @@ export function createBrowserRuntimeEnvironment(
 }
 
 export type BrowserRuntimeEnvironmentFactory = (window: Window) => RuntimeEnvironment;
-
-export type GlobalWindowAccessor = Window | undefined;

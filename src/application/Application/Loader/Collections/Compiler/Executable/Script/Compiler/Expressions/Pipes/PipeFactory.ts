@@ -1,10 +1,14 @@
 import { InlinePowerShell } from './PipeDefinitions/InlinePowerShell';
 import { EscapeDoubleQuotes } from './PipeDefinitions/EscapeDoubleQuotes';
+import { EmbedCollectionResource } from './PipeDefinitions/EmbedCollectionResource';
+import { ToBase64BatchLines } from './PipeDefinitions/ToBase64BatchLines';
 import type { Pipe } from './Pipe';
 
 const RegisteredPipes = [
+  new EmbedCollectionResource(),
   new EscapeDoubleQuotes(),
   new InlinePowerShell(),
+  new ToBase64BatchLines(),
 ];
 
 export interface IPipeFactory {
