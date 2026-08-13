@@ -38,7 +38,7 @@ function validateData(
   validator.assertObject({
     value: data,
     valueName: 'script metadata',
-    allowedProperties: ['language', 'fileExtension', 'startCode', 'endCode'],
+    allowedProperties: ['language', 'startCode', 'endCode'],
   });
 }
 

@@ -12,6 +12,7 @@ definitions:
   Collection:
     type: object
     additionalProperties: false
+    required: [os, scripting, actions]
     properties:
       os:
         type: string
@@ -89,14 +90,14 @@ definitions:
   CodeScript:
     type: object
     unevaluatedProperties: false
-    anyOf:
+    allOf:
       - $ref: '#/definitions/ScriptDefinition'
       - $ref: '#/definitions/CodeInstruction'
 
   CallScript:
     type: object
     unevaluatedProperties: false
-    anyOf:
+    allOf:
       - $ref: '#/definitions/ScriptDefinition'
       - $ref: '#/definitions/CallInstruction'
 

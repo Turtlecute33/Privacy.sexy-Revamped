@@ -155,12 +155,7 @@ describe('modernized collection safety boundaries', () => {
     );
   });
 
-  it('does not recommend scripts whose target product no longer ships', () => {
-    /*
-      These configure EdgeHTML policies or Flash directories that are absent from current systems,
-      so a preset would only add lines that cannot do anything. They stay available for anyone
-      cleaning up an older installation.
-    */
+  it('does not retain scripts whose target product no longer ships', () => {
     const discontinuedTargets = [
       'Disable outdated Edge metrics data sending',
       'Disable outdated Edge site information sending',
@@ -175,11 +170,7 @@ describe('modernized collection safety boundaries', () => {
 
     for (const name of discontinuedTargets) {
       const script = scripts.find((candidate: Script) => candidate.name === name);
-      expect(script, `Missing script "${name}"`).to.not.equal(undefined);
-      expect(script?.level).to.equal(undefined, formatAssertionMessage([
-        `"${name}" targets a product that no longer ships, so it must be opt-in.`,
-        'Remove its `recommend` key.',
-      ]));
+      expect(script, `Discontinued script is still present: "${name}"`).to.equal(undefined);
     }
   });
 

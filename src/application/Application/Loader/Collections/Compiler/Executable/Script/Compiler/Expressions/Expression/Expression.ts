@@ -44,7 +44,6 @@ function validateThatAllRequiredParametersAreSatisfied(
     .all
     .filter((parameter) => !parameter.isOptional)
     .map((parameter) => parameter.name);
-    // .filter((name, index, array) => array.indexOf(name) === index); // Remove duplicates
   const missingParameterNames = requiredParameterNames
     .filter((parameterName) => !args.hasArgument(parameterName));
   if (missingParameterNames.length) {

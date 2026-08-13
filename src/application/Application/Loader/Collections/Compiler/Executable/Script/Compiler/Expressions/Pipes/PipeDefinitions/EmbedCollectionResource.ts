@@ -1,8 +1,10 @@
 import DegdidPowerShell from '@/application/collections/resources/windows/degdid.ps1?raw';
+import ManagePaintAiPowerShell from '@/application/collections/resources/windows/manage-paint-ai.ps1?raw';
 import type { Pipe } from '../Pipe';
 
 const CollectionResources: ReadonlyMap<string, string> = new Map([
   ['windows/degdid.ps1', DegdidPowerShell],
+  ['windows/manage-paint-ai.ps1', ManagePaintAiPowerShell],
 ]);
 
 export class EmbedCollectionResource implements Pipe {
