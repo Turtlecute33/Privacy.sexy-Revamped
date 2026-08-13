@@ -2,7 +2,6 @@
 import { resolve } from 'node:path';
 import { defineConfig, type UserConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import legacy from '@vitejs/plugin-legacy';
 import ViteYaml from '@modyfi/vite-plugin-yaml';
 import { ViteMinifyPlugin } from 'vite-plugin-minify';
 import distDirs from './dist-dirs.json' with { type: 'json' };
@@ -11,9 +10,7 @@ import { getAliases, getClientEnvironmentVariables, getSelfDirectoryAbsolutePath
 const WEB_DIRECTORY = resolve(getSelfDirectoryAbsolutePath(), 'src/presentation');
 const TEST_INITIALIZATION_FILE = resolve(getSelfDirectoryAbsolutePath(), 'tests/shared/bootstrap/setup.ts');
 
-export function createVueConfig(options?: {
-  readonly supportLegacyBrowsers: boolean,
-}): UserConfig {
+export function createVueConfig(): UserConfig {
   return {
     root: WEB_DIRECTORY,
     base: process.env.DEPLOY_BASE_URL ?? '/',
@@ -46,7 +43,6 @@ export function createVueConfig(options?: {
     plugins: [
       vue(),
       ViteYaml(),
-      ...[options?.supportLegacyBrowsers ? legacy() : undefined],
       ViteMinifyPlugin(getStaticHtmlMinificationOptions()), // Minifies index.html
     ],
     esbuild: {
@@ -78,9 +74,7 @@ export function createVueConfig(options?: {
   };
 }
 
-export default defineConfig(createVueConfig({
-  supportLegacyBrowsers: false,
-}));
+export default defineConfig(createVueConfig());
 
 function getCollectionChunkName(id: string): string | undefined {
   const collectionMatch = id.match(/\/collections\/(windows|macos|linux)\.yaml$/);

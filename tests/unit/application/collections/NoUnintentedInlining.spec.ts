@@ -35,10 +35,11 @@ describe('collection files to have no unintended inlining', () => {
 });
 
 async function findBadLineNumbers(fileContent: string): Promise<number[]> {
-  return [
-    ...findLineNumbersEndingWith(fileContent, 'revertCode:'),
-    ...findLineNumbersEndingWith(fileContent, 'code:'),
-  ];
+  /*
+    Only `code:` is checked: a line ending with `revertCode:` also ends with `code:`, so checking
+    both reports the same line twice.
+  */
+  return findLineNumbersEndingWith(fileContent, 'code:');
 }
 
 function findLineNumbersEndingWith(content: string, ending: string): number[] {

@@ -67,6 +67,18 @@ describe('compiled collection regressions', () => {
       expect(script.code.revert).to.not.include('"$capability.Name"');
     });
 
+    it('restores optional features only when privacy.sexy disabled them', () => {
+      const script = getScript(OperatingSystem.Windows, 'Disable "Telnet Client" feature');
+
+      expect(script.code.execute).to.include("'privacy.sexy\\state\\features'");
+      expect(script.code.execute).to.include('[IO.File]::WriteAllText($statePath, \'Enabled\')');
+      expect(script.code.revert).to.include(
+        'privacy.sexy did not disable feature',
+      );
+      expect(script.code.revert).to.include('Remove-Item -LiteralPath $statePath -Force');
+      expect(script.code.revert).to.not.include('$disabledByDefault');
+    });
+
     it('adds a rule when blocking executables from running', () => {
       // A doubled backtick produced an unbindable argument, so `New-ItemProperty` always failed and
       // no `DisallowRun` rule was ever created.
@@ -134,6 +146,25 @@ describe('compiled collection regressions', () => {
         );
         expect(script.level).to.equal(undefined);
       }
+    });
+
+    it('embeds the state-preserving Paint AI policy script', () => {
+      const source = readFileSync(
+        resolve('src/application/collections/resources/windows/manage-paint-ai.ps1'),
+        'utf8',
+      );
+      const script = getScript(OperatingSystem.Windows, 'Disable generative AI features in Paint');
+
+      const executePayload = extractEmbeddedBase64Payload(script.code.execute);
+      const revertPayload = extractEmbeddedBase64Payload(script.code.revert ?? '');
+
+      expect(Buffer.from(executePayload, 'base64').toString('utf8')).to.equal(source);
+      expect(Buffer.from(revertPayload, 'base64').toString('utf8')).to.equal(source);
+      expect(script.code.execute).to.include('-Action Disable');
+      expect(script.code.revert).to.include('-Action Restore');
+      expect(source).to.include('$key.GetValueKind($Name)');
+      expect(source).to.include('RegistryValueOptions]::DoNotExpandEnvironmentNames');
+      expect(source).to.include('because it changed after privacy.sexy applied it');
     });
 
     it('ignores absent GDID services but fails closed on other inventory errors', () => {
@@ -284,30 +315,52 @@ describe('compiled collection regressions', () => {
     /*
       A user who applies a preset should be able to get back to where they started.
 
-      Deleting data cannot be undone, so scripts that clear data are necessarily irreversible and
-      are named accordingly. A script that *changes a setting* has no such excuse: if it is offered
-      by a preset it must provide revert code, otherwise the user has no way back.
+      Display names are not safety metadata. In particular, a `Clear`, `Empty`, or `Remove` prefix
+      does not make deletion reversible, so no irreversible script belongs in a preset.
     */
-    const dataRemovalNamePrefixes = ['Clear ', 'Empty ', 'Remove '];
-
     for (const os of [OperatingSystem.Windows, OperatingSystem.macOS, OperatingSystem.Linux]) {
-      it(`${OperatingSystem[os]} recommends no irreversible configuration change`, () => {
+      it(`${OperatingSystem[os]} recommends no irreversible action`, () => {
         const offenders = getScripts(os)
           .filter((script) => script.level === RecommendationLevel.Standard
             || script.level === RecommendationLevel.Strict)
           .filter((script) => !script.canRevert())
-          .filter((script) => !dataRemovalNamePrefixes.some(
-            (prefix) => script.name.startsWith(prefix),
-          ))
           .map((script) => script.name);
 
         expect(offenders).to.deep.equal([], formatAssertionMessage([
-          'A preset recommends a script that changes a setting but cannot be reverted.',
-          'Add revert code, or remove its `recommend` key:',
+          'A preset recommends an action that cannot be reverted.',
+          'Implement exact-state restoration, or remove its `recommend` key:',
           ...offenders,
         ]));
       });
     }
+
+    it('does not recommend package or app removal', () => {
+      const removalCommands = ['Remove-AppxPackage', 'apt-get purge', 'pacman -Rcns'];
+      const offenders = [OperatingSystem.Windows, OperatingSystem.macOS, OperatingSystem.Linux]
+        .flatMap((os) => getScripts(os))
+        .filter((script) => script.level !== undefined)
+        .filter((script) => removalCommands.some(
+          (command) => script.code.execute.includes(command),
+        ))
+        .map((script) => script.name);
+
+      expect(offenders).to.deep.equal([], formatAssertionMessage([
+        'A preset recommends package or app removal, which cannot restore app data or provenance:',
+        ...offenders,
+      ]));
+    });
+
+    it('does not recommend non-stateful Windows task mutation', () => {
+      const offenders = getScripts(OperatingSystem.Windows)
+        .filter((script) => script.level !== undefined)
+        .filter((script) => script.code.execute.includes('Disable-ScheduledTask'))
+        .map((script) => script.name);
+
+      expect(offenders).to.deep.equal([], formatAssertionMessage([
+        'A preset recommends disabling a task without recording its prior state:',
+        ...offenders,
+      ]));
+    });
   });
 });
 

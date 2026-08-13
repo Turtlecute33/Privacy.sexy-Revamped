@@ -24,20 +24,20 @@ function ensureNoDuplicateIds(
   throw new Error(`Duplicate executable IDs found: ${formattedDuplicateIds}`);
 }
 
+/*
+  Tracking seen IDs in a `Set` keeps this linear. Scanning the array for each executable instead
+  costs a quadratic number of comparisons, which is measurable on the Windows collection where
+  there are thousands of executables and this runs on every application load.
+*/
 function getExecutablesWithDuplicateIds(
   executables: readonly Identifiable[],
 ): Identifiable[] {
-  return executables
-    .filter(
-      (executable, index, array) => {
-        const otherIndex = array.findIndex(
-          (otherExecutable) => haveIdenticalIds(executable, otherExecutable),
-        );
-        return otherIndex !== index;
-      },
-    );
-}
-
-function haveIdenticalIds(first: Identifiable, second: Identifiable): boolean {
-  return first.executableId === second.executableId;
+  const seenIds = new Set<Identifiable['executableId']>();
+  return executables.filter((executable) => {
+    if (seenIds.has(executable.executableId)) {
+      return true;
+    }
+    seenIds.add(executable.executableId);
+    return false;
+  });
 }

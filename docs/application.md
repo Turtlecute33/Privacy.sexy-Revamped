@@ -47,7 +47,7 @@ This happens through following abstractions:
 - Loading modules:
   - `ApplicationLoader.ts`: Orchestrates constructing/loading Application object.
   - `ProjectDetailsLoader.ts`: Provides metadata about the application that's not related to any of the collections.
-  - `CollectionsProvider.ts`: Loads, parses and compiles the collection data.
+  - [`CollectionsLoader.ts`](./../src/application/Application/Loader/Collections/CollectionsLoader.ts): Loads, parses and compiles the collection data.
     - The build tool loads (or injects) application data ([collection yaml files](./../src/application/collections/)) into the application layer in compile time.
     - It uses [`CollectionCompiler`](./../src/application/Application/Loader/Collections/Compiler/CollectionCompiler.ts) to compile the application:
       - It compiles templating syntax during parsing to create the end scripts.

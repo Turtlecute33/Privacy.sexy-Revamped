@@ -39,22 +39,18 @@ actions:
                 children:
                     -
                         name: Clear bash history
-                        recommend: standard
                         code: rm -f ~/.bash_history
                     -
                         name: Clear zsh history
-                        recommend: standard
                         code: rm -f ~/.zsh_history
             -
                 name: Clear CUPS printer job cache
-                recommend: strict
                 code: |-
                     sudo rm -rfv /var/spool/cups/c0*
                     sudo rm -rfv /var/spool/cups/tmp/*
                     sudo rm -rfv /var/spool/cups/cache/job.cache*
             -
                 name: Empty current user's trash
-                recommend: strict
                 code: |-
                     rm -rfv -- "$HOME/.Trash/"* 2>/dev/null
             -
@@ -88,13 +84,13 @@ actions:
 
                     > **Caution:** Applications that are running while this script executes may misbehave or
                     > crash until you reboot, because files they are actively using disappear underneath them.
-                    > `/System/Library/Caches` is additionally protected by System Integrity Protection on
-                    > modern macOS, so that part of the script has no effect unless SIP is disabled.
                     >
                     > Reboot after running this script.
+
+                    `/System/Library/Caches` is not touched: System Integrity Protection makes it unwritable even
+                    for `root`, so clearing it is not possible without disabling SIP.
                 code: |-
                     sudo rm -rfv /Library/Caches/* &>/dev/null
-                    sudo rm -rfv /System/Library/Caches/* &>/dev/null
                     sudo rm -rfv ~/Library/Caches/* &>/dev/null
             -
                 category: Clear system and app logs
@@ -137,7 +133,6 @@ actions:
                         children:
                             -
                                 name: Clear diagnostic logs
-                                recommend: strict # Deleting recent logs may reduce auditability
                                 docs: |- # refactor-with-variables: • Caution • Log privacy/security/cleanup paragraph • Symbolic link
                                     This script removes diagnostic logs.
 
@@ -165,7 +160,6 @@ actions:
                                         grantPermissions: 'true' # 🔒️ Requires `sudo` since macOS Sonoma 14.1.3
                             -
                                 name: Clear diagnostic log details
-                                recommend: strict # Deleting recent logs may reduce auditability
                                 docs: |- # refactor-with-variables: • Caution • Log privacy/security/cleanup paragraph • Symbolic link
                                     This script removes extra logging details for diagnostic logs.
 
@@ -193,7 +187,6 @@ actions:
                                         grantPermissions: 'true' # 🔒️ Requires `sudo` since macOS Sonoma 14.1.3
                     -
                         name: Clear Apple System Logs (ASL)
-                        recommend: strict # Deleting recent logs may reduce auditability
                         docs: |- # refactor-with-variables: • Caution • Log privacy/security/cleanup paragrap • Symbolic link
                             This script deletes Apple System Log (ASL) files, enhancing your privacy and security.
 
@@ -244,7 +237,6 @@ actions:
                                     grantPermissions: 'true'
                     -
                         name: Clear installation logs
-                        recommend: strict # Deleting recent logs may reduce auditability
                         docs: |- # refactor-with-variables: • Caution • Symbolic link
                             This script deletes installation logs.
 
@@ -305,7 +297,6 @@ actions:
                                 grantPermissions: 'true' # 🔒️ Requires `sudo` since macOS Sonoma 14.1.3
                     -
                         name: Clear system application logs
-                        recommend: strict # Deleting recent logs may reduce auditability
                         docs: |- # refactor-with-variables: • Caution
                             This script clears the system application logs.
 
@@ -335,7 +326,6 @@ actions:
                                 grantPermissions: 'true' # 🔒️ Requires `sudo` since macOS Sonoma 14.1.3
                     -
                         name: Clear user application logs
-                        recommend: strict # Deleting recent logs may reduce troubleshooting capabilities but should not impact the security.
                         docs: |- # refactor-with-variables: • Caution
                             This script deletes user application logs from your system.
 
@@ -361,7 +351,6 @@ actions:
                                 # grantPermissions: 'false' # Home directory does not require `sudo` access.
                     -
                         name: Clear Mail app logs
-                        recommend: standard # Deleting recent logs may reduce auditability but improves operational stability of the Mail app and the OS.
                         docs: |- # refactor-with-variables: • Caution
                             This script deletes the log files of the Mail app.
 
@@ -384,7 +373,6 @@ actions:
                                 # grantPermissions: 'false' # Home directory does not require `sudo` access.
                     -
                         name: Clear user activity audit logs (login, logout, authentication, etc.)
-                        recommend: strict # Deleting recent logs may reduce auditability
                         docs: |- # refactor-with-variables: • Caution • Symbolic link
                             This script deletes audit logs from your system, enhancing your privacy by erasing records of your activities.
 
@@ -415,7 +403,6 @@ actions:
                                 grantPermissions: 'true' # 🔒️ Requires `sudo` since macOS Sonoma 14.1.3
                     -
                         name: Clear system maintenance logs
-                        recommend: standard # Routine operational data that is not critical
                         docs: |- # refactor-with-variables: • Caution • Symbolic link
                             This script deletes system maintenance logs, enhancing user privacy by removing traces of system activity.
 
@@ -454,7 +441,6 @@ actions:
                                     grantPermissions: 'true' # 🔒️ Requires `sudo` since macOS Sonoma 14.1.3
                     -
                         name: Clear app installation logs
-                        recommend: strict # Has security and privacy implications but their removal reduce auditability
                         docs: |- # refactor-with-variables: • Caution • Symbolic link
                             This script deletes logs that record the history of installed applications and updates.
 
@@ -489,7 +475,7 @@ actions:
                 category: Clear browser history
                 children:
                     -
-                        category: Clear Chrome history
+                        category: Clear Chrome Default-profile history
                         children:
                             -
                                 name: Clear Chrome browsing history
@@ -497,8 +483,16 @@ actions:
                                     rm -rfv ~/Library/Application\ Support/Google/Chrome/Default/History &>/dev/null
                                     rm -rfv ~/Library/Application\ Support/Google/Chrome/Default/History-journal &>/dev/null
                             -
-                                name: Clear Chrome cache
-                                code: sudo rm -rfv ~/Library/Application\ Support/Google/Chrome/Default/Application\ Cache/* &>/dev/null
+                                name: Clear Chrome Default-profile cache
+                                docs: |-
+                                    Chrome keeps its HTTP cache in `Cache` and its compiled-script cache in `Code Cache`,
+                                    both inside the profile directory.
+
+                                    The older `Application Cache` directory belonged to the AppEngine/AppCache API, which
+                                    Chrome removed in version 95, so it no longer exists on supported versions.
+                                code: |-
+                                    rm -rfv ~/Library/Application\ Support/Google/Chrome/Default/Cache/* &>/dev/null
+                                    rm -rfv ~/Library/Application\ Support/Google/Chrome/Default/Code\ Cache/* &>/dev/null
                     -
                         category: Clear Safari history
                         children:
@@ -512,9 +506,6 @@ actions:
                                     rm -f ~/Library/Safari/History.db-lock
                                     rm -f ~/Library/Safari/History.db-shm
                                     rm -f ~/Library/Safari/History.db-wal
-                                    # For older versions of Safari
-                                    rm -f ~/Library/Safari/History.plist # URL, visit count, webpage title, last visited timestamp, redirected URL, autocomplete
-                                    rm -f ~/Library/Safari/HistoryIndex.sk # History index
                             -
                                 name: Clear Safari downloads history
                                 docs: https://web.archive.org/web/20250313121458/https://blog.d204n6.com/2020/09/macos-safari-preferences-and-privacy.html
@@ -562,9 +553,10 @@ actions:
                                   - https://web.archive.org/web/20240314132018/https://community.spiceworks.com/t/understanding-the-safari-cookies-binarycookies-file-format/928827
                                   - https://web.archive.org/web/20240314060318/https://link.springer.com/content/pdf/10.1007/0-387-36891-4_13.pdf
                                 code: |-
+                                    # Sandboxed Safari (≥ macOS Catalina) stores cookies inside its container
+                                    rm -f ~/Library/Containers/com.apple.Safari/Data/Library/Cookies/Cookies.binarycookies
+                                    # Used by earlier, non-sandboxed versions
                                     rm -f ~/Library/Cookies/Cookies.binarycookies
-                                    # Used before Safari 5.1
-                                    rm -f ~/Library/Cookies/Cookies.plist
                             -
                                 name: Clear Safari zoom level preferences per site
                                 docs: https://web.archive.org/web/20250313121458/https://blog.d204n6.com/2020/09/macos-safari-preferences-and-privacy.html
@@ -583,7 +575,7 @@ actions:
                             -
                                 name: Clear Firefox cache
                                 code: |-
-                                    sudo rm -rf ~/Library/Caches/Mozilla/
+                                    rm -rfv ~/Library/Caches/Mozilla/
                                     rm -fv ~/Library/Application\ Support/Firefox/Profiles/*/netpredictions.sqlite
                             -
                                 name: Clear Firefox form history
@@ -606,7 +598,15 @@ actions:
                                     rm -fv ~/Library/Application\ Support/Firefox/Profiles/*/sessionstore-backups/upgrade.js*-20*
                             -
                                 name: Clear Firefox passwords
-                                docs: https://web.archive.org/web/20210425202923/http://kb.mozillazine.org/Password_Manager
+                                docs: |-
+                                    This script deletes the Firefox password database, so the browser no longer holds
+                                    the credentials it saved for you.
+
+                                    > **Caution:** This cannot be undone and there is no revert. Every password saved in
+                                    > Firefox is destroyed, including any that exist nowhere else. Export your logins or
+                                    > confirm they are in a password manager before running this.
+
+                                    [1]: https://web.archive.org/web/20210425202923/http://kb.mozillazine.org/Password_Manager "Password Manager | kb.mozillazine.org"
                                 code: |-
                                     rm -fv ~/Library/Application\ Support/Firefox/Profiles/*/signons.txt
                                     rm -fv ~/Library/Application\ Support/Firefox/Profiles/*/signons2.txt
@@ -639,38 +639,32 @@ actions:
                 children:
                     -
                         name: Clear Adobe cache
-                        recommend: standard
                         code: sudo rm -rfv ~/Library/Application\ Support/Adobe/Common/Media\ Cache\ Files/* &>/dev/null
                     -
                         name: Clear Gradle cache
-                        recommend: strict
                         code: |-
                             if [ -d "$HOME/.gradle/caches" ]; then
                                 rm -rfv ~/.gradle/caches/ &> /dev/null
                             fi
                     -
                         name: Clear Dropbox cache
-                        recommend: standard
                         code: |-
                             if [ -d "$HOME/Dropbox/.dropbox.cache" ]; then
                                 sudo rm -rfv ~/Dropbox/.dropbox.cache/* &>/dev/null
                             fi
                     -
                         name: Clear Google Drive File Stream cache
-                        recommend: standard
                         code: |-
                             killall "Google Drive File Stream"
                             rm -rfv ~/Library/Application\ Support/Google/DriveFS/[0-9a-zA-Z]*/content_cache &>/dev/null
                     -
                         name: Clear Composer cache
-                        recommend: strict
                         code: |-
                             if type "composer" &> /dev/null; then
                                 composer clearcache &> /dev/null
                             fi
                     -
                         name: Clear Homebrew cache
-                        recommend: strict
                         code: |-
                             if type "brew" &>/dev/null; then
                                 brew cleanup -s &>/dev/null
@@ -679,14 +673,12 @@ actions:
                             fi
                     -
                         name: Clear old Ruby gem versions
-                        recommend: strict
                         code: |-
                             if type "gem" &> /dev/null; then
                                 gem cleanup &>/dev/null
                             fi
                     -
                         name: Clear unused Docker data
-                        recommend: strict
                         docs: |-
                             This script frees up disk space, but also improves user privacy by:
 
@@ -726,21 +718,18 @@ actions:
                             fi
                     -
                         name: Clear Pyenv-Virtualenv cache
-                        recommend: strict
                         code: |-
                             if [ "$PYENV_VIRTUALENV_CACHE_PATH" ]; then
                                 rm -rfv $PYENV_VIRTUALENV_CACHE_PATH &>/dev/null
                             fi
                     -
                         name: Clear NPM cache
-                        recommend: strict
                         code: |-
                             if type "npm" &> /dev/null; then
                                 npm cache clean --force
                             fi
                     -
                         name: Clear Yarn cache
-                        recommend: strict
                         code: |-
                             if type "yarn" &> /dev/null; then
                                 echo 'Cleanup Yarn Cache...'
@@ -750,20 +739,10 @@ actions:
                 category: Clear iOS usage data
                 children:
                     -
-                        name: Clear iOS app copies from iTunes
-                        recommend: strict
-                        code: rm -rfv ~/Music/iTunes/iTunes\ Media/Mobile\ Applications/* &>/dev/null
-                    -
-                        name: Clear iOS photo cache
-                        recommend: standard
-                        code: rm -rf ~/Pictures/iPhoto\ Library/iPod\ Photo\ Cache/*
-                    -
                         name: Clear iOS Device Backups
-                        recommend: strict
                         code: rm -rfv ~/Library/Application\ Support/MobileSync/Backup/* &>/dev/null
                     -
                         name: Clear iOS simulators
-                        recommend: strict
                         code: |-
                             if type "xcrun" &>/dev/null; then
                                 osascript -e 'tell application "com.apple.CoreSimulator.CoreSimulatorService" to quit'
@@ -774,7 +753,13 @@ actions:
                             fi
                     -
                         name: Clear list of connected iOS devices
-                        recommend: strict
+                        docs: |-
+                            This script removes the record of which iOS devices have been connected to this Mac, including
+                            the pairing records in `/var/db/lockdown`.
+
+                            > **Caution:** Removing the pairing records means every iPhone and iPad has to be trusted
+                            > again: the next time you connect one you must unlock it and confirm the "Trust This
+                            > Computer" prompt before syncing or backups work.
                         code: |-
                             sudo defaults delete "$HOME/Library/Preferences/com.apple.iPod.plist" "conn:128:Last Connect"
                             sudo defaults delete "$HOME/Library/Preferences/com.apple.iPod.plist" Devices
@@ -783,21 +768,15 @@ actions:
                             sudo rm -rfv /var/db/lockdown/*
             -
                 name: Clear Xcode's derived data and archives
-                recommend: strict
                 code: |-
                     rm -rfv ~/Library/Developer/Xcode/DerivedData/* &>/dev/null
                     rm -rfv ~/Library/Developer/Xcode/Archives/* &>/dev/null
                     rm -rfv ~/Library/Developer/Xcode/iOS Device Logs/* &>/dev/null
             -
                 name: Clear DNS cache
-                recommend: standard
                 code: |-
                     sudo dscacheutil -flushcache
                     sudo killall -HUP mDNSResponder
-            -
-                name: Clear inactive memory
-                recommend: standard
-                code: sudo purge
             -
                 category: Clear application privacy permissions
                 docs: |-
@@ -1013,7 +992,6 @@ actions:
                                 serviceId: PostEvent
                     -
                         name: Clear "Speech Recognition" permissions
-                        recommend: strict
                         docs: |-
                             This script resets permissions for using Speech Recognition [1].
                             It revokes application access to the speech recognition facility and sending speech data to Apple [1], protecting user privacy.
@@ -1080,7 +1058,6 @@ actions:
                                 serviceId: SystemPolicySysAdminFiles
             -
                 name: Remove Guest User # Apple capitalizes "guest user" as "Guest User"
-                recommend: strict
                 docs: |-
                     This script removes the built-in Guest User account from macOS to prevent unauthorized access.
 
@@ -1259,7 +1236,6 @@ actions:
                         deleteOnRevert: 'true'
             -
                 name: Remove Google Software Update service
-                recommend: strict
                 code: |-
                     googleUpdateFile=~/Library/Google/GoogleSoftwareUpdate/GoogleSoftwareUpdate.bundle/Contents/Resources/ksinstall
                     if [ -f "$googleUpdateFile" ]; then
@@ -1321,12 +1297,7 @@ actions:
                             The main setting is `ProductPromo.ForcePromoOff` [1] that you can check using:
 
                             1. `defaults read 'com.parallels.Parallels Desktop' 'ProductPromo.ForcePromoOff'`
-                            2. `defaults read 'com.parallels.Parallels Desktop' 'WelcomeScreenPromo.PromoOff'`
-
                             By default, on clean installations the value is `0` which is equivalent of `no`.
-
-                            There is also `WelcomeScreenPromo.PromoOff` setting that's pre-configured to `1` (`no` as
-                            default). It's undocumented but still kept disabled by this script.
 
                             [1]: https://web.archive.org/web/20240314062932/https://forum.parallels.com/threads/unable-to-process-the-upgrade-request.345603/ "Unable to process the upgrade request | Parallels Forums | forum.parallels.com"
                             [2]: https://web.archive.org/web/20221012151800/https://kb.parallels.com/114422 "How do I turn off notifications in Parallels Desktop and Parallels Access? | Knowledge Base | parallels.com"
@@ -1339,14 +1310,6 @@ actions:
                                     valueType: bool
                                     value: 'yes'
                                     defaultValue: 'no'
-                            -
-                                function: SetUserPreference
-                                parameters:
-                                    domain: com.parallels.Parallels Desktop
-                                    key: WelcomeScreenPromo.PromoOff
-                                    valueType: bool
-                                    value: 'yes'
-                                    defaultValue: 'yes' # Pre-configured to disabled, so revert keeps it disabled
     -
         category: Configure OS
         children:
@@ -1493,12 +1456,10 @@ actions:
                 children:
                     -
                         name: Disable remote management service
-                        recommend: strict
                         code: sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart -deactivate -stop
                         revertCode: sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart -activate -restart -agent -console
                     -
                         name: Remove Apple Remote Desktop Settings
-                        recommend: strict
                         code: |-
                             sudo rm -rf /var/db/RemoteManagement
                             sudo defaults delete /Library/Preferences/com.apple.RemoteDesktop.plist
@@ -1519,8 +1480,130 @@ actions:
             -
                 name: Disable remote Apple events
                 recommend: strict
-                code: sudo systemsetup -setremoteappleevents off
-                revertCode: sudo systemsetup -setremoteappleevents on
+                code: |-
+                    remote_events_state='/var/db/privacy.sexy-remote-apple-events-state'
+                    current_state="$(systemsetup -getremoteappleevents 2>/dev/null)"
+                    if [[ "$current_state" == *On ]]; then
+                        printf 'on\n' > "$remote_events_state"
+                        chmod 600 "$remote_events_state"
+                        if systemsetup -setremoteappleevents off; then
+                            echo 'Disabled remote Apple events.'
+                        else
+                            rm --force "$remote_events_state"
+                            >&2 echo 'Failed to disable remote Apple events.'
+                        fi
+                    elif [[ "$current_state" == *Off ]]; then
+                        echo 'Skipping, remote Apple events are already disabled.'
+                    else
+                        >&2 echo "Could not determine remote Apple events state: $current_state"
+                    fi
+                revertCode: |-
+                    remote_events_state='/var/db/privacy.sexy-remote-apple-events-state'
+                    current_state="$(systemsetup -getremoteappleevents 2>/dev/null)"
+                    if [ ! -e "$remote_events_state" ]; then
+                        echo 'Skipping, no remote Apple events state recorded by privacy.sexy was found.'
+                    elif [[ "$current_state" != *Off ]]; then
+                        >&2 echo 'Skipping revert because remote Apple events changed after privacy.sexy disabled them.'
+                    elif systemsetup -setremoteappleevents on; then
+                        rm --force "$remote_events_state"
+                        echo 'Restored remote Apple events to their original enabled state.'
+                    else
+                        >&2 echo 'Failed to restore remote Apple events.'
+                    fi
+            -
+                name: Disable Apple content caching
+                docs: |-
+                    Content caching lets this Mac serve cached Apple software and iCloud content to other
+                    Apple devices on the local network. Disabling it can reduce background network, disk,
+                    and service activity when the Mac is not intentionally used as a cache [1].
+
+                    The script records whether content caching was active and restores it only when this
+                    execution deactivated it. It does not flush or delete cached content.
+
+                    > **Caution:** Other devices on the network may use more internet bandwidth and take
+                    > longer to download updates and iCloud content.
+
+                    [1]: https://support.apple.com/guide/deployment/content-caching-from-the-command-line-depfaba5bc52/web "Content caching from the command line on Mac | Apple Support"
+                code: |-
+                    asset_cache_tool='/usr/bin/AssetCacheManagerUtil'
+                    asset_cache_state='/var/db/privacy.sexy-content-cache-state'
+                    if [ ! -x "$asset_cache_tool" ]; then
+                        echo 'Skipping, AssetCacheManagerUtil is not available on this Mac.'
+                    elif [ -e "$asset_cache_state" ]; then
+                        echo "Original content-caching state is already recorded at \"$asset_cache_state\"."
+                    else
+                        activation_state="$($asset_cache_tool isActivated 2>/dev/null | tr '[:upper:]' '[:lower:]')"
+                        if [[ "$activation_state" == *deactivated* ]] \
+                            || [[ "$activation_state" =~ ^(false|no|0)$ ]]; then
+                            printf 'inactive\n' > "$asset_cache_state"
+                            chmod 0600 "$asset_cache_state"
+                            echo 'Skipping, Apple content caching is already inactive.'
+                        elif [[ "$activation_state" == *activated* ]] \
+                            || [[ "$activation_state" =~ ^(true|yes|1)$ ]]; then
+                            printf 'active\n' > "$asset_cache_state"
+                            chmod 600 "$asset_cache_state"
+                            if sudo "$asset_cache_tool" deactivate; then
+                                echo 'Disabled Apple content caching.'
+                            else
+                                rm --force "$asset_cache_state"
+                                >&2 echo 'Failed to disable Apple content caching.'
+                            fi
+                        else
+                            >&2 echo "Could not determine content-caching state: $activation_state"
+                        fi
+                    fi
+                revertCode: |-
+                    asset_cache_tool='/usr/bin/AssetCacheManagerUtil'
+                    asset_cache_state='/var/db/privacy.sexy-content-cache-state'
+                    if [ ! -x "$asset_cache_tool" ]; then
+                        echo 'Skipping, AssetCacheManagerUtil is not available on this Mac.'
+                    elif [ ! -e "$asset_cache_state" ]; then
+                        echo 'Skipping, no content-caching state recorded by privacy.sexy was found.'
+                    elif [ "$(cat "$asset_cache_state")" = 'active' ]; then
+                        if sudo "$asset_cache_tool" activate; then
+                            rm --force "$asset_cache_state"
+                            echo 'Restored active Apple content caching.'
+                        else
+                            >&2 echo 'Failed to restore Apple content caching.'
+                        fi
+                    else
+                        rm --force "$asset_cache_state"
+                        echo 'Content caching was already inactive; no change was required.'
+                    fi
+            -
+                name: Disable wake for network access during sleep
+                recommend: strict
+                docs: |-
+                    Disables the `womp` power-management setting for every power source supported by
+                    this Mac. Sleeping Macs will no longer wake to provide shared files, printers, media,
+                    or other network services. Hardware that does not expose the setting is left unchanged.
+
+                    The exact prior value for battery, charger, and UPS power is recorded separately and
+                    restored on revert.
+
+                    [1]: https://support.apple.com/guide/mac-help/set-sleep-and-wake-settings-mchle41a6ccd/mac "Set sleep and wake settings for your Mac | Apple Support"
+                call:
+                    function: SetPowerManagementSetting
+                    parameters:
+                        setting: womp
+                        value: '0'
+            -
+                name: Disable Power Nap during sleep
+                recommend: strict
+                docs: |-
+                    Disables the `powernap` power-management setting for every power source supported by
+                    this Mac. Mail, Calendar, iCloud, Time Machine, and other supported background work may
+                    be delayed until the Mac wakes. Hardware that does not expose the setting is unchanged.
+
+                    The exact prior value for battery, charger, and UPS power is recorded separately and
+                    restored on revert.
+
+                    [1]: https://support.apple.com/guide/mac-help/set-sleep-and-wake-settings-mchle41a6ccd/mac "Set sleep and wake settings for your Mac | Apple Support"
+                call:
+                    function: SetPowerManagementSetting
+                    parameters:
+                        setting: powernap
+                        value: '0'
             -
                 name: Disable automatic storage of documents in iCloud Drive
                 docs: https://web.archive.org/web/20250313122513/https://macos-defaults.com/finder/nsdocumentsavenewdocumentstocloud.html
@@ -2205,7 +2288,6 @@ actions:
                                     # Do not set `on` revert as this is not the default OS state.
                     -
                         name: Disable guest file sharing over SMB
-                        recommend: strict
                         docs: |-
                             This script prevents anonymous (guest) users from accessing files shared over the SMB protocol.
 
@@ -2277,7 +2359,6 @@ actions:
                                     revertCode: sudo sysadminctl -smbGuestAccess on
                     -
                         name: Disable guest file sharing over AFP
-                        recommend: strict
                         docs: |-
                             This script prevents anonymous users from accessing shared files through the Apple Filing Protocol (AFP).
 
@@ -2363,11 +2444,38 @@ actions:
                         recommend: standard
                         docs: https://web.archive.org/web/20250313121640/https://osxdaily.com/2016/08/16/enable-ssh-mac-command-line/
                         # Check if enabled: sudo systemsetup -getremotelogin, returns "Remote Login: On" or "Off"
-                        code: echo 'yes' | sudo systemsetup -setremotelogin off
-                        revertCode: sudo systemsetup -setremotelogin on
+                        code: |-
+                            remote_login_state='/var/db/privacy.sexy-remote-login-state'
+                            current_state="$(systemsetup -getremotelogin 2>/dev/null)"
+                            if [[ "$current_state" == *On ]]; then
+                                printf 'on\n' > "$remote_login_state"
+                                chmod 600 "$remote_login_state"
+                                if echo 'yes' | systemsetup -setremotelogin off; then
+                                    echo 'Disabled incoming SSH and SFTP logins.'
+                                else
+                                    rm --force "$remote_login_state"
+                                    >&2 echo 'Failed to disable remote login.'
+                                fi
+                            elif [[ "$current_state" == *Off ]]; then
+                                echo 'Skipping, remote login is already disabled.'
+                            else
+                                >&2 echo "Could not determine remote login state: $current_state"
+                            fi
+                        revertCode: |-
+                            remote_login_state='/var/db/privacy.sexy-remote-login-state'
+                            current_state="$(systemsetup -getremotelogin 2>/dev/null)"
+                            if [ ! -e "$remote_login_state" ]; then
+                                echo 'Skipping, no remote-login state recorded by privacy.sexy was found.'
+                            elif [[ "$current_state" != *Off ]]; then
+                                >&2 echo 'Skipping revert because remote login changed after privacy.sexy disabled it.'
+                            elif systemsetup -setremotelogin on; then
+                                rm --force "$remote_login_state"
+                                echo 'Restored remote login to its original enabled state.'
+                            else
+                                >&2 echo 'Failed to restore remote login.'
+                            fi
                     -
                         name: Disable the insecure TFTP service
-                        recommend: standard
                         # If the system does not require Trivial File Transfer Protocol (TFTP), then support for
                         # it is non-essential and should be disabled. The information system should be configured to
                         # provide only essential capabilities. Disabling TFTP helps prevent the unauthorized connection
@@ -2377,13 +2485,11 @@ actions:
                         revertCode: sudo launchctl enable 'system/com.apple.tftpd'
                     -
                         name: Disable Bonjour multicast advertising
-                        recommend: standard
                         docs: https://web.archive.org/web/20241125192601/https://www.stigviewer.com/stig/apple_os_x_10.11/2017-04-06/finding/V-67593
                         code: sudo defaults write /Library/Preferences/com.apple.mDNSResponder.plist NoMulticastAdvertisements -bool true
                         revertCode: sudo defaults write /Library/Preferences/com.apple.mDNSResponder.plist NoMulticastAdvertisements -bool false
                     -
                         name: Disable insecure telnet protocol
-                        recommend: standard
                         docs:
                             - https://web.archive.org/web/20241125065154/https://www.stigviewer.com/stig/apple_os_x_10.13/2020-09-11/finding/V-214882
                             - https://web.archive.org/web/20241125030109/https://www.stigviewer.com/stig/apple_os_x_10.10_yosemite_workstation/2017-04-06/finding/V-59671
@@ -2575,41 +2681,30 @@ actions:
                                 - https://web.archive.org/web/20250313121525/https://community.jamf.com/t5/jamf-pro/users-can-t-change-password-greyed-out/m-p/54228
                         code: |-
                             os_major_ver=$(sw_vers -productVersion | awk -F "." '{print $1}')
-                            os_minor_ver=$(sw_vers -productVersion | awk -F "." '{print $2}')
-                            if [[ $os_major_ver -le 10 \
-                                    || ( $os_major_ver -eq 10 && $os_minor_ver -lt 7 ) \
-                                ]]; then
-                                echo "No action needed, Gatekeeper is not available this OS version"
-                            else
-                                gatekeeper_status="$(spctl --status | awk '/assessments/ {print $2}')"
-                                if [ $gatekeeper_status = "disabled" ]; then
-                                    echo "No action needed, Gatekeeper is already disabled"
-                                elif [ $gatekeeper_status = "enabled" ]; then
-                                    sudo spctl --master-disable
-                                    sudo defaults write '/var/db/SystemPolicy-prefs' 'enabled' -string 'no'
-                                    echo "Disabled Gatekeeper"
-                                else
-                                    >&2 echo "Unknown gatekeeper status: $gatekeeper_status"
+                            gatekeeper_status="$(spctl --status | awk '/assessments/ {print $2}')"
+                            if [ "$gatekeeper_status" = "disabled" ]; then
+                                echo "No action needed, Gatekeeper is already disabled"
+                            elif [ "$gatekeeper_status" = "enabled" ]; then
+                                sudo spctl --master-disable
+                                sudo defaults write '/var/db/SystemPolicy-prefs' 'enabled' -string 'no'
+                                echo "Requested that Gatekeeper be disabled"
+                                if [ "$os_major_ver" -ge 13 ]; then
+                                    >&2 echo 'Not applied yet: since macOS Ventura this change only takes effect after you open'
+                                    >&2 echo 'System Settings > Privacy & Security and confirm the "Anywhere" option once.'
                                 fi
+                            else
+                                >&2 echo "Unknown gatekeeper status: $gatekeeper_status"
                             fi
                         revertCode: |-
-                            os_major_ver=$(sw_vers -productVersion | awk -F "." '{print $1}')
-                            os_minor_ver=$(sw_vers -productVersion | awk -F "." '{print $2}')
-                            if [[ $os_major_ver -le 10 \
-                                    || ( $os_major_ver -eq 10 && $os_minor_ver -lt 7 ) \
-                                ]]; then
-                                >&2 echo "Gatekeeper is not available in this OS version"
+                            gatekeeper_status="$(spctl --status | awk '/assessments/ {print $2}')"
+                            if [ "$gatekeeper_status" = "disabled" ]; then
+                                sudo spctl --master-enable
+                                sudo defaults write '/var/db/SystemPolicy-prefs' 'enabled' -string 'yes'
+                                echo "Enabled Gatekeeper"
+                            elif [ "$gatekeeper_status" = "enabled" ]; then
+                                echo "No action needed, Gatekeeper is already enabled"
                             else
-                                gatekeeper_status="$(spctl --status | awk '/assessments/ {print $2}')"
-                                if [ $gatekeeper_status = "disabled" ]; then
-                                    sudo spctl --master-enable
-                                    sudo defaults write '/var/db/SystemPolicy-prefs' 'enabled' -string 'yes'
-                                    echo "Enabled Gatekeeper"
-                                elif [ $gatekeeper_status = "enabled" ]; then
-                                    echo "No action needed, Gatekeeper is already enabled"
-                                else
-                                    >&2 echo "Unknown Gatekeeper status: $gatekeeper_status"
-                                fi
+                                >&2 echo "Unknown Gatekeeper status: $gatekeeper_status"
                             fi
             -
                 name: Disable library validation entitlement (library signature validation)
@@ -2903,6 +2998,83 @@ functions:
                         fi
                     fi
     -
+        name: SetPowerManagementSetting
+        # Records every supported power-source value before changing a pmset setting.
+        parameters:
+            - name: setting
+            - name: value
+        code: |-
+            power_setting='{{ $setting }}'
+            power_value='{{ $value }}'
+            power_state_file="/var/db/privacy.sexy-pmset-$power_setting-state"
+            read_power_values() {
+                LC_ALL=C pmset -g custom 2>/dev/null | awk -v setting="$power_setting" '
+                    /Battery Power:/ { source="b" }
+                    /AC Power:/ { source="c" }
+                    /UPS Power:/ { source="u" }
+                    $1 == setting && source != "" { print source "=" $2 }
+                '
+            }
+            previous_values="$(read_power_values)"
+            if [ -z "$previous_values" ]; then
+                echo "Skipping, this Mac does not expose the \"$power_setting\" power setting."
+            else
+                state_created='false'
+                if [ ! -e "$power_state_file" ]; then
+                    printf '%s\n' "$previous_values" > "$power_state_file"
+                    chmod 600 "$power_state_file"
+                    state_created='true'
+                fi
+                if pmset -a "$power_setting" "$power_value"; then
+                    echo "Set \"$power_setting\" to \"$power_value\" for all supported power sources."
+                else
+                    if [ "$state_created" = 'true' ]; then
+                        rm --force "$power_state_file"
+                    fi
+                    >&2 echo "Failed to set \"$power_setting\"."
+                fi
+            fi
+        revertCode: |-
+            power_setting='{{ $setting }}'
+            power_value='{{ $value }}'
+            power_state_file="/var/db/privacy.sexy-pmset-$power_setting-state"
+            read_power_values() {
+                LC_ALL=C pmset -g custom 2>/dev/null | awk -v setting="$power_setting" '
+                    /Battery Power:/ { source="b" }
+                    /AC Power:/ { source="c" }
+                    /UPS Power:/ { source="u" }
+                    $1 == setting && source != "" { print source "=" $2 }
+                '
+            }
+            if [ ! -e "$power_state_file" ]; then
+                echo "Skipping, no original state for \"$power_setting\" was found."
+            else
+                current_values="$(read_power_values)"
+                state_changed='false'
+                while IFS='=' read -r power_source current_value; do
+                    if [ -n "$power_source" ] && [ "$current_value" != "$power_value" ]; then
+                        state_changed='true'
+                    fi
+                done <<< "$current_values"
+                if [ "$state_changed" = 'true' ]; then
+                    >&2 echo "Skipping revert because \"$power_setting\" changed after privacy.sexy applied it."
+                else
+                    restore_failed='false'
+                    while IFS='=' read -r power_source original_value; do
+                        if [ -n "$power_source" ] \
+                            && ! pmset "-$power_source" "$power_setting" "$original_value"; then
+                            restore_failed='true'
+                        fi
+                    done < "$power_state_file"
+                    if [ "$restore_failed" = 'false' ]; then
+                        rm --force "$power_state_file"
+                        echo "Restored the original \"$power_setting\" values."
+                    else
+                        >&2 echo "Failed to restore every \"$power_setting\" value."
+                    fi
+                fi
+            fi
+    -
         name: RunInlineCode
         #   Marked: refactor-with-partials
         #     Same function in macOS, Linux, Windows
@@ -3040,9 +3212,8 @@ functions:
     -
         name: SetUserPreference
         # 💡 Purpose:
-        #   Writes a per-user preference with `defaults` as the invoking user rather than as root.
-        #   Provide either `defaultValue` to restore a known default on revert, or `deleteOnRevert` to
-        #   remove the key so that macOS falls back to its built-in default.
+        #   Writes a per-user preference with `defaults` as the invoking user rather than as root and
+        #   records the original value so revert can restore it instead of guessing a vendor default.
         parameters:
             - name: domain          # Preference domain, such as `com.apple.Safari`.
             - name: key             # Name of the preference key to write.
@@ -3056,22 +3227,81 @@ functions:
             function: RunAsTargetUser
             parameters:
                 code: |-
-                    if run_as_target_user defaults write '{{ $domain }}' '{{ $key }}' -{{ $valueType }} '{{ $value }}'; then
+                    preference_domain='{{ $domain }}'
+                    preference_key='{{ $key }}'
+                    preference_state_id="$(printf '%s\0%s' "$preference_domain" "$preference_key" | shasum -a 256 | awk '{ print $1 }')"
+                    preference_state_dir="$target_home/.local/state/privacy.sexy/defaults/$preference_state_id"
+                    if [ ! -d "$preference_state_dir" ]; then
+                        original_type="$(run_as_target_user defaults read-type "$preference_domain" "$preference_key" 2>/dev/null \
+                            | sed 's/^Type is //')"
+                        if [[ ! "$original_type" =~ ^(boolean|integer|float|string)?$ ]]; then
+                            >&2 echo "Cannot safely preserve unsupported preference type \"$original_type\"."
+                            exit 1
+                        fi
+                        run_as_target_user install --directory --mode=700 "$preference_state_dir"
+                        if [ -n "$original_type" ]; then
+                            printf '%s\n' "$original_type" | run_as_target_user tee "$preference_state_dir/original-type" > /dev/null
+                            run_as_target_user defaults read "$preference_domain" "$preference_key" \
+                                | run_as_target_user tee "$preference_state_dir/original-value" > /dev/null
+                        else
+                            printf 'absent\n' | run_as_target_user tee "$preference_state_dir/original-type" > /dev/null
+                            run_as_target_user touch "$preference_state_dir/original-value"
+                        fi
+                        run_as_target_user chmod 600 "$preference_state_dir/original-type" "$preference_state_dir/original-value"
+                    fi
+                    if run_as_target_user defaults write "$preference_domain" "$preference_key" -{{ $valueType }} '{{ $value }}'; then
+                        run_as_target_user defaults read-type "$preference_domain" "$preference_key" \
+                            | sed 's/^Type is //' | run_as_target_user tee "$preference_state_dir/applied-type" > /dev/null
+                        run_as_target_user defaults read "$preference_domain" "$preference_key" \
+                            | run_as_target_user tee "$preference_state_dir/applied-value" > /dev/null
+                        run_as_target_user chmod 600 "$preference_state_dir/applied-type" "$preference_state_dir/applied-value"
                         echo 'Successfully set "{{ $domain }}" preference "{{ $key }}" to "{{ $value }}".'
                     else
+                        run_as_target_user rm --recursive --force "$preference_state_dir"
                         >&2 echo 'Failed to set "{{ $domain }}" preference "{{ $key }}".'
                     fi
                 revertCode: |-
-                    {{ with $defaultValue }}
-                    if run_as_target_user defaults write '{{ $domain }}' '{{ $key }}' -{{ $valueType }} '{{ . }}'; then
-                        echo 'Successfully restored "{{ $domain }}" preference "{{ $key }}" to "{{ . }}".'
+                    preference_domain='{{ $domain }}'
+                    preference_key='{{ $key }}'
+                    preference_state_id="$(printf '%s\0%s' "$preference_domain" "$preference_key" | shasum -a 256 | awk '{ print $1 }')"
+                    preference_state_dir="$target_home/.local/state/privacy.sexy/defaults/$preference_state_id"
+                    if [ ! -d "$preference_state_dir" ]; then
+                        echo 'Skipping, no original state for "{{ $domain }}" preference "{{ $key }}" was found.'
                     else
-                        >&2 echo 'Failed to restore "{{ $domain }}" preference "{{ $key }}".'
+                        current_type_file="$(mktemp)"
+                        current_value_file="$(mktemp)"
+                        run_as_target_user defaults read-type "$preference_domain" "$preference_key" 2>/dev/null \
+                            | sed 's/^Type is //' > "$current_type_file"
+                        run_as_target_user defaults read "$preference_domain" "$preference_key" > "$current_value_file" 2>/dev/null
+                        if ! cmp --silent "$current_type_file" "$preference_state_dir/applied-type" \
+                            || ! cmp --silent "$current_value_file" "$preference_state_dir/applied-value"; then
+                            >&2 echo 'Skipping revert because "{{ $domain }}" preference "{{ $key }}" changed after privacy.sexy applied it.'
+                        else
+                            original_type="$(run_as_target_user cat "$preference_state_dir/original-type")"
+                            original_value="$(run_as_target_user cat "$preference_state_dir/original-value")"
+                            restore_succeeded='false'
+                            if [ "$original_type" = 'absent' ]; then
+                                run_as_target_user defaults delete "$preference_domain" "$preference_key" 2>/dev/null \
+                                    && restore_succeeded='true' # The key was originally absent.
+                            elif [ "$original_type" = 'boolean' ]; then
+                                run_as_target_user defaults write "$preference_domain" "$preference_key" -bool "$original_value" \
+                                    && restore_succeeded='true' # Restored a Boolean.
+                            elif [ "$original_type" = 'integer' ]; then
+                                run_as_target_user defaults write "$preference_domain" "$preference_key" -int "$original_value" \
+                                    && restore_succeeded='true' # Restored an integer.
+                            elif [ "$original_type" = 'float' ]; then
+                                run_as_target_user defaults write "$preference_domain" "$preference_key" -float "$original_value" \
+                                    && restore_succeeded='true' # Restored a floating-point value.
+                            elif [ "$original_type" = 'string' ]; then
+                                run_as_target_user defaults write "$preference_domain" "$preference_key" -string "$original_value" \
+                                    && restore_succeeded='true' # Restored a string.
+                            fi
+                            if [ "$restore_succeeded" = 'true' ]; then
+                                run_as_target_user rm --recursive --force "$preference_state_dir"
+                                echo 'Successfully restored "{{ $domain }}" preference "{{ $key }}".'
+                            else
+                                >&2 echo 'Failed to restore "{{ $domain }}" preference "{{ $key }}".'
+                            fi
+                        fi
+                        rm --force "$current_type_file" "$current_value_file"
                     fi
-                    {{ end }}{{ with $deleteOnRevert }}
-                    if run_as_target_user defaults delete '{{ $domain }}' '{{ $key }}' 2>/dev/null; then
-                        echo 'Successfully removed "{{ $domain }}" preference "{{ $key }}".'
-                    else
-                        echo 'Skipping, "{{ $domain }}" preference "{{ $key }}" is not set.'
-                    fi
-                    {{ end }}

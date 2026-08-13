@@ -60,7 +60,7 @@ See [ci-cd.md](./ci-cd.md) for more information.
 ### Building
 
 - Build web application: `npm run build`
-- (Re)create icons (see [documentation](../img/README.md)): `npm run create-icons`
+- (Re)create icons (see [documentation](../img/README.md)): `npm run icons:build`
 
 ### Scripts
 
