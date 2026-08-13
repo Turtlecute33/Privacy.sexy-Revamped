@@ -44,7 +44,6 @@
     "@types/markdown-it": "^14.1.2",
     "@typescript-eslint/eslint-plugin": "6.21.0",
     "@typescript-eslint/parser": "6.21.0",
-    "@vitejs/plugin-legacy": "^6.0.2",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/eslint-config-airbnb-with-typescript": "^8.0.0",
     "@vue/eslint-config-typescript": "12.0.0",
@@ -65,7 +64,6 @@
     "remark-validate-links": "^13.1.0",
     "sass": "~1.85.1",
     "start-server-and-test": "^3.0.11",
-    "terser": "^5.39.0",
     "tslib": "^2.8.1",
     "typescript": "~5.6.3",
     "vite": "^6.2.0",
@@ -75,7 +73,6 @@
     "yaml-lint": "^1.7.0"
   },
   "//devDependencies": {
-    "terser": "Used by `@vitejs/plugin-legacy` for minification",
     "@rushstack/eslint-patch": "Needed by `@vue/eslint-config-typescript` and `@vue/eslint-config-airbnb-with-typescript`",
     "@typescript-eslint/eslint-plugin": "Cannot migrate to ≥ v7 because of `@vue/eslint-config-airbnb-with-typescript`, see https://github.com/vuejs/eslint-config-airbnb/issues/63",
     "@typescript-eslint/parser": "Cannot migrate to ≥ v7 because of `@vue/eslint-config-airbnb-with-typescript`, see https://github.com/vuejs/eslint-config-airbnb/issues/63",

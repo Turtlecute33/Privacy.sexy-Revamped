@@ -31,8 +31,6 @@ declare module '@/application/collections/*' {
     readonly call: FunctionCallsData;
   }
 
-  export type InstructionHolder = CodeInstruction | CallInstruction;
-
   export interface ParameterDefinitionData {
     readonly name: string;
     readonly optional?: boolean;
