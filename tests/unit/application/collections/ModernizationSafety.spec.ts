@@ -105,6 +105,18 @@ describe('modernized collection safety boundaries', () => {
     }
   });
 
+  it('keeps LLMNR disabling out of presets because it can break local hostname resolution', () => {
+    const scripts = getCategories(OperatingSystem.Windows)
+      .flatMap((category) => category.scripts)
+      .filter((script) => script.name === 'Disable insecure "LLMNR" protocol');
+
+    expect(scripts.length).to.equal(1);
+    expect(scripts[0].level).to.equal(undefined, formatAssertionMessage([
+      'Disabling LLMNR can make local resources inaccessible by hostname when DNS is unavailable.',
+      'Keep this security and compatibility trade-off opt-in.',
+    ]));
+  });
+
   it('does not recommend removing the apps that sign-in and biometrics depend on', () => {
     // Uninstalling these leaves the user unable to authenticate, which is not a trade-off a
     // preset gets to make for them.

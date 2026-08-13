@@ -12449,7 +12449,6 @@ actions:
                         children:
                             -
                                 name: Disable insecure "LLMNR" protocol
-                                recommend: standard
                                 docs: |-
                                     This script disables Link-Local Multicast Name Resolution (LLMNR).
 
@@ -12463,6 +12462,11 @@ actions:
                                       capturing credentials, because Windows may then attempt to authenticate to the attacker.
 
                                     DNS resolution is unaffected by this script. Only the broadcast fallback is turned off.
+
+                                    > **Caution:** Devices that are not registered in DNS may rely on LLMNR for local hostname
+                                    > resolution. Disabling LLMNR can prevent access to network shares and other local resources
+                                    > by hostname even though they remain accessible by IP address. This is especially likely when
+                                    > NetBIOS over TCP/IP is also disabled.
 
                                     This complements *Disable insecure "NetBios" protocol*, which turns off the older broadcast
                                     protocol used for the same purpose.
