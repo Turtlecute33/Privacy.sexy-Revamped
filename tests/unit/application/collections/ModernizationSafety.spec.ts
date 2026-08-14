@@ -105,16 +105,28 @@ describe('modernized collection safety boundaries', () => {
     }
   });
 
-  it('keeps LLMNR disabling out of presets because it can break local hostname resolution', () => {
-    const scripts = getCategories(OperatingSystem.Windows)
-      .flatMap((category) => category.scripts)
-      .filter((script) => script.name === 'Disable insecure "LLMNR" protocol');
+  describe('keeps local name resolution fallbacks out of presets', () => {
+    // LLMNR and NetBIOS name service are how Windows resolves a hostname that no DNS server knows
+    // about, which is the normal case for a NAS, printer or share on a home network. Turning either
+    // off leaves those devices reachable only by IP address, so neither is a preset's call to make.
+    const nameResolutionScripts = [
+      'Disable insecure "LLMNR" protocol',
+      'Disable insecure "NetBios" protocol',
+    ];
 
-    expect(scripts.length).to.equal(1);
-    expect(scripts[0].level).to.equal(undefined, formatAssertionMessage([
-      'Disabling LLMNR can make local resources inaccessible by hostname when DNS is unavailable.',
-      'Keep this security and compatibility trade-off opt-in.',
-    ]));
+    for (const scriptName of nameResolutionScripts) {
+      it(`"${scriptName}"`, () => {
+        const scripts = getCategories(OperatingSystem.Windows)
+          .flatMap((category) => category.scripts)
+          .filter((script) => script.name === scriptName);
+
+        expect(scripts.length).to.equal(1);
+        expect(scripts[0].level).to.equal(undefined, formatAssertionMessage([
+          `"${scriptName}" can make local resources inaccessible by hostname when DNS does not know them.`,
+          'Keep this security and compatibility trade-off opt-in.',
+        ]));
+      });
+    }
   });
 
   it('does not recommend removing the apps that sign-in and biometrics depend on', () => {

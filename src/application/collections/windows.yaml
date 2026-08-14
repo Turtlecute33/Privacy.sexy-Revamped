@@ -13320,7 +13320,6 @@ actions:
                                                 function: ShowComputerRestartSuggestion
                                     -
                                         name: Disable insecure "NetBios" protocol
-                                        recommend: standard
                                         docs: |- # refactor-with-variables: Same • Compatibility Caution
                                             This script enhances your network's security by turning off NetBIOS over TCP/IP for all network interfaces.
 
@@ -13337,6 +13336,11 @@ actions:
                                             The script disables NetBIOS by changing a specific registry values
                                             (`HKLM\SYSTEM\CurrentControlSet\services\NetBT\Parameters\Interfaces\{Interface}!NetbiosOptions` [1] [8]) from their default
                                             of `0` (enabled) [5] to `2` (disabled) [5] [8] for each network interface.
+
+                                            > **Caution:** Devices that are not registered in DNS may rely on NetBIOS name service (NBT-NS)
+                                            > for local hostname resolution. Disabling it can prevent access to network shares, NAS devices
+                                            > and printers by hostname even though they remain accessible by IP address. This is especially
+                                            > likely when LLMNR is also disabled.
 
                                             > **Caution:** This may cause compatibility issues with older devices or software.
 
