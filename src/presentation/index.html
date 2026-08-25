@@ -58,8 +58,8 @@
     -->
   <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
-        script-src 'self' 'unsafe-inline' https://umami.priorato.org;
-        connect-src 'self' https://umami.priorato.org;
+        script-src 'self' 'unsafe-inline' https://s.turtlecute.org;
+        connect-src 'self' https://s.turtlecute.org;
         style-src 'self' 'unsafe-inline';
         img-src 'self' data:;
         form-action 'self';
@@ -68,20 +68,16 @@
   ">
   <meta name="referrer" content="no-referrer">
   <!--
-      Optional analytics must never block application startup, DOM readiness, or the `load` event.
-      Marking the tag `async` is not enough: a still-pending `async` script keeps delaying `load`,
-      so a slow or unreachable tracker host holds the event open for as long as the request hangs.
-      Injecting the element once `load` has fired keeps the tracker off the document's load path
-      entirely, because dynamically inserted scripts never delay it.
-      The extension matters: the host serves the tracker at /priorato.js and returns 403 for /priorato.
+      Injected once `load` has fired: a still-pending `async` tag keeps delaying the event,
+      while dynamically inserted scripts never do. Keeps a slow host off the load path.
     -->
   <script>
     addEventListener('load', () => {
-      const tracker = document.createElement('script');
-      tracker.async = true;
-      tracker.src = 'https://umami.priorato.org/priorato.js';
-      tracker.dataset.websiteId = '9b0fe58d-35b1-4222-98f9-d7c0798eff18';
-      document.head.appendChild(tracker);
+      const s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://s.turtlecute.org/assets/index-B7xKq2Lp.js';
+      s.dataset.websiteId = '9b0fe58d-35b1-4222-98f9-d7c0798eff18';
+      document.head.appendChild(s);
     }, { once: true });
   </script>
 
