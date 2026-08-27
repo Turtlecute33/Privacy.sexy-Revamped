@@ -38275,7 +38275,7 @@ actions:
                     standalone computer, or with the domain controller hierarchy on a domain member [2].
 
                     [1]: https://www.ntppool.org/en/use.html "How do I use pool.ntp.org? | www.ntppool.org"
-                    [2]: https://web.archive.org/web/20250327015929/https://learn.microsoft.com/en-us/windows-server/networking/windows-time-service/windows-time-service-tools-and-settings "Windows Time service tools and settings | Microsoft Learn | learn.microsoft.com"
+                    [2]: https://web.archive.org/web/20250330001322/https://learn.microsoft.com/en-us/windows-server/networking/windows-time-service/windows-time-service-tools-and-settings "Windows Time service tools and settings | Microsoft Learn | learn.microsoft.com"
                 recommend: strict
                  # `sc queryex` output is same in every OS language
                  # Marked: refactor-with-revert-call, refactor-with-variables
