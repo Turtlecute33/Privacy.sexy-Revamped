@@ -4,16 +4,20 @@ import type { Application } from '@/domain/Application/Application';
 import { CurrentEnvironment } from '@/infrastructure/RuntimeEnvironment/RuntimeEnvironmentFactory';
 import { createOrGetApplication } from '../Application/LazySingletonApplicationProvider';
 import { ApplicationContext } from './ApplicationContext';
+import { readRequestedOperatingSystem } from './RequestedOperatingSystem';
 import type { ApplicationProvider } from '../Application/ApplicationProvider';
 
 export async function buildContext(
   provideApp: ApplicationProvider = createOrGetApplication,
   environment = CurrentEnvironment,
+  readRequestedOs: RequestedOperatingSystemReader = readRequestedOperatingSystem,
 ): Promise<IApplicationContext> {
   const app = await provideApp();
-  const os = getInitialOs(app, environment.os);
+  const os = getInitialOs(app, readRequestedOs() ?? environment.os);
   return new ApplicationContext(app, os);
 }
+
+export type RequestedOperatingSystemReader = () => OperatingSystem | undefined;
 
 function getInitialOs(
   app: Application,
