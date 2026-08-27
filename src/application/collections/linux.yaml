@@ -2511,6 +2511,38 @@ actions:
           [3]: https://web.archive.org/web/20221008150941/https://support.mozilla.org/en-US/kb/how-does-phishing-and-malware-protection-work "How does built-in Phishing and Malware Protection work? | Firefox Help | support.mozilla.org"
         children:
           -
+            name: Disable Firefox sponsored address bar suggestions
+            recommend: standard
+            docs: |-
+              This script removes sponsored suggestions from the Firefox address bar and stops the related data
+              collection.
+
+              *Firefox Suggest* adds results from Mozilla's own servers to the address bar drop-down, and some of
+              those results are paid placements from advertising partners [1]. A separate setting lets Firefox
+              fetch online suggestions from Mozilla's *Merino* service, which sends the text you type in the
+              address bar [1] [3].
+
+              This script sets `browser.urlbar.suggest.quicksuggest.sponsored` to disable the paid placements and
+              `browser.urlbar.quicksuggest.online.enabled` to stop the online suggestion fetches [2] [3].
+              Suggestions built from your own history and bookmarks are not affected.
+
+              If you do not run this script, sponsored suggestions stay enabled where the feature is offered [1].
+
+              [1]: https://web.archive.org/web/20260421190936/https://support.mozilla.org/en-US/kb/firefox-suggest "Firefox Suggest | Firefox Help | support.mozilla.org"
+              [2]: https://web.archive.org/web/20260819205935/https://mozilla.github.io/policy-templates/#firefoxsuggest "FirefoxSuggest | Firefox Enterprise Policy Documentation | mozilla.github.io"
+              [3]: https://searchfox.org/firefox-main/source/browser/app/profile/firefox.js "firefox.js | searchfox.org"
+            call:
+              -
+                function: AddFirefoxPrefs
+                parameters:
+                  prefName: browser.urlbar.suggest.quicksuggest.sponsored
+                  jsonValue: 'false'
+              -
+                function: AddFirefoxPrefs
+                parameters:
+                  prefName: browser.urlbar.quicksuggest.online.enabled
+                  jsonValue: 'false'
+          -
             category: Harden Firefox privacy # Same name as Windows > "Harden Edge privacy"
             docs: |-
               The following are privacy-focused tweaks to prevent browser fingerprinting and tracking.

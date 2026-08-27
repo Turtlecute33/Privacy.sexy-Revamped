@@ -1,5 +1,10 @@
 <template>
-  <div id="app">
+  <!--
+    A class, not `id="app"`. Vue mounts into the `#app` element in index.html and puts this root
+    inside it, so an `id="app"` here shipped the same ID twice, nested — invalid HTML, and enough
+    to make an extractor or a `document.querySelector('#app')` pick the wrong node.
+  -->
+  <div class="app">
     <a class="skip-link" href="#main-content">Skip to privacy controls</a>
     <div class="app__wrapper">
       <TheHeader />
@@ -64,7 +69,7 @@ function getOptionalDevToolkitComponent(): Component | undefined {
 @use "@/presentation/assets/styles/fonts";
 @use "@/presentation/assets/styles/base";
 
-#app {
+.app {
   width: 100%;
   min-height: 100dvh;
 
@@ -101,7 +106,7 @@ function getOptionalDevToolkitComponent(): Component | undefined {
 }
 
 @media screen and (max-width: $media-screen-medium-width) {
-  #app {
+  .app {
     .app__main {
       width: min(100% - 32px, 1440px);
       padding-top: 4px;
@@ -111,7 +116,7 @@ function getOptionalDevToolkitComponent(): Component | undefined {
 }
 
 @media screen and (max-width: $media-screen-small-width) {
-  #app {
+  .app {
     .app__main {
       width: min(100% - 20px, 1440px);
     }

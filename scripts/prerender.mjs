@@ -150,6 +150,77 @@ async function stripRuntimeInjectedStyles(page, builtHtml) {
   }
 }
 
+/*
+ * index.html injects the analytics tag itself, from an inline listener that fires on `load`, so
+ * that a slow third-party host can never delay the load event. Capturing the page after mount
+ * therefore finds that tag in the DOM and bakes it into the static HTML — which defeats the whole
+ * point twice over: the baked copy is a plain `<script src>` in <head> that loads on the critical
+ * path, and the inline listener still appends a second copy on every real page load. Two tags, two
+ * script executions, two pageviews counted per visit. Only the scripts the build itself emitted
+ * belong in the shipped HTML.
+ */
+async function stripRuntimeInjectedScripts(page, builtHtml) {
+  const buildEmittedSources = [...builtHtml.matchAll(/<script[^>]+\ssrc="([^"]+)"[^>]*>/g)]
+    .map(([, source]) => source);
+  const removedSources = await page.evaluate((allowedSources) => {
+    const scripts = [...document.querySelectorAll('script[src]')]
+      .filter((script) => !allowedSources.includes(script.getAttribute('src')));
+    const sources = scripts.map((script) => script.getAttribute('src'));
+    scripts.forEach((script) => script.remove());
+    return sources;
+  }, buildEmittedSources);
+  if (removedSources.length > 0) {
+    console.log(`Removed ${removedSources.length} runtime-injected script tag(s): ${removedSources.join(', ')}`);
+  }
+}
+
+/*
+ * Ace sizes its glyphs by rendering probe nodes filled with hundreds of repeated characters
+ * (512 'ה' and 534 'X' at the time of writing) into a hidden, absolutely-positioned container.
+ * They are invisible, they are rebuilt from scratch when the editor chunk loads at runtime, and in
+ * the snapshot they do active harm: they are dead bytes on every cold load, and they land in the
+ * middle of the text that crawlers and AI scrapers extract from the page. The rest of the editor
+ * subtree stays, because the generated script it shows is real content.
+ */
+async function stripRuntimeInjectedFontProbes(page) {
+  const removedCharacters = await page.evaluate(() => {
+    const probes = [...document.querySelectorAll(
+      'div[style*="visibility: hidden"][style*="white-space: pre"]',
+    )];
+    const characters = probes.reduce((sum, probe) => sum + probe.textContent.length, 0);
+    probes.forEach((probe) => probe.remove());
+    return characters;
+  });
+  if (removedCharacters > 0) {
+    console.log(`Removed ${removedCharacters} characters of hidden font-measurement probes.`);
+  }
+}
+
+/*
+ * The three strip steps above are the only thing standing between a runtime-injected node and the
+ * shipped HTML, and each one is a silent failure: nothing breaks, the page just carries a tag it
+ * should not. Assert on the result instead of trusting the steps, so a future change to how the
+ * analytics tag is injected fails the build rather than doubling the pageview count in production.
+ */
+function assertNoRuntimeInjectedScripts(html, builtHtml) {
+  const shippedSources = [...html.matchAll(/<script[^>]+\ssrc="([^"]+)"[^>]*>/g)]
+    .map(([, source]) => source);
+  const buildEmittedSources = [...builtHtml.matchAll(/<script[^>]+\ssrc="([^"]+)"[^>]*>/g)]
+    .map(([, source]) => source);
+  const unexpectedSources = shippedSources.filter(
+    (source) => !buildEmittedSources.includes(source),
+  );
+  if (unexpectedSources.length > 0) {
+    throw new Error(
+      'The prerendered HTML carries script tags the build did not emit: '
+      + `${unexpectedSources.join(', ')}. `
+      + 'These were injected at runtime and would ship in <head>, loading on the critical path and '
+      + 'executing a second time when the injector in index.html runs. Extend '
+      + 'stripRuntimeInjectedScripts() to cover them.',
+    );
+  }
+}
+
 async function prerender() {
   if (!existsSync(INDEX_FILE)) {
     throw new Error(`Build output not found at ${INDEX_FILE}. Run the build first.`);
@@ -190,10 +261,13 @@ async function prerender() {
     const builtHtml = await readFile(INDEX_FILE, 'utf8');
     await stripRuntimeInjectedPreloads(page, builtHtml);
     await stripRuntimeInjectedStyles(page, builtHtml);
+    await stripRuntimeInjectedScripts(page, builtHtml);
+    await stripRuntimeInjectedFontProbes(page);
     const html = await page.content();
     if (!html.includes('app__wrapper')) {
       throw new Error('Prerendered HTML is missing app content; aborting to avoid deploying an empty page.');
     }
+    assertNoRuntimeInjectedScripts(html, builtHtml);
     await writeFile(INDEX_FILE, html, 'utf8');
     const kb = Math.round(Buffer.byteLength(html) / 1024);
     console.log(`Prerendered index.html written (${kb} KB).`);

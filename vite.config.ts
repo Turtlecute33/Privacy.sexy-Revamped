@@ -1,6 +1,6 @@
 /// <reference types="vitest" />
 import { resolve } from 'node:path';
-import { defineConfig, type UserConfig } from 'vite';
+import { defineConfig, type Plugin, type UserConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import ViteYaml from '@modyfi/vite-plugin-yaml';
 import { ViteMinifyPlugin } from 'vite-plugin-minify';
@@ -43,6 +43,7 @@ export function createVueConfig(): UserConfig {
     plugins: [
       vue(),
       ViteYaml(),
+      injectLcpFontPreload(),
       ViteMinifyPlugin(getStaticHtmlMinificationOptions()), // Minifies index.html
     ],
     esbuild: {
@@ -75,6 +76,57 @@ export function createVueConfig(): UserConfig {
 }
 
 export default defineConfig(createVueConfig());
+
+/*
+  The <h1> in TheHeader.vue is the LCP element and the only consumer of 'Slabo 27px', which
+  `_fonts.scss` sets to `font-display: block` so the heading paints once, in its final font,
+  instead of painting in the fallback and repainting larger later (see the comment there).
+  `block` only pays off if the font is already in flight when the first paint is attempted, and
+  discovering it through the stylesheet is too late — hence a preload.
+
+  The tag has to be emitted at build time rather than written into index.html by hand, because the
+  file name is content-hashed. Reading it out of the bundle also means a font rename cannot
+  silently drop the preload: the build fails instead.
+*/
+const LCP_FONT_FILE_PATTERN = /(?:^|\/)slabo-27px-[^/]*\.woff2$/;
+
+function injectLcpFontPreload(): Plugin {
+  let baseUrl = '/';
+  return {
+    name: 'privacy-sexy:inject-lcp-font-preload',
+    apply: 'build',
+    configResolved(config) {
+      baseUrl = config.base;
+    },
+    transformIndexHtml: {
+      order: 'post',
+      handler(_html, context) {
+        const fontFileName = Object
+          .keys(context.bundle ?? {})
+          .find((fileName) => LCP_FONT_FILE_PATTERN.test(fileName));
+        if (!fontFileName) {
+          throw new Error(
+            'Could not find the LCP font in the bundle to preload it. '
+            + `No emitted file matches ${LCP_FONT_FILE_PATTERN}. `
+            + 'If the font was renamed or removed, update LCP_FONT_FILE_PATTERN in vite.config.ts '
+            + 'and the `font-display` choice in src/presentation/assets/styles/_fonts.scss.',
+          );
+        }
+        return [{
+          tag: 'link',
+          attrs: {
+            rel: 'preload',
+            href: `${baseUrl}${fontFileName}`,
+            as: 'font',
+            type: 'font/woff2',
+            crossorigin: '',
+          },
+          injectTo: 'head-prepend',
+        }];
+      },
+    },
+  };
+}
 
 function getCollectionChunkName(id: string): string | undefined {
   const collectionMatch = id.match(/\/collections\/(windows|macos|linux)\.yaml$/);

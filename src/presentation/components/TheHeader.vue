@@ -7,10 +7,21 @@
           Open-source privacy workbench
         </p>
         <h1 class="brand">
-          {{ title }}
+          {{ title }}<span class="brand__suffix">Revamped</span>
         </h1>
         <p class="slogan">
           {{ subtitle }}
+        </p>
+        <!--
+          The fork relationship belongs in the rendered body, not only in <title> and meta. Before
+          this line the deployed HTML contained the words "Revamped" and "fork" zero times, so the
+          only brand the page asserted on-page was the upstream one, and the terms the site is
+          meant to be found for appeared nowhere a crawler or an AI scraper reads.
+        -->
+        <p class="hero__lede">
+          Independently maintained fork of privacy.sexy, not affiliated with the original.
+          Debloat Windows 11, disable telemetry, and harden macOS and Linux &mdash; every
+          command shown before you run it.
         </p>
       </div>
       <div class="hero__art" aria-hidden="true">
@@ -116,6 +127,18 @@ export default defineComponent({
   letter-spacing: -0.055em;
 }
 
+/*
+  Reads as part of the wordmark rather than an appended word: same family, roughly a third of the
+  size, lifted off the baseline and in the accent colour so "privacy.sexy" stays the dominant form.
+*/
+.brand__suffix {
+  margin-left: 0.16em;
+  color: $color-secondary;
+  font-size: 0.34em;
+  letter-spacing: 0;
+  vertical-align: 0.62em;
+}
+
 .slogan {
   margin: 10px 0 0;
   color: $color-primary;
@@ -123,6 +146,14 @@ export default defineComponent({
   font-size: clamp(22px, 2.5vw, 28px);
   font-weight: 400;
   line-height: 1;
+}
+
+.hero__lede {
+  max-width: 62ch;
+  margin: 8px 0 0;
+  color: $color-on-surface-muted;
+  font-size: $font-size-absolute-small;
+  line-height: 1.45;
 }
 
 .hero__art {

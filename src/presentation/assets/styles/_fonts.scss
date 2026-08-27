@@ -3,8 +3,23 @@
 // This file should only contain @font-face definitions
 // Helpful resource: https://gwfh.mranftl.com/fonts
 
+/*
+  `block` rather than `swap`, and this face only. The <h1> in TheHeader.vue is the LCP element and
+  is the sole consumer of this family. With `swap`, the prerendered snapshot paints the heading in
+  the serif fallback, then the same box repaints in Slabo once the font arrives. Slabo's glyphs ink
+  ~7% more area than the fallback's inside an identical box, and Chrome replaces an LCP candidate
+  whenever a *larger* one appears, so the swap registered a second candidate at ~5.7s and that
+  became the reported LCP. `block` holds the heading invisible until Slabo is ready, so the first
+  and only paint is the final one. Measured: LCP 5748-5800ms -> 680-692ms.
+
+  This works only in combination with the build-time `<link rel="preload">` that
+  `injectLcpFontPreload` in vite.config.ts emits — without the preload, `block` hides the heading
+  for as long as the font takes to be discovered through the stylesheet. Keep the two together.
+  Cost: one 12-character heading is invisible for ~690ms on throttled 4G. The other two faces stay
+  on `swap` because they carry body and code text, where hiding text is the worse trade.
+*/
 @font-face {
-  font-display: swap;
+  font-display: block;
   font-family: 'Slabo 27px';
   font-style: normal;
   font-weight: 400;
