@@ -1489,7 +1489,7 @@ actions:
                         if systemsetup -setremoteappleevents off; then
                             echo 'Disabled remote Apple events.'
                         else
-                            rm --force "$remote_events_state"
+                            rm -f "$remote_events_state"
                             >&2 echo 'Failed to disable remote Apple events.'
                         fi
                     elif [[ "$current_state" == *Off ]]; then
@@ -1505,7 +1505,7 @@ actions:
                     elif [[ "$current_state" != *Off ]]; then
                         >&2 echo 'Skipping revert because remote Apple events changed after privacy.sexy disabled them.'
                     elif systemsetup -setremoteappleevents on; then
-                        rm --force "$remote_events_state"
+                        rm -f "$remote_events_state"
                         echo 'Restored remote Apple events to their original enabled state.'
                     else
                         >&2 echo 'Failed to restore remote Apple events.'
@@ -1532,7 +1532,8 @@ actions:
                     elif [ -e "$asset_cache_state" ]; then
                         echo "Original content-caching state is already recorded at \"$asset_cache_state\"."
                     else
-                        activation_state="$($asset_cache_tool isActivated 2>/dev/null | tr '[:upper:]' '[:lower:]')"
+                        # AssetCacheManagerUtil reports the state on stderr, not stdout.
+                        activation_state="$($asset_cache_tool isActivated 2>&1 | tr '[:upper:]' '[:lower:]')"
                         if [[ "$activation_state" == *deactivated* ]] \
                             || [[ "$activation_state" =~ ^(false|no|0)$ ]]; then
                             printf 'inactive\n' > "$asset_cache_state"
@@ -1545,7 +1546,7 @@ actions:
                             if sudo "$asset_cache_tool" deactivate; then
                                 echo 'Disabled Apple content caching.'
                             else
-                                rm --force "$asset_cache_state"
+                                rm -f "$asset_cache_state"
                                 >&2 echo 'Failed to disable Apple content caching.'
                             fi
                         else
@@ -1561,13 +1562,13 @@ actions:
                         echo 'Skipping, no content-caching state recorded by privacy.sexy was found.'
                     elif [ "$(cat "$asset_cache_state")" = 'active' ]; then
                         if sudo "$asset_cache_tool" activate; then
-                            rm --force "$asset_cache_state"
+                            rm -f "$asset_cache_state"
                             echo 'Restored active Apple content caching.'
                         else
                             >&2 echo 'Failed to restore Apple content caching.'
                         fi
                     else
-                        rm --force "$asset_cache_state"
+                        rm -f "$asset_cache_state"
                         echo 'Content caching was already inactive; no change was required.'
                     fi
             -
@@ -1989,11 +1990,38 @@ actions:
                     -
                         name: Enable firewall logging
                         recommend: standard
-                        docs:
-                            - https://web.archive.org/web/20241125065107/https://www.stigviewer.com/stig/apple_os_x_10.13/2018-10-01/finding/V-81671
-                            - https://web.archive.org/web/20250313120219/https://daiderd.com/nix-darwin/manual/index.html
-                        code: sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setloggingmode on
-                        revertCode: sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setloggingmode off
+                        docs: |-
+                            This script turns on logging for the macOS application firewall, so blocked and
+                            allowed connection decisions are recorded.
+
+                            Apple removed the logging options from `socketfilterfw` in recent macOS releases:
+                            `--setloggingmode` and `--getloggingmode` are no longer listed in its usage output
+                            and calling them fails. The script therefore checks whether the option still exists
+                            before using it, and reports that it skipped when it does not, instead of failing.
+
+                            If you do not run this script, firewall logging stays at its default state, which is
+                            off on releases that still expose the option.
+
+                            [1]: https://web.archive.org/web/20241125065107/https://www.stigviewer.com/stig/apple_os_x_10.13/2018-10-01/finding/V-81671 "Apple OS X 10.13 STIG V-81671 | www.stigviewer.com"
+                            [2]: https://web.archive.org/web/20250313120219/https://daiderd.com/nix-darwin/manual/index.html "nix-darwin manual | daiderd.com"
+                        code: |-
+                            firewall_tool='/usr/libexec/ApplicationFirewall/socketfilterfw'
+                            if ! "$firewall_tool" -h 2>&1 | grep -q -- '--setloggingmode'; then
+                                echo 'Skipping, this macOS version no longer supports firewall logging configuration.'
+                            elif sudo "$firewall_tool" --setloggingmode on; then
+                                echo 'Successfully enabled firewall logging.'
+                            else
+                                >&2 echo 'Failed to enable firewall logging.'
+                            fi
+                        revertCode: |-
+                            firewall_tool='/usr/libexec/ApplicationFirewall/socketfilterfw'
+                            if ! "$firewall_tool" -h 2>&1 | grep -q -- '--setloggingmode'; then
+                                echo 'Skipping, this macOS version no longer supports firewall logging configuration.'
+                            elif sudo "$firewall_tool" --setloggingmode off; then
+                                echo 'Successfully disabled firewall logging.'
+                            else
+                                >&2 echo 'Failed to disable firewall logging.'
+                            fi
                     -
                         name: Enable stealth mode
                         recommend: standard
@@ -2453,7 +2481,7 @@ actions:
                                 if echo 'yes' | systemsetup -setremotelogin off; then
                                     echo 'Disabled incoming SSH and SFTP logins.'
                                 else
-                                    rm --force "$remote_login_state"
+                                    rm -f "$remote_login_state"
                                     >&2 echo 'Failed to disable remote login.'
                                 fi
                             elif [[ "$current_state" == *Off ]]; then
@@ -2469,7 +2497,7 @@ actions:
                             elif [[ "$current_state" != *Off ]]; then
                                 >&2 echo 'Skipping revert because remote login changed after privacy.sexy disabled it.'
                             elif systemsetup -setremotelogin on; then
-                                rm --force "$remote_login_state"
+                                rm -f "$remote_login_state"
                                 echo 'Restored remote login to its original enabled state.'
                             else
                                 >&2 echo 'Failed to restore remote login.'
@@ -3029,7 +3057,7 @@ functions:
                     echo "Set \"$power_setting\" to \"$power_value\" for all supported power sources."
                 else
                     if [ "$state_created" = 'true' ]; then
-                        rm --force "$power_state_file"
+                        rm -f "$power_state_file"
                     fi
                     >&2 echo "Failed to set \"$power_setting\"."
                 fi
@@ -3067,7 +3095,7 @@ functions:
                         fi
                     done < "$power_state_file"
                     if [ "$restore_failed" = 'false' ]; then
-                        rm --force "$power_state_file"
+                        rm -f "$power_state_file"
                         echo "Restored the original \"$power_setting\" values."
                     else
                         >&2 echo "Failed to restore every \"$power_setting\" value."
@@ -3214,6 +3242,10 @@ functions:
         # 💡 Purpose:
         #   Writes a per-user preference with `defaults` as the invoking user rather than as root and
         #   records the original value so revert can restore it instead of guessing a vendor default.
+        # ❗ Short flags only, here and everywhere else in this collection: macOS ships BSD userland, and
+        #   BSD `install`/`rm` reject GNU long options with "illegal option -- -" and exit 64 without doing
+        #   anything. This function used `install --directory --mode=700`, so the state directory was never
+        #   created and every revert of every preference-based script silently found no original state.
         parameters:
             - name: domain          # Preference domain, such as `com.apple.Safari`.
             - name: key             # Name of the preference key to write.
@@ -3238,7 +3270,7 @@ functions:
                             >&2 echo "Cannot safely preserve unsupported preference type \"$original_type\"."
                             exit 1
                         fi
-                        run_as_target_user install --directory --mode=700 "$preference_state_dir"
+                        run_as_target_user install -d -m 700 "$preference_state_dir"
                         if [ -n "$original_type" ]; then
                             printf '%s\n' "$original_type" | run_as_target_user tee "$preference_state_dir/original-type" > /dev/null
                             run_as_target_user defaults read "$preference_domain" "$preference_key" \
@@ -3257,7 +3289,7 @@ functions:
                         run_as_target_user chmod 600 "$preference_state_dir/applied-type" "$preference_state_dir/applied-value"
                         echo 'Successfully set "{{ $domain }}" preference "{{ $key }}" to "{{ $value }}".'
                     else
-                        run_as_target_user rm --recursive --force "$preference_state_dir"
+                        run_as_target_user rm -rf "$preference_state_dir"
                         >&2 echo 'Failed to set "{{ $domain }}" preference "{{ $key }}".'
                     fi
                 revertCode: |-
@@ -3297,11 +3329,11 @@ functions:
                                     && restore_succeeded='true' # Restored a string.
                             fi
                             if [ "$restore_succeeded" = 'true' ]; then
-                                run_as_target_user rm --recursive --force "$preference_state_dir"
+                                run_as_target_user rm -rf "$preference_state_dir"
                                 echo 'Successfully restored "{{ $domain }}" preference "{{ $key }}".'
                             else
                                 >&2 echo 'Failed to restore "{{ $domain }}" preference "{{ $key }}".'
                             fi
                         fi
-                        rm --force "$current_type_file" "$current_value_file"
+                        rm -f "$current_type_file" "$current_value_file"
                     fi

@@ -12332,7 +12332,11 @@ actions:
                 call:
                     function: SetWinGetSetting
                     parameters:
-                        settingName: telemetry.disable
+                        # WinGet reads `"telemetry": { "disable": true }`. Passing `telemetry.disable` as
+                        # a single setting name wrote a flat property of that literal name, which WinGet
+                        # never reads, so this `recommend: standard` script had no effect.
+                        parentSettingName: telemetry
+                        settingName: disable
                         powerShellValueExpression: $true
             -
                 name: Disable Accessibility Insights telemetry
@@ -14880,6 +14884,15 @@ actions:
                         function: BlockViaHostsFile
                         parameters:
                             domain: eu-watsonc.events.data.microsoft.com
+                    -
+                        function: BlockViaHostsFile
+                        parameters:
+                            # The docs above have always listed this host, but no call blocked it. It is the
+                            # current OneDS collector and it resolves today
+                            # (v20.events.data.microsoft.com -> win-global-asimov-leafs-events-data.trafficmanager.net
+                            # -> onedscolprd*.cloudapp.azure.com). The hosts file has no wildcards, so blocking
+                            # `v10.*` does not cover it.
+                            domain: v20.events.data.microsoft.com
             -
                 name: Block remote configuration sync hosts
                 recommend: strict
@@ -15685,7 +15698,10 @@ actions:
                                                 function: SetMpPreference
                                                 parameters:
                                                     property: CloudExtendedTimeout  # Status:   Get-MpPreference | Select-Object -Property CloudExtendedTimeout
-                                                    value: "'50'"                   # Set:      Set-MpPreference -Force -CloudExtendedTimeout '50'
+                                                    # `0`, not `50`: the value is extra seconds ADDED to the standard 10 s cloud
+                                                    # check, and the ADMX caps it at 50, so `50` is the maximum (60 s total) —
+                                                    # it enabled the feature this script exists to disable.
+                                                    value: "'0'"                    # Set:      Set-MpPreference -Force -CloudExtendedTimeout '0'
                                                     default: $False                 # Default:  0 | Set-MpPreference -Force -CloudExtendedTimeout '0'
                                                     setDefaultOnWindows11: 'true'   # `Remove-MpPreference` sets it to 0 instead 1 (OS default) in Windows 11
                                             -
@@ -15694,7 +15710,7 @@ actions:
                                                     keyPath: HKLM\Software\Policies\Microsoft\Windows Defender\MpEngine
                                                     valueName: MpBafsExtendedTimeout
                                                     dataType: REG_DWORD
-                                                    data: "50"
+                                                    data: "0" # Extra seconds on top of the standard 10 s check; ADMX max is 50, so 50 enabled it
                                                     deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
                                             -
                                                 function: SetRegistryValue
@@ -15702,7 +15718,7 @@ actions:
                                                     keyPath: HKLM\SOFTWARE\Microsoft\Windows Defender\MpEngine
                                                     valueName: MpBafsExtendedTimeout
                                                     dataType: REG_DWORD
-                                                    data: "50"
+                                                    data: "0" # Extra seconds on top of the standard 10 s check; ADMX max is 50, so 50 enabled it
                                                     deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
                                     -
                                         name: Disable Defender Antivirus aggressive cloud protection
@@ -15763,7 +15779,10 @@ actions:
                                                     keyPath: HKLM\SOFTWARE\Microsoft\Windows Defender\MpEngine
                                                     valueName: MpCloudBlockLevel
                                                     dataType: REG_DWORD
-                                                    data: "2"
+                                                    # `0`, not `2`: this key mirrors the CLI, which the call above sets to `0`.
+                                                    # `2` is the "High" blocking level, so this line enabled the aggressive
+                                                    # cloud protection the script exists to disable.
+                                                    data: "0"
                                                     deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
                                     -
                                         name: Disable Defender Antivirus cloud-based notifications
@@ -27089,7 +27108,9 @@ actions:
                                         keyPath: HKLM\Software\Policies\Microsoft\Windows Defender\Windows Defender Exploit Guard\Network Protection
                                         valueName: EnableNetworkProtection
                                         dataType: REG_DWORD
-                                        data: "1"
+                                        # `0` (Off), not `1` (Block). `1` force-enabled Network Protection, the opposite of
+                                        # this script's name and of its parent category.
+                                        data: "0"
                                         deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
                             -
                                 name: Disable controlled folder access
@@ -29764,7 +29785,10 @@ actions:
                         call:
                             function: SetRegistryValue
                             parameters:
-                                keyPath: HKLM\SOFTWARE\Policies\Microsoft\Windows\System
+                                # The ADMX declares this policy under `...\CurrentVersion\Policies\Explorer`. Commit
+                                # cec0b4b4, which converted these scripts to `SetRegistryValue`, copied the key path
+                                # from the adjacent lock-screen entry, so the script wrote to a key nothing reads.
+                                keyPath: HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer
                                 valueName: AllowOnlineTips
                                 dataType: REG_DWORD
                                 data: '0'
@@ -29942,7 +29966,10 @@ actions:
                 call:
                     function: SetRegistryValue
                     parameters:
-                        keyPath: HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer
+                        # Microsoft documents this setting under the OEM capture key, which is where this
+                        # script wrote before commit cec0b4b4 retargeted it at the Explorer policy key
+                        # during the `SetRegistryValue` conversion. Nothing reads it there.
+                        keyPath: HKLM\SOFTWARE\Microsoft\OEM\Device\Capture
                         valueName: NoPhysicalCameraLED
                         dataType: REG_DWORD
                         data: '1'
@@ -30940,7 +30967,10 @@ actions:
                             [3]: https://web.archive.org/web/20231230073627/https://learn.microsoft.com/en-us/windows/application-management/remove-provisioned-apps-during-update "Keep removed apps from returning during an update - Windows Application Management | Microsoft Learn"
                             [4]: https://web.archive.org/web/20240613063743/https://www.sita.co.za/sites/default/files/documents/Product_Certification/TASRR40_Windows_optimisation.pdf "List of installed apps: Windows 11 | TAS Research Report: Desktop Windows Optimisation | www.sita.co.za"
                         call:
-                            function: UninstallStoreApp
+                            # `UninstallNonRemovableStoreApp`, not `UninstallStoreApp`: every snapshot in
+                            # docs/research/windows marks `Microsoft.DesktopAppInstaller` NonRemovable, so plain
+                            # `Remove-AppxPackage` fails and the app stays installed.
+                            function: UninstallNonRemovableStoreApp
                             parameters:
                                 packageName: Microsoft.DesktopAppInstaller # Get-AppxPackage Microsoft.DesktopAppInstaller
                                 publisherId: 8wekyb3d8bbwe
@@ -34219,7 +34249,10 @@ actions:
                                     -
                                         function: UninstallNonRemovableStoreApp
                                         parameters:
-                                            packageName: NarratorQuickStart # Get-AppxPackage NarratorQuickStart
+                                            # Fully qualified name. `Get-AppxPackage -Name NarratorQuickStart` matches
+                                            # nothing, so the removal silently did nothing; every snapshot in
+                                            # docs/research/windows lists `Microsoft.Windows.NarratorQuickStart`.
+                                            packageName: Microsoft.Windows.NarratorQuickStart # Get-AppxPackage Microsoft.Windows.NarratorQuickStart
                                             publisherId: 8wekyb3d8bbwe
                                     -
                                         function: SetRegistryValue
@@ -37884,7 +37917,7 @@ actions:
                             By modifying the Windows registry, this script blocks this automatic installation mechanism specifically for Outlook.
 
                             The script also configures the `BlockedOobeUpdaters` value in the
-                            `HKLM\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\OutlookUpdate` registry key [1].
+                            `HKLM\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe` registry key [1].
                             This prevents Windows updates from reinstalling Outlook [1].
 
                             Some community findings show that configuring the `HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\OutlookUpdate`
@@ -37907,7 +37940,10 @@ actions:
                             -
                                 function: SetRegistryValue
                                 parameters:
-                                    keyPath: HKLM\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\OutlookUpdate
+                                    # Directly under `UScheduler_Oobe`, not inside the `OutlookUpdate` subkey.
+                                    # The orchestrator reads its block list from the scheduler key itself, so a
+                                    # copy one level deeper was never consulted and Outlook kept being installed.
+                                    keyPath: HKLM\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe
                                     valueName: BlockedOobeUpdaters
                                     dataType: REG_SZ
                                     data: '["MS_Outlook"]'
@@ -38943,19 +38979,38 @@ functions:
             - name: powerShellValueExpression   # Value to assign (PowerShell expression)
             - name: deleteOnRevert              # Whether to delete the property on revert
               optional: true
+            -
+                # Optional parent object to nest `propertyKey` inside, created when missing.
+                # Needed because JSON configuration files disagree about shape: VS Code uses flat
+                # keys that happen to contain dots (`telemetry.telemetryLevel` is one key), while
+                # WinGet uses real nested objects (`"telemetry": { "disable": true }`). Writing a
+                # dotted key into WinGet produces a property it never reads.
+                name: parentPropertyKey
+                optional: true
         docs: |-
             Updates a property in a specified a JSON configuration file.
         call:
             -
                 function: Comment
                 parameters:
-                    codeComment: Set JSON property '{{ $propertyKey }}' in {{ $jsonFilePath }}
+                    codeComment: >-
+                        Set JSON property
+                        '{{ with $parentPropertyKey }}{{ . }}.{{ end }}{{ $propertyKey }}'
+                        in {{ $jsonFilePath }}
                     revertCodeComment: |-
                         {{ with $deleteOnRevert }}
-                            Delete JSON property '{{ $propertyKey }}' from {{ $jsonFilePath }}
+                            Delete JSON property '{{ with $parentPropertyKey }}{{ . }}.{{ end }}{{ $propertyKey }}' from {{ $jsonFilePath }}
                         {{ end }}
             -
                 function: RunPowerShell
+                # ❗ Both writers below must pass `-Depth 100` and write UTF-8 without a BOM.
+                #   `ConvertTo-Json` defaults to depth 2 and Windows PowerShell 5.1 — the interpreter the
+                #   generated batch invokes — truncates silently, replacing anything deeper with its
+                #   `ToString()`. This function round-trips the user's entire settings file, so without the
+                #   depth every level-3 object (a VS Code terminal profile's `args`, a `[python]` language
+                #   block, WinGet's `installBehavior.preferences.architectures`) came back as a string like
+                #   `@{source=PowerShell}`. Plain `Set-Content` writes the ANSI code page on 5.1 and mangles
+                #   non-ASCII values, hence the explicit encoding.
                 parameters:
                     code: |-
                         $rawJsonFilePath = "{{ $jsonFilePath }}"
@@ -38980,14 +39035,29 @@ functions:
                         } catch {
                             throw "Failed to parse JSON in file: '$jsonFilePath'. Error: $_"
                         }
-                        $currentValue = $json.$propertyKey
+                        $target = $json
+                        {{ with $parentPropertyKey }}
+                            $parentPropertyKey = '{{ . }}'
+                            if (-not $json.PSObject.Properties[$parentPropertyKey] `
+                                -or $null -eq $json.$parentPropertyKey) {
+                                $json | Add-Member -Type NoteProperty -Name $parentPropertyKey -Value (New-Object PSObject) -Force
+                            }
+                            $target = $json.$parentPropertyKey
+                            if ($target -isnot [PSCustomObject]) {
+                                throw "Cannot set '$parentPropertyKey.$propertyKey' in '$jsonFilePath': '$parentPropertyKey' is not a JSON object."
+                            }
+                        {{ end }}
+                        $currentValue = $target.$propertyKey
                         if ($currentValue -eq $desiredValue) {
                             Write-Host "Skipping, key '$propertyKey' already has value '$desiredValue'."
                             exit 0
                         }
-                        $json | Add-Member -Type NoteProperty -Name $propertyKey -Value $desiredValue -Force
-                        $json | ConvertTo-Json | Set-Content $jsonFilePath
+                        $target | Add-Member -Type NoteProperty -Name $propertyKey -Value $desiredValue -Force
+                        $jsonText = $json | ConvertTo-Json -Depth 100
+                        [System.IO.File]::WriteAllText($jsonFilePath, $jsonText, (New-Object System.Text.UTF8Encoding($false)))
                         Write-Host "Successfully set '$propertyKey' in '$jsonFilePath'."
+                    # When `parentPropertyKey` is used, the revert also drops the parent object once it is
+                    # empty: an absent setting is the state before the script ran, an empty `{}` is not.
                     revertCode: |-
                         {{ with $deleteOnRevert }}
                             $rawJsonFilePath = "{{ $jsonFilePath }}"
@@ -39012,16 +39082,31 @@ functions:
                             } catch {
                                 throw "Failed to parse JSON in file '$jsonFilePath'. Error: $_"
                             }
-                            if (!$json.PSObject.Properties[$propertyKey]) {
+                            $target = $json
+                            {{ with $parentPropertyKey }}
+                                $parentPropertyKey = '{{ . }}'
+                                if (!$json.PSObject.Properties[$parentPropertyKey]) {
+                                    Write-Host "Skipping, key '$parentPropertyKey' does not exist in configuration."
+                                    exit 0
+                                }
+                                $target = $json.$parentPropertyKey
+                            {{ end }}
+                            if (!$target.PSObject.Properties[$propertyKey]) {
                                 Write-Host "Skipping, key '$propertyKey' does not exist in configuration."
                                 exit 0
                             }
-                            if ($json.$propertyKey -ne $undesiredValue) {
-                                Write-Host "Skipping, key '$propertyKey' has value '$($json.$propertyKey)' instead of '$undesiredValue'."
+                            if ($target.$propertyKey -ne $undesiredValue) {
+                                Write-Host "Skipping, key '$propertyKey' has value '$($target.$propertyKey)' instead of '$undesiredValue'."
                                 exit 0
                             }
-                            $json.PSObject.Properties.Remove($propertyKey)
-                            $json | ConvertTo-Json | Set-Content $jsonFilePath
+                            $target.PSObject.Properties.Remove($propertyKey)
+                            {{ with $parentPropertyKey }}
+                                if (@($target.PSObject.Properties).Count -eq 0) {
+                                    $json.PSObject.Properties.Remove($parentPropertyKey)
+                                }
+                            {{ end }}
+                            $jsonText = $json | ConvertTo-Json -Depth 100
+                            [System.IO.File]::WriteAllText($jsonFilePath, $jsonText, (New-Object System.Text.UTF8Encoding($false)))
                             Write-Host "Successfully removed '$propertyKey' from '$jsonFilePath'."
                         {{ end }}
     -
@@ -40471,6 +40556,7 @@ functions:
                             try {
                                 Remove-Item `
                                     -LiteralPath $registryPath `
+                                    -Recurse `
                                     -Force `
                                     -ErrorAction Stop `
                                     | Out-Null
@@ -40483,6 +40569,9 @@ functions:
         name: DeleteRegistryKey
         # Removes the entire registry key, including all subkeys and values.
         # ❗ Use with caution. Consider `ClearRegistryValues` or `DeleteRegistryValues` for less destructive operations.
+        # ❗ `Remove-Item` must keep `-Recurse`: without it, a key that has subkeys raises an interactive
+        #   confirmation prompt that `-Force` does not suppress, which stalls the generated script instead
+        #   of deleting the key. The same applies to `CreateRegistryKey`'s revert.
         parameters:
             - name: keyPath     # Full path of the subkey or entry to be deleted. No glob/wildcard interpretation.
             - name: replaceSid  # Replaces "$CURRENT_USER_SID" string in registry key with user SID.
@@ -40531,6 +40620,7 @@ functions:
                         try {
                             Remove-Item `
                                 -LiteralPath $registryPath `
+                                -Recurse `
                                 -Force `
                                 -ErrorAction Stop `
                                 | Out-Null
@@ -43125,6 +43215,13 @@ functions:
         parameters:
             - name: settingName                 # JSON setting name to modify
             - name: powerShellValueExpression   # PowerShell value to set
+            -
+                # WinGet groups its settings into nested objects, so most settings need this. For
+                # example `telemetry.disable` in the documentation means
+                # `"telemetry": { "disable": true }`, i.e. parentSettingName `telemetry` and
+                # settingName `disable` — not a single key named `telemetry.disable`.
+                name: parentSettingName
+                optional: true
         docs: |-
             This function updates a setting in WinGet configuration files.
 
@@ -43145,6 +43242,7 @@ functions:
                 parameters:
                     jsonFilePath: '%LOCALAPPDATA%\Packages\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\LocalState\settings.json'
                     propertyKey: '{{ $settingName }}'
+                    parentPropertyKey: '{{ with $parentSettingName }}{{ . }}{{ end }}'
                     powerShellValueExpression: '{{ $powerShellValueExpression }}'
                     deleteOnRevert: 'true' # Default WinGet has no explicit settings
             -
@@ -43157,6 +43255,7 @@ functions:
                 parameters:
                     jsonFilePath: '%LOCALAPPDATA%\Microsoft\WinGet\Settings\settings.json'
                     propertyKey: '{{ $settingName }}'
+                    parentPropertyKey: '{{ with $parentSettingName }}{{ . }}{{ end }}'
                     powerShellValueExpression: '{{ $powerShellValueExpression }}'
                     deleteOnRevert: 'true' # Default WinGet has no explicit settings
     -
