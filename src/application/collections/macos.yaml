@@ -485,14 +485,16 @@ actions:
                             -
                                 name: Clear Chrome Default-profile cache
                                 docs: |-
-                                    Chrome keeps its HTTP cache in `Cache` and its compiled-script cache in `Code Cache`,
-                                    both inside the profile directory.
+                                    Chrome on macOS keeps its HTTP cache and its compiled-script cache under
+                                    `~/Library/Caches/Google/Chrome`, not inside the profile directory in
+                                    `~/Library/Application Support`. This script previously targeted the profile
+                                    directory, where those caches do not exist on macOS, so it deleted nothing.
 
                                     The older `Application Cache` directory belonged to the AppEngine/AppCache API, which
                                     Chrome removed in version 95, so it no longer exists on supported versions.
                                 code: |-
-                                    rm -rfv ~/Library/Application\ Support/Google/Chrome/Default/Cache/* &>/dev/null
-                                    rm -rfv ~/Library/Application\ Support/Google/Chrome/Default/Code\ Cache/* &>/dev/null
+                                    rm -rfv "$HOME/Library/Caches/Google/Chrome/Default/Cache/"* &>/dev/null
+                                    rm -rfv "$HOME/Library/Caches/Google/Chrome/Default/Code Cache/"* &>/dev/null
                     -
                         category: Clear Safari history
                         children:
@@ -525,8 +527,20 @@ actions:
                                 children:
                                     -
                                         name: Clear Safari cached blobs, URLs and timestamps
-                                        docs: https://web.archive.org/web/20250313121423/https://davidkoepi.wordpress.com/2013/04/20/safariforensic/
-                                        code: rm -f ~/Library/Caches/com.apple.Safari/Cache.db
+                                        docs: |-
+                                            Safari is sandboxed, so its cache database lives inside the app container at
+                                            `~/Library/Containers/com.apple.Safari/Data/Library/Caches/com.apple.Safari/`.
+                                            This script previously deleted only the pre-container path, where the file no
+                                            longer exists.
+
+                                            The `-wal` and `-shm` companions are removed too: `Cache.db` is a SQLite
+                                            database in write-ahead-logging mode, so cached URLs and timestamps live in
+                                            the write-ahead log until it is checkpointed.
+
+                                            [1]: https://web.archive.org/web/20250313121423/https://davidkoepi.wordpress.com/2013/04/20/safariforensic/ "Safari Forensic | davidkoepi.wordpress.com"
+                                        code: |-
+                                            rm -fv "$HOME/Library/Containers/com.apple.Safari/Data/Library/Caches/com.apple.Safari/Cache.db"* &>/dev/null
+                                            rm -fv "$HOME/Library/Caches/com.apple.Safari/Cache.db"* &>/dev/null
                                     -
                                         name: Clear Safari URL bar web page icons
                                         docs:
@@ -574,9 +588,14 @@ actions:
                         children:
                             -
                                 name: Clear Firefox cache
+                                docs: |-
+                                    Firefox stores its HTTP cache in `cache2` and its startup cache under
+                                    `~/Library/Caches/Firefox/Profiles/<profile>`. `~/Library/Caches/Mozilla` is the
+                                    update-staging directory, which this script used to delete instead, leaving the
+                                    browser cache in place.
                                 code: |-
-                                    rm -rfv ~/Library/Caches/Mozilla/
-                                    rm -fv ~/Library/Application\ Support/Firefox/Profiles/*/netpredictions.sqlite
+                                    rm -rfv "$HOME"/Library/Caches/Firefox/Profiles/*/cache2 &>/dev/null
+                                    rm -rfv "$HOME"/Library/Caches/Firefox/Profiles/*/startupCache &>/dev/null
                             -
                                 name: Clear Firefox form history
                                 code: |-
@@ -665,12 +684,23 @@ actions:
                             fi
                     -
                         name: Clear Homebrew cache
-                        code: |-
-                            if type "brew" &>/dev/null; then
-                                brew cleanup -s &>/dev/null
-                                rm -rfv $(brew --cache) &>/dev/null
-                                brew tap --repair &>/dev/null
-                            fi
+                        # Homebrew refuses to run as root, and the generated script re-executes itself as
+                        # root, so every one of these commands used to abort without clearing anything.
+                        call:
+                            function: RunAsTargetUser
+                            parameters:
+                                code: |-
+                                    if ! run_as_target_user type brew &>/dev/null; then
+                                        echo 'Skipping, Homebrew is not installed.'
+                                    else
+                                        run_as_target_user brew cleanup -s &>/dev/null
+                                        brew_cache="$(run_as_target_user brew --cache 2>/dev/null)"
+                                        if [ -n "$brew_cache" ] && [ -d "$brew_cache" ]; then
+                                            run_as_target_user rm -rfv "$brew_cache" &>/dev/null
+                                        fi
+                                        run_as_target_user brew tap --repair &>/dev/null
+                                        echo 'Successfully cleared the Homebrew cache.'
+                                    fi
                     -
                         name: Clear old Ruby gem versions
                         code: |-
@@ -768,10 +798,13 @@ actions:
                             sudo rm -rfv /var/db/lockdown/*
             -
                 name: Clear Xcode's derived data and archives
+                # ❗ Keep the quotes. `~/Library/Developer/Xcode/iOS Device Logs/*` unquoted splits into
+                #   three operands for `rm -rf` running as root: the intended path, `Device`, and `Logs/*`,
+                #   the last two resolved against whatever directory the script was started from.
                 code: |-
-                    rm -rfv ~/Library/Developer/Xcode/DerivedData/* &>/dev/null
-                    rm -rfv ~/Library/Developer/Xcode/Archives/* &>/dev/null
-                    rm -rfv ~/Library/Developer/Xcode/iOS Device Logs/* &>/dev/null
+                    rm -rfv "$HOME/Library/Developer/Xcode/DerivedData/"* &>/dev/null
+                    rm -rfv "$HOME/Library/Developer/Xcode/Archives/"* &>/dev/null
+                    rm -rfv "$HOME/Library/Developer/Xcode/iOS Device Logs/"* &>/dev/null
             -
                 name: Clear DNS cache
                 code: |-
@@ -1740,16 +1773,6 @@ actions:
                     -
                         category: Remove Siri from user interface
                         children:
-                            -
-                                name: Remove Siri from menu bar
-                                recommend: strict
-                                # `SetUserPreference` is not used here because it always passes a type flag, and
-                                # `defaults write` without one stores the value as a string rather than an integer.
-                                call:
-                                    function: RunAsTargetUser
-                                    parameters:
-                                        code: run_as_target_user defaults write com.apple.systemuiserver 'NSStatusItem Visible Siri' 0
-                                        revertCode: run_as_target_user defaults write com.apple.systemuiserver 'NSStatusItem Visible Siri' 1
                             -
                                 name: Remove Siri from status menu
                                 recommend: strict
@@ -2946,33 +2969,39 @@ actions:
 functions:
     -
         name: PersistUserEnvironmentConfiguration
+        # ❗ Every write goes through `run_as_target_user`. The generated script runs as root with `HOME`
+        #   pointed at the invoking user's home, so plain `touch`/`>>` created root-owned `.bash_profile`
+        #   and `.zprofile` that the user could no longer edit without sudo.
+        # ❗ `grep -F` and a `\|…|` sed address, because the configuration is a shell command line that
+        #   normally contains `/` and other regex metacharacters.
         parameters:
             - name: configuration
-        code: |-
-            command='{{ $configuration }}'
-            declare -a profile_files=("$HOME/.bash_profile" "$HOME/.zprofile")
-            for profile_file in "${profile_files[@]}"
-            do
-                touch "$profile_file"
-                if ! grep -q "$command" "${profile_file}"; then
-                    echo "$command" >> "$profile_file"
-                    echo "[$profile_file] Configured"
-                else
-                    echo "[$profile_file] No need for any action, already configured"
-                fi
-            done
-        revertCode: |-
-            command='{{ $configuration }}'
-            declare -a profile_files=("$HOME/.bash_profile" "$HOME/.zprofile")
-            for profile_file in "${profile_files[@]}"
-            do
-                if grep -q "$command" "${profile_file}" 2>/dev/null; then
-                    sed -i '' "/$command/d" "$profile_file"
-                    echo "[$profile_file] Reverted configuration"
-                else
-                    echo "[$profile_file] No need for any action, configuration does not exist"
-                fi
-            done
+        call:
+            function: RunAsTargetUser
+            parameters:
+                code: |-
+                    command='{{ $configuration }}'
+                    for profile_file in "$HOME/.bash_profile" "$HOME/.zprofile"
+                    do
+                        run_as_target_user touch "$profile_file"
+                        if ! grep -qF -- "$command" "$profile_file" 2>/dev/null; then
+                            printf '%s\n' "$command" | run_as_target_user tee -a "$profile_file" > /dev/null
+                            echo "[$profile_file] Configured"
+                        else
+                            echo "[$profile_file] No need for any action, already configured"
+                        fi
+                    done
+                revertCode: |-
+                    command='{{ $configuration }}'
+                    for profile_file in "$HOME/.bash_profile" "$HOME/.zprofile"
+                    do
+                        if grep -qF -- "$command" "$profile_file" 2>/dev/null; then
+                            run_as_target_user sed -i '' "\|$command|d" "$profile_file"
+                            echo "[$profile_file] Reverted configuration"
+                        else
+                            echo "[$profile_file] No need for any action, configuration does not exist"
+                        fi
+                    done
     -
         name: RunIfCommandExists # Skips if command does not exist
         #   Marked: refactor-with-partials

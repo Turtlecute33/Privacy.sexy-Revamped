@@ -1431,19 +1431,52 @@ actions:
                   Configuring this configuration allows you to opt out of the submission of data [1].
 
                   [1]: https://web.archive.org/web/20221029161047/https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=172824 "#172824 - popularity-contest: dpkg-reconfigure popularity-contest does not include PARTICIPATE=yes - Debian Bug report logs | bugs.debian.org"
+                # ❗️ The original `PARTICIPATE` line is recorded before it is changed, following the same
+                #   `/var/lib/privacy.sexy/state` convention as `PersistSystemEnvironmentVariable` and
+                #   `DisableCronjob`. An earlier revert rewrote every `PARTICIPATE=no` to
+                #   `PARTICIPATE=yes` unconditionally, so reverting turned package-list submission ON for
+                #   users who had it off before they ever ran privacy.sexy.
                 code: |-
                   config_file='/etc/popularity-contest.conf'
-                  if [ -f "$config_file" ]; then
-                    sudo sed -i '/PARTICIPATE/c\PARTICIPATE=no' "$config_file"
-                  else
+                  popcon_state_dir='/var/lib/privacy.sexy/state'
+                  popcon_state_file="$popcon_state_dir/popularity-contest-participate"
+                  if [ ! -f "$config_file" ]; then
                     echo "Skipping because configuration file at ($config_file) is not found. Is popcon installed?"
+                  else
+                    if [ ! -e "$popcon_state_file" ]; then
+                      sudo install -d -m 700 "$popcon_state_dir"
+                      original_line="$(grep -m1 '^[[:space:]]*PARTICIPATE' "$config_file" || true)"
+                      if [ -n "$original_line" ]; then
+                        printf '%s\n' "$original_line" | sudo tee "$popcon_state_file" > /dev/null
+                      else
+                        printf 'absent\n' | sudo tee "$popcon_state_file" > /dev/null
+                      fi
+                      sudo chmod 600 "$popcon_state_file"
+                    fi
+                    if grep -q '^[[:space:]]*PARTICIPATE' "$config_file"; then
+                      sudo sed -i '/^[[:space:]]*PARTICIPATE/c\PARTICIPATE=no' "$config_file"
+                    else
+                      printf 'PARTICIPATE=no\n' | sudo tee -a "$config_file" > /dev/null
+                    fi
+                    echo 'Successfully opted out of Popularity Contest submissions.'
                   fi
                 revertCode: |-
                   config_file='/etc/popularity-contest.conf'
-                  if [ -f "$config_file" ]; then
-                    sudo sed -i 's/PARTICIPATE=no/PARTICIPATE=yes/g' "$config_file"
-                  else
+                  popcon_state_file='/var/lib/privacy.sexy/state/popularity-contest-participate'
+                  if [ ! -f "$config_file" ]; then
                     echo "Skipping because configuration file ($config_file) is not found. Is popcon installed?"
+                  elif [ ! -e "$popcon_state_file" ]; then
+                    echo 'Skipping, no original Popularity Contest setting recorded by privacy.sexy was found.'
+                  else
+                    original_line="$(cat "$popcon_state_file")"
+                    if [ "$original_line" = 'absent' ]; then
+                      sudo sed -i '/^[[:space:]]*PARTICIPATE/d' "$config_file"
+                      echo 'Successfully removed the PARTICIPATE setting, as it was absent originally.'
+                    else
+                      sudo sed -i "/^[[:space:]]*PARTICIPATE/c\\$original_line" "$config_file"
+                      echo "Successfully restored the original setting: $original_line"
+                    fi
+                    sudo rm -f "$popcon_state_file"
                   fi
               -
                 name: Remove Popularity Contest (`popcon`) package
@@ -3245,18 +3278,23 @@ actions:
               network filtering [1]. Because these programs run in the kernel, flaws in the verifier that checks
               them have repeatedly been used to escalate privileges.
 
-              Setting this value to `1` requires administrator privileges to load eBPF programs [1]. Newer
-              kernels use `2` as their default, which already restricts unprivileged access.
+              This script sets the value to `2`, which requires administrator privileges to load eBPF
+              programs [1]. `1` gives the same restriction but is a one-way latch: once set, the kernel
+              rejects further writes to this key until the next reboot, so reverting is impossible.
+              Newer kernels already default to `2`.
 
               > **Consideration:** Tracing and profiling tools that rely on eBPF need to be run as an
               > administrator after this change.
+
+              > **Note:** If the running kernel already holds `1`, this script cannot change the value and
+              > a reboot is needed first.
 
               [1]: https://web.archive.org/web/20240523112610/https://www.kernel.org/doc/html/latest/admin-guide/sysctl/kernel.html "Documentation for /proc/sys/kernel/ | The Linux Kernel documentation | www.kernel.org"
             call:
               function: SetKernelParameter
               parameters:
                 key: kernel.unprivileged_bpf_disabled
-                value: '1'
+                value: '2'
 functions:
   -
     name: RunInlineCode
@@ -4012,6 +4050,11 @@ functions:
     #   Configures a GNOME desktop setting through `gsettings` for the user running the script.
     #   Settings that are not present on the current system are skipped instead of failing, so the script
     #   remains safe to run on non-GNOME desktops.
+    # ❗️ Recording the original state and applying the setting are separate concerns:
+    #   an earlier version skipped `gsettings set` entirely when a state file already existed, so
+    #   re-running the generated script never re-enforced a setting the user had since changed back.
+    #   The state file is written only when absent, and removed on failure only if this run created it,
+    #   so a later failure cannot destroy the original value recorded by an earlier successful run.
     # References:
     #   - https://web.archive.org/web/20240404013714/https://manpages.ubuntu.com/manpages/jammy/man1/gsettings.1.html
     parameters:
@@ -4034,16 +4077,20 @@ functions:
           elif current_value="$(run_as_target_user gsettings get "$gnome_schema" "$gnome_key")" \
               && [ "$current_value" = "$gnome_value" ]; then
             echo "Skipping, \"$gnome_schema $gnome_key\" is already set to \"$gnome_value\"."
-          elif [ -e "$gnome_state_file" ]; then
-            echo "Original state is already recorded for \"$gnome_schema $gnome_key\"."
           else
-            run_as_target_user install --directory --mode=700 "$gnome_state_dir"
-            printf '%s' "$current_value" | run_as_target_user tee "$gnome_state_file" > /dev/null
-            run_as_target_user chmod 600 "$gnome_state_file"
+            recorded_now='no'
+            if [ ! -e "$gnome_state_file" ]; then
+              run_as_target_user install --directory --mode=700 "$gnome_state_dir"
+              printf '%s' "$current_value" | run_as_target_user tee "$gnome_state_file" > /dev/null
+              run_as_target_user chmod 600 "$gnome_state_file"
+              recorded_now='yes'
+            fi
             if run_as_target_user gsettings set "$gnome_schema" "$gnome_key" "$gnome_value"; then
               echo "Successfully set \"$gnome_schema $gnome_key\" to \"$gnome_value\"."
             else
-              run_as_target_user rm --force "$gnome_state_file"
+              if [ "$recorded_now" = 'yes' ]; then
+                run_as_target_user rm --force "$gnome_state_file"
+              fi
               >&2 echo "Failed to set \"$gnome_schema $gnome_key\" to \"$gnome_value\"."
             fi
           fi

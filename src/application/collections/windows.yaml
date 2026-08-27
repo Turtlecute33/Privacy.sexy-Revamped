@@ -472,7 +472,7 @@ actions:
                               for Windows 2000 [5], Windows XP [3] [5], Windows Vista [2].
                             - `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32\OpenSavePidlMRU\<Extension>` [2] [3] [5]
                               for Windows 7 [3], Windows Vista [2] [5], Windows 8 [3] and Windows 10 [3].
-                            - `%APPDATA%\Microsoft\Windows\Recent Items` [1] [4]
+                            - `%APPDATA%\Microsoft\Windows\Recent` [1] [4]
                               for Windows 10 [1] and Windows 11.
 
                             > **Caution:**
@@ -503,7 +503,9 @@ actions:
                             -
                                 function: ClearDirectoryContents
                                 parameters:
-                                    directoryGlob: '%APPDATA%\Microsoft\Windows\Recent Items'
+                                    # `Recent`, not `Recent Items`: the latter is the display name shown in
+                                    # Explorer, not a real directory, so nothing was ever deleted.
+                                    directoryGlob: '%APPDATA%\Microsoft\Windows\Recent'
                     -
                         name: Clear Windows Media Player recent activity history
                         docs: |-
@@ -548,7 +550,10 @@ actions:
                             -
                                 function: ClearRegistryValues
                                 parameters:
-                                    keyPath: HKCU\Software\Gabest\Media Player Classic\Recent File List
+                                    # The Windows Media Player radio MRU. This previously pointed at
+                                    # `HKCU\Software\Gabest\Media Player Classic\Recent File List`, an
+                                    # unrelated third-party player, so the documented WMP data was never cleared.
+                                    keyPath: HKCU\Software\Microsoft\MediaPlayer\Radio\MRUList
                     -
                         name: Clear DirectX recent application history
                         docs: |-
@@ -7938,7 +7943,9 @@ actions:
                         function: SetRegistryValue
                         parameters:
                             keyPath: HKLM\SOFTWARE\Microsoft\PolicyManager\default\WiFi\AllowAutoConnectToWiFiSenseHotspots
-                            valueName: Enabled
+                            # PolicyManager stores policies under the value name `value`; a later refactor
+                            # renamed this to `Enabled`, which PolicyManager does not read.
+                            valueName: value
                             dataType: REG_DWORD
                             data: '0'
                             dataOnRevert: '1' # Default value: `1` on Windows 10 Pro (≥ 21H2) | `1` on Windows 11 Pro (≥ 22H2)
@@ -9904,7 +9911,7 @@ actions:
                                                 function: SetEdgeUpdatePolicyViaRegistry
                                                 parameters:
                                                     valueName: UpdatesSuppressedDurationMin # Microsoft Edge Update ≥ 1.3.33.5
-                                                    dwordData: '1440' # Total number of minutes in a day = 24×60 minutes = 1440 minutes.
+                                                    dwordData: '960' # Documented maximum (16 hours). Edge Update rejects the policy above 960.
                                             -
                                                 function: SetEdgeUpdatePolicyViaRegistry
                                                 parameters:
@@ -15111,6 +15118,12 @@ actions:
                     -
                         function: BlockViaHostsFile
                         parameters:
+                            # The docs above have always listed this host, but no call blocked it. It is the
+                            # Bing Maps API endpoint the Caution refers to, and it still resolves.
+                            domain: dev.virtualearth.net
+                    -
+                        function: BlockViaHostsFile
+                        parameters:
                             domain: ecn.dev.virtualearth.net
                     -
                         function: BlockViaHostsFile
@@ -15242,7 +15255,7 @@ actions:
                     - `edgeassetservice.azureedge.net` [1] [5]
                     - `c-ring.msedge.net` [1]
                     - `fp.msedge.net` [1] [5]
-                    - `I-ring.msedge.net` [1]
+                    - `l-ring.msedge.net` [1]
                     - `s-ring.msedge.net` [1] [5]
                     - `dual-s-ring.msedge.net` [1]
                     - `creativecdn.com` [1]
@@ -15306,7 +15319,9 @@ actions:
                     -
                         function: BlockViaHostsFile
                         parameters:
-                            domain: I-ring.msedge.net
+                            # `l-ring` with a lowercase L. Microsoft's endpoint table renders it in a font
+                            # where it reads as `I-ring`, which does not exist in DNS; `l-ring.msedge.net` does.
+                            domain: l-ring.msedge.net
                     -
                         function: BlockViaHostsFile
                         parameters:
@@ -16615,7 +16630,11 @@ actions:
                                             keyPath: HKLM\SYSTEM\CurrentControlSet\Control\EarlyLaunch
                                             valueName: 'BackupPath'
                                             dataTypeOnRevert: REG_SZ
-                                            dataOnRevert: '%SYSTEMROOT%\ELAMBKUP' # `C:\Windows\ELAMBKUP` by default on Windows 10 Pro (≥ 22H2) and Windows 11 (≥ 24H2)
+                                            # Evaluated, because REG_SZ stores the string verbatim: the revert used to
+                                            # write the literal token `%SYSTEMROOT%\ELAMBKUP`, so the ELAM backup path
+                                            # was never restored to the real default.
+                                            evaluateDataAsPowerShell: 'true'
+                                            dataOnRevert: 'Join-Path $env:SystemRoot ''ELAMBKUP''' # `C:\Windows\ELAMBKUP` by default on Windows 10 Pro (≥ 22H2) and Windows 11 (≥ 24H2)
                                     -
                                         function: SoftDeleteFiles
                                         parameters:
@@ -19231,7 +19250,9 @@ actions:
                                                         keyPath: HKLM\Software\Policies\Microsoft\Windows Defender\Signature Updates
                                                         valueName: ForceUpdateFromMU
                                                         dataType: REG_DWORD
-                                                        data: '1'
+                                                        # `0` = policy Disabled. `1` is Enabled, which forces the
+                                                        # signature downloads this script exists to prevent.
+                                                        data: '0'
                                                         deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
                                             -
                                                 name: Disable security intelligence (signature) updates when running on battery power
@@ -19253,7 +19274,9 @@ actions:
                                                         keyPath: HKLM\Software\Policies\Microsoft\Windows Defender\Signature Updates
                                                         valueName: UpdateOnStartUp
                                                         dataType: REG_DWORD
-                                                        data: '1'
+                                                        # `0` = policy Disabled, i.e. no check on service startup.
+                                                        # `1` is Enabled and turned the check on.
+                                                        data: '0'
                                                         deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
                                             -
                                                 name: Disable catch-up security intelligence (signature) updates # default is one day
@@ -19938,7 +19961,11 @@ actions:
                                                         # Availability: ✅ Windows 10 Pro (≥ 22H2) | ✅ Windows 11 Pro (≥ 21H2)
                                                         keyPath: HKLM\SOFTWARE\Microsoft\Windows Defender
                                                         valueName: ProductAppDataPath
-                                                        dataOnRevert: '%PROGRAMDATA%\Microsoft\Windows Defender'
+                                                        # Evaluated, because REG_SZ stores the string verbatim: the revert
+                                                        # used to write the literal token `%PROGRAMDATA%\...`, which left
+                                                        # Defender pointed at a directory that does not exist.
+                                                        evaluateDataAsPowerShell: 'true'
+                                                        dataOnRevert: 'Join-Path $env:ProgramData ''Microsoft\Windows Defender'''
                                                         dataTypeOnRevert: REG_SZ
                                                         elevateToTrustedInstaller: 'true' # Without TrustedInstaller: ❌ Windows 10 Pro (>= 22H2) | ❌ Windows 11 Pro (>= 21H2)
                                             -
@@ -24275,7 +24302,10 @@ actions:
                                                     # Availability: ❌ Windows 10 Pro (≥ 22H2) | ✅ Windows 11 Pro (≥ 23H2)
                                                     fileGlob: '%SYSTEMROOT%\System32\SecurityHealth\*\SecurityHealthSSO.dll'
                                                     grantPermissions: 'true' # 🔍 Missing on Windows 10 Pro (≥ 22H2) | 🔒️ Protected on Windows 11 Pro (≥ 23H2)
-                                                    maximumWindowsVersion: Windows10-MostRecent
+                                                    # This file exists only on Windows 11, so the constraint has to be a
+                                                    # minimum. It read `maximumWindowsVersion: Windows10-MostRecent`, which
+                                                    # ran the deletion only where the file does not exist.
+                                                    minimumWindowsVersion: Windows11-FirstRelease
                                             -
                                                 function: SoftDeleteFiles
                                                 parameters:
@@ -38232,7 +38262,20 @@ actions:
         children:
             -
                 name: Set NTP (time) server to `pool.ntp.org`
-                docs: https://www.ntppool.org/en/use.html
+                docs: |-
+                    This script points Windows time synchronization at the public `pool.ntp.org` servers
+                    instead of Microsoft's `time.windows.com`, so time sync no longer contacts Microsoft.
+
+                    > **Caution:** On a computer joined to a Windows domain, this replaces domain-hierarchy
+                    > time sync with a manual peer list, and reverting restores the standalone default rather
+                    > than the domain configuration. On a domain member, restore it with
+                    > `w32tm /config /syncfromflags:domhier /update` instead of reverting this script.
+
+                    If you do not run this script, Windows synchronizes time with `time.windows.com,0x1` on a
+                    standalone computer, or with the domain controller hierarchy on a domain member [2].
+
+                    [1]: https://www.ntppool.org/en/use.html "How do I use pool.ntp.org? | www.ntppool.org"
+                    [2]: https://web.archive.org/web/20250327015929/https://learn.microsoft.com/en-us/windows-server/networking/windows-time-service/windows-time-service-tools-and-settings "Windows Time service tools and settings | Microsoft Learn | learn.microsoft.com"
                 recommend: strict
                  # `sc queryex` output is same in every OS language
                  # Marked: refactor-with-revert-call, refactor-with-variables
@@ -38250,7 +38293,9 @@ actions:
                     w32tm /resync
                 revertCode: |-
                     :: Configure time source
-                    w32tm /config /syncfromflags:manual /manualpeerlist:"time.windows.com"
+                    :: `,0x1` is part of the Windows default peer specification; without the flag the
+                    :: restored configuration is not the state before this script ran.
+                    w32tm /config /syncfromflags:manual /manualpeerlist:"time.windows.com,0x1"
                     :: Stop time service if running
                     SC queryex "w32time"|Find "STATE"|Find /v "RUNNING">Nul||(
                         net stop w32time
