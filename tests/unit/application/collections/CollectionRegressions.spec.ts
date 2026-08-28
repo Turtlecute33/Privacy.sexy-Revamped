@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { loadCollections } from '@/application/Application/Loader/Collections/CollectionsLoader';
 import { OperatingSystem } from '@/domain/OperatingSystem';
 import { RecommendationLevel } from '@/domain/Executables/Script/RecommendationLevel';
+import type { CategoryCollection } from '@/domain/Collection/CategoryCollection';
 import type { Script } from '@/domain/Executables/Script/Script';
 import { ProjectDetailsStub } from '@tests/unit/shared/Stubs/ProjectDetailsStub';
 import { formatAssertionMessage } from '@tests/shared/FormatAssertionMessage';
@@ -35,6 +36,24 @@ function getScript(os: OperatingSystem, name: string): Script {
 }
 
 describe('compiled collection regressions', () => {
+  it('compiles the code of every script', () => {
+    /*
+      Script code compiles on first read rather than during `loadCollections`, so a malformed
+      script no longer breaks the shared load above — it breaks whenever a user first hovers over
+      it, searches for it, or selects it, inside an already mounted app. Reading the code of every
+      script is what keeps that failure in CI, where the other cases here only read the handful of
+      scripts they name.
+    */
+    const failures = collections.flatMap((collection) => collection
+      .getAllScripts()
+      .flatMap((script) => describeCompilationFailure(collection, script)));
+
+    expect(failures).to.deep.equal([], formatAssertionMessage([
+      'A script does not compile:',
+      ...failures,
+    ]));
+  });
+
   describe('Windows', () => {
     it('keeps the CPU vendor guards of the Spectre and Meltdown mitigation', () => {
       // `RunPowerShellWithOptionalElevation` used to read an undeclared `$setupCode`, which
@@ -363,6 +382,19 @@ describe('compiled collection regressions', () => {
     });
   });
 });
+
+function describeCompilationFailure(
+  collection: CategoryCollection,
+  script: Script,
+): readonly string[] {
+  const location = `${OperatingSystem[collection.os]} > ${script.name}`;
+  try {
+    const { execute } = script.code;
+    return execute.length > 0 ? [] : [`${location}: compiles to empty code`];
+  } catch (error) {
+    return [`${location}: ${error}`];
+  }
+}
 
 function extractEmbeddedBase64Payload(code: string): string {
   return Array.from(code.matchAll(/^\s*echo\(([A-Za-z0-9+/=]+)$/gm), (match) => match[1]).join('');

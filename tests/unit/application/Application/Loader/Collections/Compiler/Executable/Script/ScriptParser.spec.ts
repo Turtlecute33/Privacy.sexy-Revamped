@@ -274,15 +274,33 @@ describe('ScriptParser', () => {
         // arrange
         const expectedCode = new ScriptCodeStub();
         const scriptCodeFactory: ScriptCodeFactory = () => expectedCode;
-        const { scriptFactorySpy, getInitParameters } = createScriptFactorySpy();
+        const { scriptFactorySpy, compileCode } = createScriptFactorySpy();
         // act
         const actualScript = new TestContext()
           .withScriptCodeFactory(scriptCodeFactory)
           .withScriptFactory(scriptFactorySpy)
           .parseScript();
         // assert
-        const actualCode = getInitParameters(actualScript)?.code;
+        const actualCode = compileCode(actualScript);
         expect(expectedCode).to.equal(actualCode);
+      });
+      it('defers compilation until the code is read', () => {
+        /*
+          Compiling all 1,163 scripts of the three collections costs 649 ms before the first paint,
+          so `parseScript` must hand over an unevaluated factory rather than a compiled result.
+        */
+        // arrange
+        let isCompiled = false;
+        const scriptCodeFactory: ScriptCodeFactory = () => {
+          isCompiled = true;
+          return new ScriptCodeStub();
+        };
+        // act
+        new TestContext()
+          .withScriptCodeFactory(scriptCodeFactory)
+          .parseScript();
+        // assert
+        expect(isCompiled).to.equal(false);
       });
       describe('parses code correctly', () => {
         it('parses "execute" as expected', () => {
@@ -295,11 +313,14 @@ describe('ScriptParser', () => {
           };
           const scriptData = createScriptDataWithCode()
             .withCode(expectedCode);
+          const { scriptFactorySpy, compileCode } = createScriptFactorySpy();
           // act
-          new TestContext()
+          const actualScript = new TestContext()
             .withData(scriptData)
             .withScriptCodeFactory(scriptCodeFactory)
+            .withScriptFactory(scriptFactorySpy)
             .parseScript();
+          compileCode(actualScript);
           // assert
           expect(actualCode).to.equal(expectedCode);
         });
@@ -313,11 +334,14 @@ describe('ScriptParser', () => {
             actualRevertCode = revertCode;
             return new ScriptCodeStub();
           };
+          const { scriptFactorySpy, compileCode } = createScriptFactorySpy();
           // act
-          new TestContext()
+          const actualScript = new TestContext()
             .withData(scriptData)
             .withScriptCodeFactory(scriptCodeFactory)
+            .withScriptFactory(scriptFactorySpy)
             .parseScript();
+          compileCode(actualScript);
           // assert
           expect(actualRevertCode).to.equal(expectedRevertCode);
         });
@@ -331,7 +355,7 @@ describe('ScriptParser', () => {
             .withCompileAbility(script, expectedCode);
           const collectionContext = new CategoryCollectionContextStub()
             .withCompiler(compiler);
-          const { scriptFactorySpy, getInitParameters } = createScriptFactorySpy();
+          const { scriptFactorySpy, compileCode } = createScriptFactorySpy();
           // act
           const actualScript = new TestContext()
             .withData(script)
@@ -339,7 +363,7 @@ describe('ScriptParser', () => {
             .withScriptFactory(scriptFactorySpy)
             .parseScript();
           // assert
-          const actualCode = getInitParameters(actualScript)?.code;
+          const actualCode = compileCode(actualScript);
           expect(actualCode).to.equal(expectedCode);
         });
       });
@@ -358,11 +382,14 @@ describe('ScriptParser', () => {
               .withExecute(expectedCode)
               .withRevert(expectedRevertCode),
           });
+          const { scriptFactorySpy, compileCode } = createScriptFactorySpy();
           // act
-          new TestContext()
+          const actualScript = new TestContext()
             .withScriptCodeFactory(scriptCodeFactory)
             .withCodeValidator(validator.get())
+            .withScriptFactory(scriptFactorySpy)
             .parseScript();
+          compileCode(actualScript);
           // assert
           validator.assertValidatedCodes(expectedCodeCalls);
         });
@@ -374,12 +401,15 @@ describe('ScriptParser', () => {
             .withCompileAbility(script, new ScriptCodeStub());
           const collectionContext = new CategoryCollectionContextStub()
             .withCompiler(compiler);
+          const { scriptFactorySpy, compileCode } = createScriptFactorySpy();
           // act
-          new TestContext()
+          const actualScript = new TestContext()
             .withData(script)
             .withCodeValidator(validator.get())
             .withCollectionContext(collectionContext)
+            .withScriptFactory(scriptFactorySpy)
             .parseScript();
+          compileCode(actualScript);
           // assert
           const calls = validator.callHistory;
           expect(calls).to.have.lengthOf(0);
@@ -392,10 +422,13 @@ describe('ScriptParser', () => {
             CodeValidationRule.NoCommentOnlyLines,
           ];
           const validator = new CodeValidatorStub();
+          const { scriptFactorySpy, compileCode } = createScriptFactorySpy();
           // act
-          new TestContext()
+          const actualScript = new TestContext()
             .withCodeValidator(validator.get())
+            .withScriptFactory(scriptFactorySpy)
             .parseScript();
+          compileCode(actualScript);
           // assert
           validator.assertValidatedRules(expectedRules);
         });
@@ -404,11 +437,14 @@ describe('ScriptParser', () => {
           const validator = new CodeValidatorStub();
           const collectionContext = new CategoryCollectionContextStub()
             .withLanguage(expectedLanguage);
+          const { scriptFactorySpy, compileCode } = createScriptFactorySpy();
           // act
-          new TestContext()
+          const actualScript = new TestContext()
             .withCodeValidator(validator.get())
             .withCollectionContext(collectionContext)
+            .withScriptFactory(scriptFactorySpy)
             .parseScript();
+          compileCode(actualScript);
           // assert
           validator.assertValidatedLanguage(expectedLanguage);
         });
@@ -448,6 +484,40 @@ describe('ScriptParser', () => {
               .withValidatorFactory(validatorFactory)
               .withData(givenData)
               .parseScript();
+          },
+          expectedWrappedError: expectedError,
+          expectedContextMessage,
+        });
+      });
+      describe('rethrows exception if compilation fails', () => {
+        /*
+          Compilation happens after `parseScript` has returned, outside its `try`, so it needs its
+          own wrapping to still name the script that failed.
+        */
+        // arrange
+        const givenData = createScriptDataWithCode();
+        const expectedContextMessage = 'Failed to parse script.';
+        const expectedError = new Error();
+        const validatorFactory: ExecutableValidatorFactory = () => {
+          const validatorStub = new ExecutableValidatorStub();
+          validatorStub.createContextualErrorMessage = (message) => message;
+          return validatorStub;
+        };
+        const failingCodeFactory: ScriptCodeFactory = () => {
+          throw expectedError;
+        };
+        // act & assert
+        itThrowsContextualError({
+          throwingAction: (wrapError) => {
+            const { scriptFactorySpy, compileCode } = createScriptFactorySpy();
+            const script = new TestContext()
+              .withScriptFactory(scriptFactorySpy)
+              .withScriptCodeFactory(failingCodeFactory)
+              .withErrorWrapper(wrapError)
+              .withValidatorFactory(validatorFactory)
+              .withData(givenData)
+              .parseScript();
+            compileCode(script);
           },
           expectedWrappedError: expectedError,
           expectedContextMessage,
