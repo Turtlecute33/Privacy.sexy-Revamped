@@ -46,9 +46,6 @@
   <meta name="twitter:image" content="https://privacy.turtlecute.org/og-image.png" />
   <meta name="twitter:image:alt" content="privacy.sexy Revamped: build privacy and debloat scripts for Windows, macOS, and Linux." />
 
-  <!-- Improve initial load time for critical assets by preloading -->
-  <link rel="preload" href="%BASE_URL%icon.svg" as="image" type="image/svg+xml">
-
   <!--
       Security meta tags based on OWASP recommendations.
       See https://owasp.org/www-project-secure-headers/ci/headers_add.json for all recommended policies.
@@ -370,6 +367,12 @@
     </style>
     <div class="splash-screen__spinner-container" aria-hidden="true">
       <div class="splash-screen__spinner"></div>
+      <!--
+        Deliberately not preloaded. This is the only element that paints icon.svg, and it is absent
+        from the deployed snapshot because scripts/prerender.mjs captures the post-mount DOM, after
+        the app has removed the splash. A `rel="preload" as="image"` therefore spent a high-priority
+        pre-FCP request on an image production never draws; `rel="icon"` still fetches it lazily.
+      -->
       <img src="%BASE_URL%icon.svg" alt="privacy.sexy logo" class="splash-screen__logo" width="256" height="256" />
     </div>
     <p class="
