@@ -33,6 +33,60 @@ describe('ScriptFactory', () => {
         // assert
         expect(actual).to.deep.equal(expected);
       });
+      it('does not compile before the code is read', () => {
+        // arrange
+        let compilations = 0;
+        const codeFactory = () => {
+          compilations++;
+          return new ScriptCodeStub();
+        };
+        // act
+        new TestContext()
+          .withCodeFactory(codeFactory)
+          .build();
+        // assert
+        expect(compilations).to.equal(0);
+      });
+      it('compiles only once across repeated reads', () => {
+        // arrange
+        let compilations = 0;
+        const codeFactory = () => {
+          compilations++;
+          return new ScriptCodeStub();
+        };
+        const script = new TestContext()
+          .withCodeFactory(codeFactory)
+          .build();
+        // act
+        const first = script.code;
+        const second = script.code;
+        // assert
+        expect(compilations).to.equal(1);
+        expect(first).to.equal(second);
+      });
+      it('rethrows the same failure without recompiling', () => {
+        // arrange
+        const expectedError = new Error('compilation failed');
+        let compilations = 0;
+        const codeFactory = (): ScriptCode => {
+          compilations++;
+          throw expectedError;
+        };
+        const script = new TestContext()
+          .withCodeFactory(codeFactory)
+          .build();
+        // act
+        const errors = [1, 2].map(() => {
+          try {
+            return script.code;
+          } catch (error) {
+            return error;
+          }
+        });
+        // assert
+        expect(compilations).to.equal(1);
+        expect(errors).to.deep.equal([expectedError, expectedError]);
+      });
     });
     describe('canRevert', () => {
       it('returns false without revert code', () => {
@@ -113,17 +167,18 @@ class TestContext {
 
   private id: ExecutableId = `[${TestContext.name}]id`;
 
-  private code: ScriptCode = new ScriptCodeStub();
+  private codeFactory: () => ScriptCode = () => new ScriptCodeStub();
 
   private level? = RecommendationLevel.Standard;
 
   private docs: readonly string[] = [];
 
   public withCodes(code: string, revertCode = ''): this {
-    this.code = new ScriptCodeStub()
-      .withExecute(code)
-      .withRevert(revertCode);
-    return this;
+    return this.withCode(
+      new ScriptCodeStub()
+        .withExecute(code)
+        .withRevert(revertCode),
+    );
   }
 
   public withId(id: ExecutableId): this {
@@ -132,7 +187,11 @@ class TestContext {
   }
 
   public withCode(code: ScriptCode): this {
-    this.code = code;
+    return this.withCodeFactory(() => code);
+  }
+
+  public withCodeFactory(codeFactory: () => ScriptCode): this {
+    this.codeFactory = codeFactory;
     return this;
   }
 
@@ -155,7 +214,7 @@ class TestContext {
     return createScript({
       executableId: this.id,
       name: this.name,
-      code: this.code,
+      code: this.codeFactory,
       docs: this.docs,
       level: this.level,
     });
