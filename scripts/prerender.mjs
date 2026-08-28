@@ -37,6 +37,18 @@ const APP_CONTENT_SELECTOR = '#app .app__wrapper';
 const PRERENDER_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 const PRERENDERED_OPERATING_SYSTEM = 'Windows';
 
+const CODE_EDITOR_SELECTOR = '#codeEditor';
+
+/*
+ * A sentence from the generated default script. The code pane is only ~320 px wide even at the
+ * 1280 px prerender viewport, so the editor soft-wraps every long line into three or four rendered
+ * rows, each its own element — which is why the phrase is matched against the tag-stripped text
+ * rather than the raw HTML, and why it stops short of the trailing period, which the editor pushes
+ * onto a row of its own.
+ */
+const PRERENDERED_SCRIPT_PHRASE = 'Start by exploring different categories '
+  + 'and choosing different tweaks';
+
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript',
@@ -104,6 +116,29 @@ async function assertPrerenderedOperatingSystem(page) {
     );
   }
   console.log(`Prerendering the ${PRERENDERED_OPERATING_SYSTEM} collection.`);
+}
+
+/*
+ * The code editor no longer loads itself on mount: its ~470 KB chunk is fetched only once the pane
+ * approaches the viewport or the visitor interacts, which keeps it off the cold-load critical path.
+ * A headless capture does neither on its own, so waiting for mount alone would snapshot an empty
+ * placeholder box. That loses the generated script — the only real content in the right-hand pane,
+ * and a chunk of the copy crawlers and AI scrapers extract — and it silently turns
+ * `stripRuntimeInjectedStyles()` and `stripRuntimeInjectedFontProbes()` into no-ops, because there
+ * would be no Ace CSS or measurement probes in the document to strip. Scrolling the pane into view
+ * is what arms its IntersectionObserver; scrolling back afterwards keeps the snapshot in the state
+ * a first-time visitor sees.
+ */
+async function renderCodeEditor(page) {
+  await page.evaluate((selector) => {
+    document.querySelector(selector)?.scrollIntoView();
+  }, CODE_EDITOR_SELECTOR);
+  await page.waitForFunction(
+    (selector) => document.querySelector(selector)?.classList.contains('ace_editor'),
+    { timeout: READY_TIMEOUT_MS },
+    CODE_EDITOR_SELECTOR,
+  );
+  await page.evaluate(() => window.scrollTo(0, 0));
 }
 
 /*
@@ -221,6 +256,28 @@ function assertNoRuntimeInjectedScripts(html, builtHtml) {
   }
 }
 
+/*
+ * `renderCodeEditor()` only knows how the editor is triggered today, and the strip steps run over
+ * the document afterwards; neither guarantees the generated script is in the bytes that get
+ * written. Losing it is a silent failure — the page still looks fine, it just ships an empty box
+ * where a screenful of indexable copy used to be — so assert on the final HTML rather than on the
+ * steps that are supposed to produce it.
+ */
+function assertPrerenderedScript(html) {
+  const renderedText = html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ');
+  if (!renderedText.includes(PRERENDERED_SCRIPT_PHRASE)) {
+    throw new Error(
+      `The prerendered HTML does not contain "${PRERENDERED_SCRIPT_PHRASE}" from the generated `
+      + 'default script, so the lazily-loaded code editor never rendered into the snapshot. Check '
+      + 'that renderCodeEditor() still triggers it, and that the default script in '
+      + 'TheCodeArea.vue still carries that phrase.',
+    );
+  }
+}
+
 async function prerender() {
   if (!existsSync(INDEX_FILE)) {
     throw new Error(`Build output not found at ${INDEX_FILE}. Run the build first.`);
@@ -258,6 +315,7 @@ async function prerender() {
       APP_CONTENT_SELECTOR,
     );
     await assertPrerenderedOperatingSystem(page);
+    await renderCodeEditor(page);
     const builtHtml = await readFile(INDEX_FILE, 'utf8');
     await stripRuntimeInjectedPreloads(page, builtHtml);
     await stripRuntimeInjectedStyles(page, builtHtml);
@@ -268,6 +326,7 @@ async function prerender() {
       throw new Error('Prerendered HTML is missing app content; aborting to avoid deploying an empty page.');
     }
     assertNoRuntimeInjectedScripts(html, builtHtml);
+    assertPrerenderedScript(html);
     await writeFile(INDEX_FILE, html, 'utf8');
     const kb = Math.round(Buffer.byteLength(html) / 1024);
     console.log(`Prerendered index.html written (${kb} KB).`);
