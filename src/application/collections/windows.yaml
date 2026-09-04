@@ -8,7 +8,7 @@ scripting:
     language: batchfile
     startCode: |-
         @echo off
-        :: {{ $homepage }} — v{{ $version }} — {{ $date }}
+        :: {{ $homepage }} v{{ $version }} ({{ $date }})
         :: Initialize environment
         setlocal EnableExtensions DisableDelayedExpansion
         :: Ensure PowerShell is available
@@ -483,7 +483,7 @@ actions:
                             [2]: https://web.archive.org/web/20240730200254/https://www.magnetforensics.com/blog/what-is-mru-most-recently-used/ "What is MRU (Most Recently Used)? - Magnet Forensics | www.magnetforensics.com"
                             [3]: https://web.archive.org/web/20240730195941/https://forensafe.com/blogs/opensavemru.html "OpenSaveMRU Blog | forensafe.com"
                             [4]: https://web.archive.org/web/20240730200152/https://forensafe.com/blogs/investigating_recent_items.html "Recent Items | forensafe.com"
-                            [5]: https://web.archive.org/web/20240730195957/https://winreg-kb.readthedocs.io/en/latest/sources/explorer-keys/Most-recently-used.html "Most recently used (MRU) — Windows Registry knowledge base (winreg-kb) 20240211 documentation | winreg-kb.readthedocs.io"
+                            [5]: https://web.archive.org/web/20240730195957/https://winreg-kb.readthedocs.io/en/latest/sources/explorer-keys/Most-recently-used.html "Most recently used (MRU) | Windows Registry knowledge base (winreg-kb) 20240211 documentation | winreg-kb.readthedocs.io"
                         call:
                             -
                                 function: ClearRegistryValues
@@ -1223,7 +1223,7 @@ actions:
                                     [3]: https://web.archive.org/web/20150601014235/http://randomthoughtsofforensics.blogspot.com/2012/07/trouble-with-typedurlstime.html "Random Thoughts of Forensics: The Trouble with TypedUrlsTime | randomthoughtsofforensics.blogspot.com"
                                     [4]: https://web.archive.org/web/20240801123756/https://forensafe.com/blogs/typedurls.html "Typed URLs Blog | forensafe.com"
                                     [5]: https://web.archive.org/web/20151103125411/http://www.symantec.com/security_response/writeup.jsp?docid=2004-042715-3545-99&tabid=2 "Adware.StartPage Technical Details | Symantec | www.symantec.com"
-                                    [6]: https://web.archive.org/web/20240730124000/https://blogs.windows.com/windowsexperience/2022/06/15/internet-explorer-11-has-retired-and-is-officially-out-of-support-what-you-need-to-know/ "Internet Explorer 11 has retired and is officially out of support—what you need to know | Windows Experience Blog | blogs.windows.com"
+                                    [6]: https://web.archive.org/web/20240730124000/https://blogs.windows.com/windowsexperience/2022/06/15/internet-explorer-11-has-retired-and-is-officially-out-of-support-what-you-need-to-know/ "Internet Explorer 11 has retired and is officially out of support: what you need to know | Windows Experience Blog | blogs.windows.com"
                                 call:
                                     -
                                         function: ClearRegistryValues
@@ -4359,7 +4359,7 @@ actions:
 
                                     [1]: https://web.archive.org/web/20231021125929/https://cloudblogs.microsoft.com/windowsserver/2012/05/17/improved-server-manageability-through-customer-feedback-how-the-customer-experience-improvement-program-makes-windows-server-2012-a-better-product-for-it-professionals/ "Improved Server Manageability through Customer Feedback: How the Customer Experience Improvement Program makes Windows Server 2012 a better product for IT Professionals - Microsoft Windows Server Blog | cloudblogs.microsoft.com"
                                     [2]: https://web.archive.org/web/20231021011254/https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/jj651022%28v=ws.11%29 "What's New in Telemetry | Microsoft Learn | learn.microsoft.com"
-                                    [3]: https://web.archive.org/web/20240726132037/https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/cc774625(v%3Dws.10) "Event ID 1008 — CEIP Upload | Microsoft Learn | learn.microsoft.com"
+                                    [3]: https://web.archive.org/web/20240726132037/https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/cc774625(v%3Dws.10) "Event ID 1008: CEIP Upload | Microsoft Learn | learn.microsoft.com"
                                     [4]: https://web.archive.org/web/20240726131536/http://windows.fyicenter.com/4376_Uploader_Scheduled_Task_on_Windows_8.html "\"Uploader\" Scheduled Task on Windows 8 | windows.fyicenter.com"
                                     [5]: https://web.archive.org/web/20240726131546/https://antoanthongtin.gov.vn/giai-phap-khac/cau-hinh-nang-cao-hieu-nang-va-an-toan-cho-windows-10-104713 "Cấu hình nâng cao hiệu năng và an toàn cho Windows 10 - Tạp chí An toàn thông tin | antoanthongtin.gov.vn"
                                 call:
@@ -7563,7 +7563,7 @@ actions:
                             - For work or school accounts:
                               `HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\SearchSettings!IsAADCloudSearchEnabled` [1] [2] [3]
 
-                            [1]: https://web.archive.org/web/20240121002929/https://r-pufky.github.io/docs/operating-systems/windows/10/20H2/settings/search/permissions-and-history.html "8.1. Permissions & History — Generic service & computer documentation. documentation | r-pufky.github.io"
+                            [1]: https://web.archive.org/web/20240121002929/https://r-pufky.github.io/docs/operating-systems/windows/10/20H2/settings/search/permissions-and-history.html "8.1. Permissions & History | Generic service & computer documentation. documentation | r-pufky.github.io"
                             [2]: https://web.archive.org/web/20240121002902/https://www.clasesordenador.com/como-activar-y-desactivar-la-busqueda-de-contenido-en-la-nube-en-windows-11/ "Cómo activar y desactivar la búsqueda de contenido en la nube en Windows 11 | www.clasesordenador.com"
                             [3]: https://web.archive.org/web/20240121002826/https://www.thewindowsclub.com/disable-cloud-content-search-in-taskbar-search-box "Disable Cloud Content Search in Taskbar search box in Windows 11/10 | www.thewindowsclub.com"
                             [4]: https://web.archive.org/web/20240121010645/https://support.microsoft.com/en-us/windows/windows-search-and-privacy-99fb8251-7260-1cd6-1bbb-15c2370eb168 "Windows Search and privacy - Microsoft Support | support.microsoft.com"
@@ -9700,7 +9700,7 @@ actions:
                                             [1]: https://web.archive.org/web/20220112180622/https://techcommunity.microsoft.com/t5/discussions/edge-97-starting-automatically-at-logon/m-p/3057166 "Edge 97 starting automatically at logon - Microsoft Community Hub | techcommunity.microsoft.com"
                                             [2]: https://web.archive.org/web/20240621141001/https://www.file.net/process/microsoftedgeupdate.exe.html "MicrosoftEdgeUpdate.exe Windows process - What is it? | www.file.net"
                                             [3]: https://web.archive.org/web/20240621150615/https://joji.me/en-us/blog/understanding-the-edge-and-edge-webview2-update-logs/ "Understanding the Edge and Edge WebView2 Update Logs | joji.me"
-                                            [4]: https://archive.ph/2024.06.21-151340/https://vms.drweb.com/virus/?i=25158791 "Trojan.Siggen17.58258 — Dr.Web Malware description library | vms.drweb.com"
+                                            [4]: https://archive.ph/2024.06.21-151340/https://vms.drweb.com/virus/?i=25158791 "Trojan.Siggen17.58258 | Dr.Web Malware description library | vms.drweb.com"
                                         call:
                                             -
                                                 function: DisableScheduledTask
@@ -9761,7 +9761,7 @@ actions:
                                         docs: |- # refactor-with-variable: Same • Edge Update Caution • Chromium Policy Caution • Active Directory only • Edge Channels
                                             This script prevents Microsoft Edge from automatically updating across all channels.
 
-                                            Microsoft Edge offers four update channels—Stable, Beta, Dev, and Canary—each designed with different stability
+                                            Microsoft Edge offers four update channels (Stable, Beta, Dev, and Canary), each designed with different stability
                                             levels and update frequencies [1].
                                             This script disables updates for all of these channels.
 
@@ -9977,7 +9977,7 @@ actions:
                                                     This script disables the automatic installation of Microsoft Edge across all update channels, enhancing
                                                     user control over their systems and privacy.
 
-                                                    Microsoft Edge offers four update channels—Stable, Beta, Dev, and Canary—each designed with different stability
+                                                    Microsoft Edge offers four update channels (Stable, Beta, Dev, and Canary), each designed with different stability
                                                     levels and update frequencies [1].
                                                     This script blocks automatic installations for all these channels [2] [3].
                                                     This allows users to manually manage their updates and potentially reduce exposure to unstable or privacy-intrusive software.
@@ -11021,7 +11021,7 @@ actions:
                                     This script disables the Collections feature in Microsoft Edge.
 
                                     By default, if this script is not executed, users can access and use the Collections feature in Microsoft Edge [1].
-                                    The Collections feature in Edge compiles and manages web content—articles, images, and videos—for activities like shopping, trip planning, or research [2] [3].
+                                    The Collections feature in Edge compiles and manages web content (articles, images, and videos) for activities like shopping, trip planning, or research [2] [3].
                                     This feature syncs across devices when logged into Microsoft Edge, keeping your collections updated no matter where you access the browser [2].
                                     The Collections feature enables efficient collection, organization, sharing, and exporting of content, with seamless integration into Office [1] [4].
                                     The feature lets users save and categorize web pages, text, images, and videos into groups for specific projects or interests [3].
@@ -11646,7 +11646,7 @@ actions:
                                     The script configures `HKLM\SOFTWARE\Policies\Mozilla\Firefox!DisableDefaultBrowserAgent` registry key to
                                     prevent the Default Browser Agent from taking any actions [4].
 
-                                    [1]: https://web.archive.org/web/20231201223153/https://firefox-source-docs.mozilla.org/toolkit/mozapps/defaultagent/default-browser-agent/index.html "Default Browser Agent — Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
+                                    [1]: https://web.archive.org/web/20231201223153/https://firefox-source-docs.mozilla.org/toolkit/mozapps/defaultagent/default-browser-agent/index.html "Default Browser Agent | Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
                                     [2]: https://web.archive.org/web/20240313164703/https://blog.mozilla.org/data/2020/03/16/understanding-default-browser-trends/ "Understanding default browser trends – Data@Mozilla | blog.mozilla.org"
                                     [3]: https://web.archive.org/web/20240313164715/https://github.com/mozilla-services/mozilla-pipeline-schemas/pull/495/files#diff-48f14d6bdea5bf803f8b8cff5f018172 "Bug 1602463 - Add a schema for the new default-browser ping · Pull Request #495 · mozilla-services/mozilla-pipeline-schemas · GitHub | github.com/mozilla-services"
                                     [4]: https://web.archive.org/web/20240529061535/https://github.com/privacysexy-forks/policy-templates#disabledefaultbrowseragent "GitHub - privacysexy-forks/policy-templates: Policy Templates for Firefox | github.com/privacysexy-forks"
@@ -11681,7 +11681,7 @@ actions:
                                     | Windows 10 22H2  | 🟡 N/A (missing) |
                                     | Windows 11 22H2  | 🟡 N/A (missing) |
 
-                                    [1]: https://web.archive.org/web/20231201223153/https://firefox-source-docs.mozilla.org/toolkit/mozapps/defaultagent/default-browser-agent/index.html "Default Browser Agent — Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
+                                    [1]: https://web.archive.org/web/20231201223153/https://firefox-source-docs.mozilla.org/toolkit/mozapps/defaultagent/default-browser-agent/index.html "Default Browser Agent | Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
                                     [2]: https://web.archive.org/web/20240313164703/https://blog.mozilla.org/data/2020/03/16/understanding-default-browser-trends/ "Understanding default browser trends – Data@Mozilla | blog.mozilla.org"
                                 call:
                                     -
@@ -12447,9 +12447,9 @@ actions:
                             Every time you visit a website, your computer asks a DNS server to translate the name into an
                             address. These requests reveal which sites you visit.
 
-                            By default these lookups are sent in plain text, so anyone able to observe your network — including
+                            By default these lookups are sent in plain text, so anyone able to observe your network (including
                             other devices on the same Wi-Fi, your internet provider and the operators of the network you are
-                            connected to — can read and record them [1].
+                            connected to) can read and record them [1].
 
                             Windows also uses additional name resolution protocols that broadcast the names you are looking for
                             to the entire local network, which both leaks information and allows nearby devices to answer with a
@@ -15714,8 +15714,8 @@ actions:
                                                 parameters:
                                                     property: CloudExtendedTimeout  # Status:   Get-MpPreference | Select-Object -Property CloudExtendedTimeout
                                                     # `0`, not `50`: the value is extra seconds ADDED to the standard 10 s cloud
-                                                    # check, and the ADMX caps it at 50, so `50` is the maximum (60 s total) —
-                                                    # it enabled the feature this script exists to disable.
+                                                    # check, and the ADMX caps it at 50, so `50` is the maximum (60 s total).
+                                                    # It enabled the feature this script exists to disable.
                                                     value: "'0'"                    # Set:      Set-MpPreference -Force -CloudExtendedTimeout '0'
                                                     default: $False                 # Default:  0 | Set-MpPreference -Force -CloudExtendedTimeout '0'
                                                     setDefaultOnWindows11: 'true'   # `Remove-MpPreference` sets it to 0 instead 1 (OS default) in Windows 11
@@ -16367,7 +16367,7 @@ actions:
 
                             > **Caution:** This action may reduce security and can expose your system to potential threats
 
-                            [1]: https://archive.ph/2024.10.27-163838/https://www.fsf.org/news/lifes-better-together-when-you-avoid-windows-11 "Life's better together when you avoid Windows 11 — Free Software Foundation — Working together for free software | www.fsf.org"
+                            [1]: https://archive.ph/2024.10.27-163838/https://www.fsf.org/news/lifes-better-together-when-you-avoid-windows-11 "Life's better together when you avoid Windows 11 | Free Software Foundation | Working together for free software | www.fsf.org"
                             [2]: https://archive.ph/2024.10.27-163852/https://learn.microsoft.com/en-us/windows/security/hardware-security/tpm/how-windows-uses-the-tpm "How Windows uses the TPM | Microsoft Learn | learn.microsoft.com"
                             [3]: https://archive.ph/2024.10.27-163859/https://www.tandfonline.com/doi/full/10.1080/0144929X.2024.2374889 "Full article: Building trust in remote attestation through transparency – a qualitative user study on observable attestation | www.tandfonline.com"
                         children:
@@ -16460,14 +16460,14 @@ actions:
                                     [7]: https://archive.ph/2024.10.27-165820/https://learn.microsoft.com/en-us/windows/iot/iot-enterprise/customize/uwf-antimalware-support "Antimalware support on UWF-protected devices | Microsoft Learn | learn.microsoft.com"
                                     [8]: https://archive.ph/2024.10.27-164210/https://learn.microsoft.com/en-us/troubleshoot/sql/database-engine/security/antivirus-and-sql-server "Configure antivirus software to work with SQL Server - SQL Server | Microsoft Learn | learn.microsoft.com"
                                     [9]: https://web.archive.org/web/20240717094647/https://learn.microsoft.com/en-us/defender-endpoint/troubleshoot-onboarding "Troubleshoot Microsoft Defender for Endpoint onboarding issues - Microsoft Defender for Endpoint | Microsoft Learn | learn.microsoft.com"
-                                    [10]: https://web.archive.org/web/20240930174756/https://retooling.io/blog/an-unexpected-journey-into-microsoft-defenders-signature-world "An unexpected journey into Microsoft Defender's signature World — retooling_ | retooling.io"
+                                    [10]: https://web.archive.org/web/20240930174756/https://retooling.io/blog/an-unexpected-journey-into-microsoft-defenders-signature-world "An unexpected journey into Microsoft Defender's signature World | retooling_ | retooling.io"
                                     [11]: https://archive.ph/2024.10.27-164028/https://github.com/privacysexy-forks/10_0_22622_601/blob/c598035e1a6627384d646140fe9e4d234b36b11d/C/Windows/System32/drivers/WdFilter.sys.strings "10_0_22622_601/C/Windows/System32/drivers/WdFilter.sys.strings at c598035e1a6627384d646140fe9e4d234b36b11d · privacysexy-forks/10_0_22622_601 | github.com"
-                                    [12]: https://archive.ph/2024.10.27-164137/https://n4r1b.com/posts/2020/01/dissecting-the-windows-defender-driver-wdfilter-part-1/ "Dissecting the Windows Defender Driver - WdFilter (Part 1) :: Up is Down and Black is White — n4r1b | n4r1b.com"
-                                    [13]: https://archive.ph/2024.10.27-164049/https://n4r1b.com/posts/2020/02/dissecting-the-windows-defender-driver-wdfilter-part-2/ "Dissecting the Windows Defender Driver - WdFilter (Part 2) :: Up is Down and Black is White — n4r1b | n4r1b.com"
+                                    [12]: https://archive.ph/2024.10.27-164137/https://n4r1b.com/posts/2020/01/dissecting-the-windows-defender-driver-wdfilter-part-1/ "Dissecting the Windows Defender Driver - WdFilter (Part 1) :: Up is Down and Black is White | n4r1b | n4r1b.com"
+                                    [13]: https://archive.ph/2024.10.27-164049/https://n4r1b.com/posts/2020/02/dissecting-the-windows-defender-driver-wdfilter-part-2/ "Dissecting the Windows Defender Driver - WdFilter (Part 2) :: Up is Down and Black is White | n4r1b | n4r1b.com"
                                     [14]: https://archive.ph/2024.10.27-164055/https://saza.re/posts/handle_exploration/ "Windows Defender Handle Exploration - saza.RE | saza.re"
-                                    [15]: https://archive.ph/2024.10.27-164102/https://n4r1b.com/posts/2020/03/dissecting-the-windows-defender-driver-wdfilter-part-3/ "Dissecting the Windows Defender Driver - WdFilter (Part 3) :: Up is Down and Black is White — n4r1b | n4r1b.com"
+                                    [15]: https://archive.ph/2024.10.27-164102/https://n4r1b.com/posts/2020/03/dissecting-the-windows-defender-driver-wdfilter-part-3/ "Dissecting the Windows Defender Driver - WdFilter (Part 3) :: Up is Down and Black is White | n4r1b | n4r1b.com"
                                     [16]: https://web.archive.org/web/20240725101722/https://www.alteredsecurity.com/post/disabling-tamper-protection-and-other-defender-mde-components?ref=news.risky.biz "Breaking through Defender's Gates - Disabling Tamper Protection and other Defender components | alteredsecurity.com"
-                                    [17]: https://archive.ph/2024.10.27-164114/https://n4r1b.com/posts/2020/04/dissecting-the-windows-defender-driver-wdfilter-part-4/ "Dissecting the Windows Defender Driver - WdFilter (Part 4) :: Up is Down and Black is White — n4r1b | n4r1b.com"
+                                    [17]: https://archive.ph/2024.10.27-164114/https://n4r1b.com/posts/2020/04/dissecting-the-windows-defender-driver-wdfilter-part-4/ "Dissecting the Windows Defender Driver - WdFilter (Part 4) :: Up is Down and Black is White | n4r1b | n4r1b.com"
                                     [18]: https://web.archive.org/web/20241007150442/https://learn.microsoft.com/en-us/windows/dev-drive/ "Set up a Dev Drive on Windows 11 | Microsoft Learn | learn.microsoft.com"
                                     [19]: https://archive.ph/2024.10.27-164443/https://windows-internals.com/investigating-filter-communication-ports/ "Investigating Filter Communication Ports – Winsider Seminars & Solutions Inc. | windows-internals.com"
                                     [20]: https://archive.ph/2024.10.27-164213/https://www.microsoft.com/en-us/security/business/security-101/what-is-edr-endpoint-detection-response "What Is EDR? Endpoint Detection and Response | Microsoft Security | www.microsoft.com"
@@ -16584,7 +16584,7 @@ actions:
                                     [1]: https://archive.ph/2024.10.27-165733/https://batcmd.com/windows/8/services/wdboot/ "Windows Defender Boot Driver - Windows 8 Service - batcmd.com | batcmd.com"
                                     [2]: https://archive.ph/2024.10.27-165849/https://batcmd.com/windows/11/services/wdboot/ "Microsoft Defender Antivirus Boot Driver - Windows 11 Service - batcmd.com | batcmd.com"
                                     [3]: https://archive.ph/2024.10.27-165804/https://github.com/privacysexy-forks/10_0_22622_601/blob/c598035e1a6627384d646140fe9e4d234b36b11d/C/Windows/System32/drivers/WdBoot.sys.strings "10_0_22622_601/C/Windows/System32/drivers/WdBoot.sys.strings at c598035e1a6627384d646140fe9e4d234b36b11d · privacysexy-forks/10_0_22622_601 | github.com"
-                                    [4]: https://archive.ph/2024.10.27-165818/https://n4r1b.netlify.app/posts/2019/11/understanding-wdboot-windows-defender-elam/ "Understanding WdBoot (Windows Defender ELAM) :: Up is Down and Black is White — n4r1b | n4r1b.netlify.app"
+                                    [4]: https://archive.ph/2024.10.27-165818/https://n4r1b.netlify.app/posts/2019/11/understanding-wdboot-windows-defender-elam/ "Understanding WdBoot (Windows Defender ELAM) :: Up is Down and Black is White | n4r1b | n4r1b.netlify.app"
                                     [5]: https://archive.ph/2024.10.27-170051/https://learn.microsoft.com/en-us/windows/security/operating-system-security/system-security/protect-high-value-assets-by-controlling-the-health-of-windows-10-based-devices "Control the health of Windows devices | Microsoft Learn | learn.microsoft.com"
                                     [6]: https://archive.ph/2024.10.27-165826/https://systemexplorer.net/file-database/file/wdboot-sys/15452761 "What is wdboot.sys from Microsoft Corporation? (id:15452761) | systemexplorer.net"
                                     [7]: https://archive.ph/2024.10.27-165922/https://learn.microsoft.com/en-us/defender-endpoint/elam-on-mdav "Early Launch Antimalware (ELAM) and Microsoft Defender Antivirus - Microsoft Defender for Endpoint | Microsoft Learn | learn.microsoft.com"
@@ -16753,7 +16753,7 @@ actions:
                                     [22]: https://archive.ph/2024.10.27-172033/https://techcommunity.microsoft.com/t5/microsoft-defender-for-endpoint/onboard-mde-windows-2019-ms-sense-is-missing-error-15/m-p/3925000 "Onboard MDE - Windows 2019 - MS Sense is missing / Error 15 - Microsoft Community Hub | techcommunity.microsoft.com"
                                     [23]: https://archive.ph/2024.10.27-164210/https://learn.microsoft.com/en-us/troubleshoot/sql/database-engine/security/antivirus-and-sql-server "Configure antivirus software to work with SQL Server - SQL Server | Microsoft Learn | learn.microsoft.com"
                                     [24]: https://archive.ph/2024.10.27-172153/https://learn.microsoft.com/en-us/windows/dev-drive/group-policy "Configure Dev Drive policy for enterprise business devices | Microsoft Learn | learn.microsoft.com"
-                                    [25]: https://archive.ph/2024.10.27-172044/https://windows-internals.com/faxing-your-way-to-system/ "Faxing Your Way to SYSTEM — Part Two – Winsider Seminars & Solutions Inc. | windows-internals.com"
+                                    [25]: https://archive.ph/2024.10.27-172044/https://windows-internals.com/faxing-your-way-to-system/ "Faxing Your Way to SYSTEM: Part Two – Winsider Seminars & Solutions Inc. | windows-internals.com"
                                     [26]: https://archive.ph/2024.10.27-172054/https://strontic.github.io/xcyclopedia/library/mssecuser.dll-4C0B2D44270EAA444B96CC1A10CF920A.html "mssecuser.dll | Microsoft Security Events Component Library | STRONTIC | strontic.github.io"
                                 call:
                                     -
@@ -17172,7 +17172,7 @@ actions:
                                             [4]: https://web.archive.org/web/20241006191914/https://github.com/privacysexy-forks/10_0_17763_1/blob/6151931b169f55ce8b8581c39bb508a661e4085b/C/Windows/System32/drivers/SgrmAgent.sys.strings "10_0_17763_1/C/Windows/System32/drivers/SgrmAgent.sys.strings at 6151931b169f55ce8b8581c39bb508a661e4085b · privacysexy-forks/10_0_17763_1 | github.com"
                                             [5]: https://web.archive.org/web/20241006160645/https://batcmd.com/windows/11/services/sgrmagent/ "System Guard Runtime Monitor Agent - Windows 11 Service - batcmd.com | batcmd.com"
                                             [6]: https://web.archive.org/web/20241006191906/https://github.com/privacysexy-forks/nickel-x64/blob/b3f8c9549e49f2a92b401b3809b210d5f78190ba/WinSxS/Manifests/amd64_security-octagon-agent_31bf3856ad364e35_10.0.22621.1_none_611e8a0ed84a25b2.manifest "nickel-x64/WinSxS/Manifests/amd64_security-octagon-agent_31bf3856ad364e35_10.0.22621.1_none_611e8a0ed84a25b2.manifest at b3f8c9549e49f2a92b401b3809b210d5f78190ba · privacysexy-forks/nickel-x64 | github.com"
-                                            [7]: https://archive.ph/2024.10.27-172044/https://windows-internals.com/faxing-your-way-to-system/ "Faxing Your Way to SYSTEM — Part Two – Winsider Seminars & Solutions Inc. | windows-internals.com"
+                                            [7]: https://archive.ph/2024.10.27-172044/https://windows-internals.com/faxing-your-way-to-system/ "Faxing Your Way to SYSTEM: Part Two – Winsider Seminars & Solutions Inc. | windows-internals.com"
                                         call:
                                             -
                                                 function: DisableService
@@ -18014,7 +18014,7 @@ actions:
                                             [4]: https://archive.ph/2024.10.27-175028/https://superuser.com/questions/1115395/windows-10-upgrade-cpu-100/1116367%231116367 "Windows 10 upgrade = CPU 100% - Super User | superuser.com"
                                             [5]: https://archive.ph/2024.10.29-182929/https://github.com/privacysexy-forks/10_0_22622_601/blob/c598035e1a6627384d646140fe9e4d234b36b11d/C/Windows/WinSxS/amd64_windows-defender-service_31bf3856ad364e35_10.0.22621.1_none_273bee824a8ac431/MpRtp.dll.strings "10_0_22622_601/C/Windows/WinSxS/amd64_windows-defender-service_31bf3856ad364e35_10.0.22621.1_none_273bee824a8ac431/MpRtp.dll.strings at c598035e1a6627384d646140fe9e4d234b36b11d · privacysexy-forks/10_0_22622_601 | github.com"
                                             [6]: https://archive.ph/2024.10.27-175146/https://m.blog.naver.com/codecrusader/110133772276 "Windows 8 - Windows Defender : 네이버 블로그 | m.blog.naver.com"
-                                            [7]: https://archive.ph/2024.10.27-164114/https://n4r1b.com/posts/2020/04/dissecting-the-windows-defender-driver-wdfilter-part-4/ "Dissecting the Windows Defender Driver - WdFilter (Part 4) :: Up is Down and Black is White — n4r1b | n4r1b.com"
+                                            [7]: https://archive.ph/2024.10.27-164114/https://n4r1b.com/posts/2020/04/dissecting-the-windows-defender-driver-wdfilter-part-4/ "Dissecting the Windows Defender Driver - WdFilter (Part 4) :: Up is Down and Black is White | n4r1b | n4r1b.com"
                                             [8]: https://archive.ph/2024.10.27-175108/https://www.lenovo.com/us/en/glossary/windows-defender/ "Windows Defender: How Does Windows Defender Work? Do I Need To Install It? | Lenovo US | www.lenovo.com"
                                             [9]: https://archive.ph/2024.10.27-175254/https://readmedium.com/windows-defender-memory-scan-feature-analysis-3f9242f00132 "Windows Defender Memory Scan Feature Analysis | readmedium.com"
                                             [10]: https://web.archive.org/web/20240806084253/https://troopers.de/downloads/troopers24/TR24_Deep_Dive_into_Windows_Defender_MSXP97.pdf "Deep Dive into Windows Defender: SmartApp Control and ET | PowerPoint Presentation | troopers.de"
@@ -20034,7 +20034,7 @@ actions:
                                                     [9]: https://archive.ph/2024.10.28-124201/https://batcmd.com/windows/11/services/windefend/ "Microsoft Defender Antivirus Service - Windows 11 Service - batcmd.com | batcmd.com"
                                                     [10]: https://archive.ph/2024.10.28-124319/https://hijacklibs.net/entries/microsoft/built-in/mpsvc.html "mpsvc.dll | HijackLibs | hijacklibs.net"
                                                     [11]: https://archive.ph/2024.10.28-124440/https://malware.news/t/fuzzing-the-shield-cve-2022-24548/65673/1 "Fuzzing the Shield: CVE-2022–24548 - Malware Analysis - Malware Analysis, News and Indicators | malware.news"
-                                                    [12]: https://web.archive.org/web/20240930174756/https://retooling.io/blog/an-unexpected-journey-into-microsoft-defenders-signature-world "An unexpected journey into Microsoft Defender's signature World — retooling_ | retooling.io"
+                                                    [12]: https://web.archive.org/web/20240930174756/https://retooling.io/blog/an-unexpected-journey-into-microsoft-defenders-signature-world "An unexpected journey into Microsoft Defender's signature World | retooling_ | retooling.io"
                                                     [13]: https://archive.ph/2024.10.28-124859/https://redplait.blogspot.com/2010/11/mpsvcdll-rpc-interfaces.html "windows deep internals: MpSvc.dll RPC interfaces | redplait.blogspot.com"
                                                 call:
                                                     function: SoftDeleteFiles
@@ -20093,7 +20093,7 @@ actions:
                                                     [6]: https://archive.ph/2024.10.28-131542/https://www.virusbulletin.com/conference/vb2018/abstracts/windows-defender-under-microscope-reverse-engineers-perspective "Virus Bulletin :: Windows Defender under the microscope: a reverse engineer's perspective | virusbulletin.com"
                                                     [7]: https://archive.ph/2024.10.27-175254/https://readmedium.com/windows-defender-memory-scan-feature-analysis-3f9242f00132 "Windows Defender Memory Scan Feature Analysis | readmedium.com"
                                                     [8]: https://archive.ph/2024.10.28-131709/https://community.broadcom.com/symantecenterprise/communities/community-home/librarydocuments/viewdocument?DocumentKey=f49b2ef7-244f-451d-85a5-0ca2ab01bf26&CommunityKey=a9b005c5-dc3c-4b04-9a1a-41efdafc2a35&tab=librarydocuments "Web Isolation - Symantec Enterprise | community.broadcom.com"
-                                                    [9]: https://web.archive.org/web/20240930174756/https://retooling.io/blog/an-unexpected-journey-into-microsoft-defenders-signature-world "An unexpected journey into Microsoft Defender's signature World — retooling_ | retooling.io"
+                                                    [9]: https://web.archive.org/web/20240930174756/https://retooling.io/blog/an-unexpected-journey-into-microsoft-defenders-signature-world "An unexpected journey into Microsoft Defender's signature World | retooling_ | retooling.io"
                                                     [10]: https://archive.ph/2024.10.28-131842/https://forensics.wiki/microsoft_security_essentials/ "Microsoft security essentials - | forensics.wiki"
                                                     [11]: https://archive.ph/2024.10.28-132014/https://www.pixiepointsecurity.com/blog/nday-cve-2021-31985/ "Exploiting the Windows Defender `AsProtect` Heap Overflow Vulnerability | PixiePoint Security | www.pixiepointsecurity.com"
                                                     [12]: https://archive.ph/2024.10.28-132144/https://project-zero.issues.chromium.org/issues/42450597 "mpengine contains unrar code forked from unrar prior to 5.0, introduces new bug while fixing others [42450597] - Project Zero | project-zero.issues.chromium.org"
@@ -22131,7 +22131,7 @@ actions:
                                                     [1]: https://web.archive.org/web/20230911110911/https://learn.microsoft.com/en-us/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services#181-general "Manage connections from Windows 10 and Windows 11 Server/Enterprise editions operating system components to Microsoft services - Windows Privacy | Microsoft Learn"
                                                     [2]: https://web.archive.org/web/20240724093008/https://www.anoopcnair.com/smartscreen-for-microsoft-store-apps-windows-11/ "Enable Disable Defender SmartScreen For Microsoft Store Apps In Windows 11 HTMD Blog | www.anoopcnair.com"
                                                     [3]: https://web.archive.org/web/20240724093046/https://www.thewindowsclub.com/enable-or-disable-smartscreen-filter-for-microsoft-store-apps "Enable or Disable SmartScreen for Microsoft Store apps | www.thewindowsclub.com"
-                                                    [4]: https://web.archive.org/web/20240724093031/https://r-pufky.github.io/docs/operating-systems/windows/10/20H2/security/app-and-browser-control/reputation-based-protection-setttings.html "3.1. Reputation-based protection settings — Generic service & computer documentation. documentation | r-pufky.github.io"
+                                                    [4]: https://web.archive.org/web/20240724093031/https://r-pufky.github.io/docs/operating-systems/windows/10/20H2/security/app-and-browser-control/reputation-based-protection-setttings.html "3.1. Reputation-based protection settings | Generic service & computer documentation. documentation | r-pufky.github.io"
                                                     [5]: https://web.archive.org/web/20231011231107/https://plid.obywatel.gov.pl/wp-content/uploads/2014/08/Wymagania-dla-stacji-koncowych-SRP-v-5-0.pdf "WYMAGANIA - dla stacji roboczych stanowisk obsługi dla użytkowników końcowych SRP | plid.obywatel.gov.pl"
                                                     [6]: https://github.com/privacysexy-forks/10_0_22622_601/blob/c598035e1a6627384d646140fe9e4d234b36b11d/C/Windows/System32/urlmon.dll.strings "10_0_22622_601/C/Windows/System32/urlmon.dll.strings at c598035e1a6627384d646140fe9e4d234b36b11d · privacysexy-forks/10_0_22622_601 | github.com"
                                                     [7]: https://github.com/privacysexy-forks/10_0_19045_2251/blob/0960c766a4fc8eb5a95d47ac4df6c1d35b9324bf/C/Windows/System32/smartscreen.exe.strings#L5180 "10_0_19045_2251/C/Windows/System32/smartscreen.exe.strings at 0960c766a4fc8eb5a95d47ac4df6c1d35b9324bf · privacysexy-forks/10_0_19045_2251 · GitHub | github.com"
@@ -22190,7 +22190,7 @@ actions:
                                                     [1]: https://web.archive.org/web/20240724102538/https://www.elevenforum.com/t/enable-or-disable-microsoft-defender-smartscreen-for-microsoft-store-apps-in-windows-11.5736/ "Enable or Disable Microsoft Defender SmartScreen for Microsoft Store Apps in Windows 11 Tutorial | Windows 11 Forum | www.elevenforum.com"
                                                     [2]: https://web.archive.org/web/20240724102525/https://www.tenforums.com/tutorials/81139-turn-off-smartscreen-microsoft-store-apps-windows-10-a.html "Turn On or Off SmartScreen for Microsoft Store Apps in Windows 10 | Tutorials | tenforums.com"
                                                     [3]: https://web.archive.org/web/20240624133131/https://learn.microsoft.com/en-us/previous-versions/windows/edge-legacy/available-policies#prevent-bypassing-windows-defender-smartscreen-prompts-for-sites "Group Policy and Mobile Device Management settings for Microsoft Edge (Microsoft Edge for IT Pros) | Microsoft Learn | learn.microsoft.com"
-                                                    [4]: https://web.archive.org/web/20240724093031/https://r-pufky.github.io/docs/operating-systems/windows/10/20H2/security/app-and-browser-control/reputation-based-protection-setttings.html "3.1. Reputation-based protection settings — Generic service & computer documentation. documentation | r-pufky.github.io"
+                                                    [4]: https://web.archive.org/web/20240724093031/https://r-pufky.github.io/docs/operating-systems/windows/10/20H2/security/app-and-browser-control/reputation-based-protection-setttings.html "3.1. Reputation-based protection settings | Generic service & computer documentation. documentation | r-pufky.github.io"
                                                     [5]: https://github.com/privacysexy-forks/10_0_19045_2251/blob/0960c766a4fc8eb5a95d47ac4df6c1d35b9324bf/C/Windows/System32/smartscreen.exe.strings#L5181C51-L5181C66 "10_0_19045_2251/C/Windows/System32/smartscreen.exe.strings at 0960c766a4fc8eb5a95d47ac4df6c1d35b9324bf · privacysexy-forks/10_0_19045_2251 · GitHub | github.com"
                                                 call:
                                                     -
@@ -28123,7 +28123,7 @@ actions:
                                     | Windows 10 (≥ 22H2) | 🔴 Stopped | Manual |
                                     | Windows 11 (≥ 23H2) | 🔴 Stopped | Manual |
 
-                                    [1]: https://web.archive.org/web/20230905120805/https://support.microsoft.com/en-us/topic/kb5005322-some-devices-cannot-install-new-updates-after-installing-kb5003214-may-25-2021-and-kb5003690-june-21-2021-66edf7cf-5d3c-401f-bd32-49865343144f "KB5005322—Some devices cannot install new updates after installing KB5003214 (May 25, 2021) and KB5003690 (June 21, 2021) - Microsoft Support"
+                                    [1]: https://web.archive.org/web/20230905120805/https://support.microsoft.com/en-us/topic/kb5005322-some-devices-cannot-install-new-updates-after-installing-kb5003214-may-25-2021-and-kb5003690-june-21-2021-66edf7cf-5d3c-401f-bd32-49865343144f "KB5005322: Some devices cannot install new updates after installing KB5003214 (May 25, 2021) and KB5003690 (June 21, 2021) - Microsoft Support"
                                     [2]: https://web.archive.org/web/20231001150100/https://learn.microsoft.com/en-us/windows/deployment/update/prepare-deploy-windows "Prepare to deploy Windows - Windows Deployment | Microsoft Learn"
                                     [3]: https://archive.ph/2024.09.14-152730/https://github.com/privacysexy-forks/nickel-x64/blob/b3f8c9549e49f2a92b401b3809b210d5f78190ba/WinSxS/Manifests/amd64_microsoft-windows-waasmedic_31bf3856ad364e35_10.0.22621.1_none_94e9973331d890c7.manifest "nickel-x64/WinSxS/Manifests/amd64_microsoft-windows-waasmedic_31bf3856ad364e35_10.0.22621.1_none_94e9973331d890c7.manifest at b3f8c9549e49f2a92b401b3809b210d5f78190ba · privacysexy-forks/nickel-x64 | github.com"
                                     [4]: https://web.archive.org/web/20240828090735/https://github.com/undergroundwires/privacy.sexy/issues/252 "Disable automatic Updates · Issue #252 · undergroundwires/privacy.sexy | github.com/undergroundwires/privacy.sexy"
@@ -33162,7 +33162,7 @@ actions:
 
                                     [1]: https://archive.ph/2024.03.31-121334/https://www.reddit.com/r/techsupport/comments/7oa5ho/what_is_microsoft_text_input_application/ "What is Microsoft text input application? : r/techsupport | www.reddit.com"
                                     [2]: https://web.archive.org/web/20240331121608/https://www.tenforums.com/general-support/133209-microsoft-text-input-application-inicio-start-english-processes.html "Microsoft Text Input Application/Inicio (Start in English) processes Solved - Windows 10 Forums | www.tenforums.com"
-                                    [3]: https://web.archive.org/web/20240331121516/http://virtmachine.ru/microsoft-text-input-application-chto-eto-za-protsess-windowsinternal-composableshell-experiences-textinput-inputapp-exe.html "Microsoft Text input Application — что это за процесс? (WindowsInternal.ComposableShell.Experiences.TextInput.InputApp.exe) | virtmachine.ru"
+                                    [3]: https://web.archive.org/web/20240331121516/http://virtmachine.ru/microsoft-text-input-application-chto-eto-za-protsess-windowsinternal-composableshell-experiences-textinput-inputapp-exe.html "Microsoft Text input Application: что это за процесс? (WindowsInternal.ComposableShell.Experiences.TextInput.InputApp.exe) | virtmachine.ru"
                                     [4]: https://archive.ph/2024.03.31-121557/https://community.spiceworks.com/t/windows-10-explorer-hanging-quickbooks-crashing/760896/1 "Windows 10 Explorer Hanging - QuickBooks Crashing - Windows - Spiceworks Community | community.spiceworks.com"
                                     [5]: https://web.archive.org/web/20240331121131/https://stackoverflow.com/questions/53642522/how-to-launch-windowsinternal-composableshell-experiences-textinput-inputapp/53648370#53648370 "c# - How to launch WindowsInternal.ComposableShell.Experiences.TextInput.InputApp - Stack Overflow | stackoverflow.com"
                                     [6]: https://web.archive.org/web/20210727081048/https://docs.microsoft.com/en-us/windows/application-management/apps-in-windows-10 "Windows 10 - Apps - Windows Application Management | Microsoft Docs"
@@ -33831,7 +33831,7 @@ actions:
                                     | Windows 11 | 23H2 | ✅ |
 
                                     [1]: https://web.archive.org/web/20231008130535/https://www.microsoft.com/en-us/microsoft-365-life-hacks/privacy-and-safety/choosing-a-parental-control-app "Choosing a parental control app that works for you - Microsoft 365"
-                                    [2]: https://web.archive.org/web/20231008130516/https://www.microsoft.com/en-us/microsoft-365/family-safety "Microsoft Family Safety—Location Sharing and Screen Time App | Microsoft 365"
+                                    [2]: https://web.archive.org/web/20231008130516/https://www.microsoft.com/en-us/microsoft-365/family-safety "Microsoft Family Safety: Location Sharing and Screen Time App | Microsoft 365"
                                     [3]: https://web.archive.org/web/20231008130419/https://support.microsoft.com/en-us/topic/family-safety-update-improves-web-filtering-and-activity-reporting-in-windows-8-1-and-windows-rt-8-1-116efe24-0153-9680-0d0c-5f433c677336 "Family Safety update improves web filtering and activity reporting in Windows 8.1 and Windows RT 8.1 - Microsoft Support"
                                     [4]: https://web.archive.org/web/20231008130529/https://support.microsoft.com/en-us/account-billing/family-safety-data-collection-and-privacy-options-3d01b791-e48a-498f-bfa6-97f0d373cd9c "Family Safety data collection and privacy options - Microsoft Support"
                                     [5]: https://web.archive.org/web/20210727081048/https://docs.microsoft.com/en-us/windows/application-management/apps-in-windows-10 "Windows 10 - Apps - Windows Application Management | Microsoft Docs"
@@ -37688,7 +37688,7 @@ actions:
                     This means your personal communications and sensitive information (like financial details or private conversations) no longer
                     remain exclusively under your control.
                     Even if you've never done anything wrong, your private information can be accessed, analyzed, or leaked without your knowledge
-                    or consent—unlike emails stored locally on your computer.
+                    or consent, unlike emails stored locally on your computer.
 
                     The new Outlook collects and processes:
 
@@ -37911,7 +37911,7 @@ actions:
                             control over what software runs on your computer.
 
                             It improves your privacy by preventing the installation of software that collects user data without explicit consent.
-                            Outlook collects your personal information—including emails, contacts, usage patterns, and system information [2].
+                            Outlook collects your personal information, including emails, contacts, usage patterns, and system information [2].
                             It shares this data with third-party organizations and uses it to display targeted advertisements [2].
 
                             This script enhances user control by letting you decide whether and when to install Outlook,
@@ -39049,8 +39049,8 @@ functions:
             -
                 function: RunPowerShell
                 # ❗ Both writers below must pass `-Depth 100` and write UTF-8 without a BOM.
-                #   `ConvertTo-Json` defaults to depth 2 and Windows PowerShell 5.1 — the interpreter the
-                #   generated batch invokes — truncates silently, replacing anything deeper with its
+                #   `ConvertTo-Json` defaults to depth 2 and Windows PowerShell 5.1 (the interpreter the
+                #   generated batch invokes) truncates silently, replacing anything deeper with its
                 #   `ToString()`. This function round-trips the user's entire settings file, so without the
                 #   depth every level-3 object (a VS Code terminal profile's `args`, a `[python]` language
                 #   block, WinGet's `installBehavior.preferences.architectures`) came back as a string like
@@ -43264,7 +43264,7 @@ functions:
                 # WinGet groups its settings into nested objects, so most settings need this. For
                 # example `telemetry.disable` in the documentation means
                 # `"telemetry": { "disable": true }`, i.e. parentSettingName `telemetry` and
-                # settingName `disable` — not a single key named `telemetry.disable`.
+                # settingName `disable`, not a single key named `telemetry.disable`.
                 name: parentSettingName
                 optional: true
         docs: |-

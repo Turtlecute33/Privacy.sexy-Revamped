@@ -82,7 +82,7 @@ export default defineConfig(createVueConfig());
   `_fonts.scss` sets to `font-display: block` so the heading paints once, in its final font,
   instead of painting in the fallback and repainting larger later (see the comment there).
   `block` only pays off if the font is already in flight when the first paint is attempted, and
-  discovering it through the stylesheet is too late — hence a preload.
+  discovering it through the stylesheet is too late, so a preload is needed.
 
   The tag has to be emitted at build time rather than written into index.html by hand, because the
   file name is content-hashed. Reading it out of the bundle also means a font rename cannot

@@ -39,10 +39,10 @@ describe('compiled collection regressions', () => {
   it('compiles the code of every script', () => {
     /*
       Script code compiles on first read rather than during `loadCollections`, so a malformed
-      script no longer breaks the shared load above — it breaks whenever a user first hovers over
-      it, searches for it, or selects it, inside an already mounted app. Reading the code of every
-      script is what keeps that failure in CI, where the other cases here only read the handful of
-      scripts they name.
+      script no longer breaks the shared load above. Instead, it breaks whenever a user first
+      hovers over it, searches for it, or selects it, inside an already mounted app. Reading the
+      code of every script is what keeps that failure in CI, where the other cases here only read
+      the handful of scripts they name.
     */
     const failures = collections.flatMap((collection) => collection
       .getAllScripts()

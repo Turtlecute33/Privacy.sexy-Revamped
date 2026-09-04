@@ -8,7 +8,7 @@ import packageJson from '@/../package.json' with { type: 'json' };
   `projectDetails.name` and `projectDetails.slogan`, which come straight from package.json.
 
   So the subset is only safe for as long as those two strings stay ASCII. Rename the project to
-  something with a "é" or a "—" and the character is outside the face's `unicode-range`, the
+  something with a "é" or an em dash and the character is outside the face's `unicode-range`, the
   wordmark silently drops to the serif/cursive fallback for that one glyph, and nothing else in the
   build complains. This test is the thing that complains.
 

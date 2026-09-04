@@ -42,7 +42,7 @@ const CODE_EDITOR_SELECTOR = '#codeEditor';
 /*
  * A sentence from the generated default script. The code pane is only ~320 px wide even at the
  * 1280 px prerender viewport, so the editor soft-wraps every long line into three or four rendered
- * rows, each its own element — which is why the phrase is matched against the tag-stripped text
+ * rows, each its own element. That is why the phrase is matched against the tag-stripped text
  * rather than the raw HTML, and why it stops short of the trailing period, which the editor pushes
  * onto a row of its own.
  */
@@ -122,8 +122,8 @@ async function assertPrerenderedOperatingSystem(page) {
  * The code editor no longer loads itself on mount: its ~470 KB chunk is fetched only once the pane
  * approaches the viewport or the visitor interacts, which keeps it off the cold-load critical path.
  * A headless capture does neither on its own, so waiting for mount alone would snapshot an empty
- * placeholder box. That loses the generated script — the only real content in the right-hand pane,
- * and a chunk of the copy crawlers and AI scrapers extract — and it silently turns
+ * placeholder box. That loses the generated script: the only real content in the right-hand pane,
+ * and a chunk of the copy crawlers and AI scrapers extract. It also silently turns
  * `stripRuntimeInjectedStyles()` and `stripRuntimeInjectedFontProbes()` into no-ops, because there
  * would be no Ace CSS or measurement probes in the document to strip. Scrolling the pane into view
  * is what arms its IntersectionObserver; scrolling back afterwards keeps the snapshot in the state
@@ -259,8 +259,8 @@ function assertNoRuntimeInjectedScripts(html, builtHtml) {
 /*
  * `renderCodeEditor()` only knows how the editor is triggered today, and the strip steps run over
  * the document afterwards; neither guarantees the generated script is in the bytes that get
- * written. Losing it is a silent failure — the page still looks fine, it just ships an empty box
- * where a screenful of indexable copy used to be — so assert on the final HTML rather than on the
+ * written. Losing it is a silent failure (the page still looks fine, it just ships an empty box
+ * where a screenful of indexable copy used to be), so assert on the final HTML rather than on the
  * steps that are supposed to produce it.
  */
 function assertPrerenderedScript(html) {

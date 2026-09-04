@@ -5,8 +5,8 @@
 
 /*
   'Slabo 27px' and 'Yesteryear' are ASCII subsets of the upstream gwfh downloads, not the downloads
-  themselves. Each face renders exactly one string that comes from package.json — the `.brand` <h1>
-  ("privacy.sexy" + "Revamped") and the `.slogan` ("Privacy is sexy") in TheHeader.vue — and both
+  themselves. Each face renders exactly one string that comes from package.json: the `.brand` <h1>
+  ("privacy.sexy" + "Revamped") and the `.slogan` ("Privacy is sexy") in TheHeader.vue. Both
   are pure ASCII, so everything outside U+0020-007E was dead weight on the critical path. Slabo in
   particular is `<link rel="preload">`ed, so its bytes block first paint.
   Slabo 19,068 B -> 10,300 B, Yesteryear 23,008 B -> 15,852 B.
@@ -38,7 +38,7 @@
   and only paint is the final one. Measured: LCP 5748-5800ms -> 680-692ms.
 
   This works only in combination with the build-time `<link rel="preload">` that
-  `injectLcpFontPreload` in vite.config.ts emits — without the preload, `block` hides the heading
+  `injectLcpFontPreload` in vite.config.ts emits. Without the preload, `block` hides the heading
   for as long as the font takes to be discovered through the stylesheet. Keep the two together.
   Cost: one 12-character heading is invisible for ~690ms on throttled 4G. The other two faces stay
   on `swap` because they carry body and code text, where hiding text is the worse trade.
