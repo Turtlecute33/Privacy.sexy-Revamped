@@ -20,8 +20,8 @@
         -->
         <p class="hero__lede">
           Independently maintained fork of privacy.sexy, not affiliated with the original.
-          Debloat Windows 11, disable telemetry, and harden macOS and Linux &mdash; every
-          command shown before you run it.
+          Debloat Windows 11, disable telemetry, and harden macOS and Linux. Every command is
+          shown before you run it.
         </p>
       </div>
       <div class="hero__art" aria-hidden="true">

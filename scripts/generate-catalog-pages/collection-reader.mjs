@@ -5,7 +5,7 @@
  * pages show script names, the category tree and this fork's recommendation verdict; none of that
  * needs the templating engine, and reaching into `src/application` from a build script would drag
  * the whole TypeScript graph and the `{{ with }}` expression compiler into the page build for data
- * it does not use. The trade is that these pages never show generated code — which is also what
+ * it does not use. The trade is that these pages never show generated code, which is also what
  * keeps them from restating upstream's script bodies verbatim.
  */
 import { readFile } from 'node:fs/promises';
@@ -86,7 +86,7 @@ function toScript(node) {
 /*
  * `revertCode` only appears on scripts that inline their own code. A script that delegates through
  * `call:` inherits whatever revert its shared function defines, and resolving that would mean
- * walking the `functions:` block — so treat delegated scripts as reversible, which is what the
+ * walking the `functions:` block, so treat delegated scripts as reversible, which is what the
  * shared functions in all three collections actually implement.
  */
 function hasCall(node) {

@@ -29,7 +29,7 @@ const APP_CONTENT_SELECTOR = '#app .app__wrapper';
 
 /*
  * The app opens on the operating system it detects from `navigator.userAgent`, so without
- * pinning one here the snapshot would show whichever OS the build machine runs — the Linux
+ * pinning one here the snapshot would show whichever OS the build machine runs: the Linux
  * collection on CI, macOS on a developer's Mac. That makes the indexed HTML depend on the
  * runner image, and hides the Windows collection, which is the largest one and the one the
  * page's own keywords target, from crawlers that do not execute JavaScript.
@@ -188,7 +188,7 @@ async function stripRuntimeInjectedStyles(page, builtHtml) {
 /*
  * index.html injects the analytics tag itself, from an inline listener that fires on `load`, so
  * that a slow third-party host can never delay the load event. Capturing the page after mount
- * therefore finds that tag in the DOM and bakes it into the static HTML — which defeats the whole
+ * therefore finds that tag in the DOM and bakes it into the static HTML, which defeats the whole
  * point twice over: the baked copy is a plain `<script src>` in <head> that loads on the critical
  * path, and the inline listener still appends a second copy on every real page load. Two tags, two
  * script executions, two pageviews counted per visit. Only the scripts the build itself emitted

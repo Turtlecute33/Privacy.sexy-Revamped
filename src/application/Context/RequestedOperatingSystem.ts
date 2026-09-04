@@ -9,8 +9,8 @@ import { OperatingSystem } from '@/domain/OperatingSystem';
  *
  * Only the three slugs the catalog pages emit are accepted, and an unrecognised or absent value
  * falls through to detection, so no URL can put the app into a state the OS selector cannot reach.
- * Notably `/` with no query string is unaffected, which keeps `scripts/prerender.mjs` — which loads
- * the bare root and asserts the Windows collection is showing — working unchanged.
+ * Notably `/` with no query string is unaffected, so `scripts/prerender.mjs`, which loads the bare
+ * root and asserts the Windows collection is showing, keeps working unchanged.
  */
 /*
  * A `Map`, not an object literal: an object literal inherits from `Object.prototype`, so

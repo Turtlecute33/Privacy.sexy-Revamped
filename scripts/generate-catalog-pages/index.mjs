@@ -2,7 +2,7 @@
  * Build-time generation of the static catalog and article pages, plus the sitemap.
  *
  * Why static HTML written into `dist-web` rather than routes in the SPA: GitHub Pages has no
- * rewrite rules, so client-side routing needs the `404.html` trick — and that serves an HTTP 404
+ * rewrite rules, so client-side routing needs the `404.html` trick, and that serves an HTTP 404
  * status before any JavaScript runs, which is what a crawler records. A real directory with an
  * `index.html` answers 200. These pages also carry no JavaScript at all, so they do not inherit the
  * app's mount cost.

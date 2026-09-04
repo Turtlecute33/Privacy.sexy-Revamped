@@ -9,7 +9,7 @@ export class ExpressionsCompiler implements IExpressionsCompiler {
   /*
     Every script that calls a shared function compiles that function's body again, so the
     same code is scanned for expressions once per call site. Expressions depend only on the
-    code they were parsed from — evaluation takes its context as an argument — so the parse
+    code they were parsed from (evaluation takes its context as an argument), so the parse
     result is reusable, which turns a per-call-site scan of the whole collection into one
     scan per distinct code snippet.
   */
