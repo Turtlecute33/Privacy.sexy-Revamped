@@ -7,7 +7,7 @@
  *    byte-identical to upstream privacy.sexy, and the upstream author already publishes that corpus
  *    as ~700 per-script pages on his own site. Republishing it here would be near-duplicate content
  *    competing against the person who wrote it. So these pages carry an index of script names plus
- *    prose written for this fork — never the catalog's `docs:` bodies.
+ *    prose written for this fork, never the catalog's `docs:` bodies.
  * 2. The recommendation verdict is the unique signal. This fork moved 266 scripts out of a
  *    recommendation tier and upgraded none, which is editorial work that exists nowhere else. The
  *    per-script tag and the counts in the summary are that work, made visible.
@@ -21,12 +21,13 @@ const OS_COPY = {
     description:
       'Every Windows tweak in privacy.sexy Revamped, with this fork\'s recommendation for each '
       + 'one. Remove preinstalled apps, disable telemetry and Recall, and harden Windows 11 and 10.',
-    intro: `
+    lede: `
       <p class="lede">
-        This is the full index of what the Windows collection can change, grouped the way the
-        script builder groups it. Every entry is a tweak you can select, read as plain
-        commands, and download as one script that runs locally.
-      </p>
+        The full index of what the Windows collection can change, grouped the way the script
+        builder groups it. Every entry is a tweak you can select, read as plain commands, and
+        download as one script that runs locally.
+      </p>`,
+    context: `
       <p>
         Windows is the largest collection here because it has the most to switch off. It covers
         diagnostic telemetry and the DiagTrack service, Recall and Click to Do, the Copilot app
@@ -36,14 +37,14 @@ const OS_COPY = {
         cipher and protocol removal, remote administration lockdown and Meltdown/Spectre
         mitigations.
       </p>
-      <p>
+      <div class="note">
         Not everything here is advisable, and the tags say which is which. A tweak tagged
-        <b>Opt-in only</b> is deliberately excluded from both recommendation presets &mdash;
-        most of the "Privacy over security" section is in that state, because turning off
-        Defender, SmartScreen or automatic updates buys privacy by removing a protection.
-        This fork moved a large number of upstream's recommendations into that tier rather than
-        dropping the scripts, so the choice stays available and stops being a default.
-      </p>`,
+        <b>Opt-in only</b> is deliberately excluded from both recommendation presets. Most of
+        the "Privacy over security" section is in that state, because turning off Defender,
+        SmartScreen or automatic updates buys privacy by removing a protection. This fork moved
+        a large number of upstream's recommendations into that tier rather than dropping the
+        scripts, so the choice stays available and stops being a default.
+      </div>`,
   },
   macos: {
     title: 'macOS privacy and hardening script catalog',
@@ -51,12 +52,13 @@ const OS_COPY = {
     description:
       'Every macOS tweak in privacy.sexy Revamped, with this fork\'s recommendation for each one. '
       + 'Reduce Apple data collection, configure Siri and Safari, and harden the firewall.',
-    intro: `
+    lede: `
       <p class="lede">
-        This is the full index of what the macOS collection can change, grouped the way the
-        script builder groups it. Every entry is a tweak you can select, read as plain
-        commands, and download as one script that runs locally.
-      </p>
+        The full index of what the macOS collection can change, grouped the way the script
+        builder groups it. Every entry is a tweak you can select, read as plain commands, and
+        download as one script that runs locally.
+      </p>`,
+    context: `
       <p>
         macOS ships fewer switches than Windows, and Apple removes or renames the ones it does
         ship without notice, so this collection is smaller and more conservative by design. It
@@ -65,12 +67,12 @@ const OS_COPY = {
         application firewall and stealth mode, guest accounts, screen-saver locking, and
         printer and remote sharing services.
       </p>
-      <p>
+      <div class="note">
         The <b>Opt-in only</b> tag matters more here than anywhere else. Disabling Gatekeeper or
         File Quarantine removes the checks that stop unsigned and downloaded code from running,
         and those entries exist so the option is documented rather than recommended. Anything
         needing System Integrity Protection turned off is out of scope entirely.
-      </p>`,
+      </div>`,
   },
   linux: {
     title: 'Linux privacy and hardening script catalog',
@@ -78,28 +80,29 @@ const OS_COPY = {
     description:
       'Every Linux tweak in privacy.sexy Revamped, with this fork\'s recommendation for each one. '
       + 'Clear shell and package history, disable distro telemetry, and harden the kernel.',
-    intro: `
+    lede: `
       <p class="lede">
-        This is the full index of what the Linux collection can change, grouped the way the
-        script builder groups it. Every entry is a tweak you can select, read as plain
-        commands, and download as one script that runs locally.
-      </p>
+        The full index of what the Linux collection can change, grouped the way the script
+        builder groups it. Every entry is a tweak you can select, read as plain commands, and
+        download as one script that runs locally.
+      </p>`,
+    context: `
       <p>
         This is a desktop Linux collection, not a server baseline. If you came looking for CIS
         or STIG remediation, an Ansible role will serve you better. What is here is the privacy
         surface of a workstation: shell and terminal history, recently-used file lists, package
         manager data for APT, Snap and Flatpak, shared caches and thumbnails, Firefox and
         Thunderbird profiles, Wine and Visual Studio Code state, and the distribution telemetry
-        that Ubuntu, Debian, Arch and Zorin each collect differently &mdash; popcon, pkgstats,
-        Apport, Whoopsie and the Ubuntu metrics reporter. Kernel and network hardening sysctls
-        sit alongside them.
+        that Ubuntu, Debian, Arch and Zorin each collect differently: popcon, pkgstats, Apport,
+        Whoopsie and the Ubuntu metrics reporter. Kernel and network hardening sysctls sit
+        alongside them.
       </p>
-      <p>
+      <div class="note">
         Distribution coverage is uneven and worth saying plainly: Debian and Ubuntu derivatives
         are covered best, Arch and Zorin partially, and Fedora and openSUSE barely at all. A
         script that targets a path your distribution does not use reports that it skipped and
         moves on.
-      </p>`,
+      </div>`,
   },
 };
 
@@ -122,8 +125,13 @@ export function renderCollectionPage(collection) {
           </a>
         </li>`).join('')}
     </ol>`;
+  /*
+   * Counts and the call to action sit directly under the lede, before the explanatory prose. On a
+   * phone the three intro paragraphs used to push both of them, and the index itself, two screens
+   * down; the prose still ships for the reader who wants it, just after the part with the button.
+   */
   const body = `
-    ${copy.intro}
+    ${copy.lede}
     <ul class="stats">
       <li><b>${collection.totalScripts}</b> tweaks</li>
       <li><b>${collection.recommendationCounts.standard}</b> recommended</li>
@@ -134,6 +142,7 @@ export function renderCollectionPage(collection) {
     <a class="cta" href="/?os=${collection.slug}">
       Build a ${escapeHtml(collection.name)} script &rarr;
     </a>
+    ${copy.context}
     ${groups.map((group) => renderGroup(group)).join('')}`;
   return {
     path,
@@ -218,17 +227,17 @@ export function renderAlternativesPage(collections) {
   const body = `
     <p class="lede">
       If you landed here looking for privacy.sexy and found something unfamiliar, or you are
-      deciding between the tools in this category, this page is an honest comparison &mdash;
-      including where this one loses.
+      deciding between the tools in this category, this page is an honest comparison, including
+      where this one loses.
     </p>
 
     <h2>What this fork is</h2>
     <p>
       privacy.sexy Revamped is an independently maintained fork of
       <a href="https://github.com/undergroundwires/privacy.sexy" rel="noopener nofollow">undergroundwires/privacy.sexy</a>,
-      running at <a href="/">privacy.turtlecute.org</a>. It keeps the original idea &mdash; pick
-      the changes you want, read the exact commands, run the script yourself &mdash; and updates
-      the catalog against current vendor documentation. It carries ${total} tweaks across
+      running at <a href="/">privacy.turtlecute.org</a>. It keeps the original idea: pick the
+      changes you want, read the exact commands, run the script yourself. On top of that it
+      updates the catalog against current vendor documentation. It carries ${total} tweaks across
       ${collections.map((collection) => `${collection.totalScripts} ${collection.name}`).join(', ')}.
     </p>
     <p>
@@ -250,7 +259,7 @@ export function renderAlternativesPage(collections) {
       <a href="https://privacylearn.com/" rel="noopener nofollow">privacylearn.com</a> is by the
       original privacy.sexy author. It publishes the script documentation as a browsable
       reference with sources and revert notes for each tweak. <b>Pick it</b> when you want to
-      understand a single setting in depth rather than generate a script &mdash; it is the better
+      understand a single setting in depth rather than generate a script. It is the better
       reference for the original documentation, because it is the original documentation.
     </p>
 
@@ -290,7 +299,7 @@ export function renderAlternativesPage(collections) {
     <p>
       A large, carefully maintained PowerShell module for Windows 10 and 11.
       <b>Pick it</b> if you are comfortable in PowerShell and want the most granular control
-      available. <b>Against it:</b> there is no interface &mdash; you edit a preset file.
+      available. <b>Against it:</b> there is no interface, you edit a preset file instead.
     </p>
 
     <h2>How this fork differs from upstream privacy.sexy</h2>
@@ -310,8 +319,8 @@ export function renderAlternativesPage(collections) {
         Windows versions.
       </li>
       <li>
-        <b>Modern Windows AI controls were added</b> &mdash; Recall, Click to Do, the Copilot
-        app, and Copilot in Edge.
+        <b>Modern Windows AI controls were added:</b> Recall, Click to Do, the Copilot app, and
+        Copilot in Edge.
       </li>
       <li>
         <b>The desktop application was dropped.</b> Upstream shipped an Electron app; this fork
@@ -330,7 +339,7 @@ export function renderAlternativesPage(collections) {
       title: 'privacy.sexy alternatives and forks, compared honestly | privacy.sexy Revamped',
       description:
         'An honest comparison of privacy.sexy, this maintained fork, PrivacyLearn, '
-        + 'O&O ShutUp10++, Win11Debloat, WinUtil, WinScript and Sophia Script — including where '
+        + 'O&O ShutUp10++, Win11Debloat, WinUtil, WinScript and Sophia Script, including where '
         + 'each one loses.',
       h1: 'privacy.sexy alternatives and forks',
       breadcrumb: [
