@@ -1,7 +1,7 @@
 <template>
   <!--
     A class, not `id="app"`. Vue mounts into the `#app` element in index.html and puts this root
-    inside it, so an `id="app"` here shipped the same ID twice, nested — invalid HTML, and enough
+    inside it, so an `id="app"` here shipped the same ID twice, nested: invalid HTML, and enough
     to make an extractor or a `document.querySelector('#app')` pick the wrong node.
   -->
   <div class="app">

@@ -279,7 +279,7 @@ function getLanguage(language: ScriptLanguage): SupportedSyntaxLanguage {
 function getDefaultCode(language: ScriptLanguage, project: ProjectDetails): string {
   return new CodeBuilderFactory()
     .create(language)
-    .appendCommentLine(`${project.name} — ${project.slogan}`)
+    .appendCommentLine(`${project.name}: ${project.slogan}`)
     /*
       Keep the slogan without a period for impact and continuity.
       Slogans should be punchy and memorable, not punctuated like full sentences.
