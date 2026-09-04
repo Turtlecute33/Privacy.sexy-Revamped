@@ -3,8 +3,9 @@ import { ToBase64BatchLines } from '@/application/Application/Loader/Collections
 
 describe('ToBase64BatchLines', () => {
   it('encodes Unicode text as UTF-8 Base64 batch output', () => {
-    const input = 'GDID — privacy';
-    const expectedBase64 = 'R0RJRCDigJQgcHJpdmFjeQ==';
+    // 16 UTF-8 bytes, so the encoding is padded as well as multi-byte.
+    const input = 'GDID é privacy.';
+    const expectedBase64 = 'R0RJRCDDqSBwcml2YWN5Lg==';
     const sut = new ToBase64BatchLines();
 
     const actual = sut.apply(input);

@@ -84,7 +84,7 @@ function warmUpScript(script: Script): void {
       A malformed script must not stop the warm-up for the ~1,100 healthy ones queued behind it,
       and must not become an uncaught error for a script the user may never open. The failure is
       memoized by `CollectionScript`, so the identical error is thrown again the moment the script
-      is genuinely used — a render, a search, an export — where it is reported in context.
+      is genuinely used (a render, a search, an export), where it is reported in context.
     */
   }
 }

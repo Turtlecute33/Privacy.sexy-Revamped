@@ -12,7 +12,7 @@ import type { Ref, VNode } from 'vue';
 /*
   The mock records what the component hands to `useFloating` so the tests can assert the
   deferral itself. Asserting only the `has-been-shown` slot prop would let the floating element
-  be passed at mount again — a one-token change — without a single test failing, which is exactly
+  be passed at mount again (a one-token change) without a single test failing, which is exactly
   the mount-time `computePosition`/`autoUpdate` storm the deferral exists to prevent.
 */
 let floatingElementArgument: Readonly<Ref<HTMLElement | undefined>> | undefined;

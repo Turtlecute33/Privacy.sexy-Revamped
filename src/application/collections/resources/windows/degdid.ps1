@@ -4311,7 +4311,7 @@ function Write-DegdidStatusHuman {
   param([object]$Report)
 
   Write-Output ''
-  Write-Output ('degdid status — {0}' -f $Report.Timestamp)
+  Write-Output ('degdid status ({0})' -f $Report.Timestamp)
   Write-Output ''
   Write-Output 'This PC'
   $windowsName = if ($Report.Environment.IsWindows11) {
@@ -4371,7 +4371,7 @@ function Write-DegdidStatusHuman {
   Write-Output ''
   Write-Output 'Registration protection'
   if ($blockActive) {
-    Write-Output '  ACTIVE — Windows DeviceAdd is blocked.'
+    Write-Output '  ACTIVE: Windows DeviceAdd is blocked.'
     Write-Output '  login.live.com: blocked on IPv4 and IPv6; TCP connection failed.'
     if ($Report.Firewall.MintServiceRuleValid) {
       Write-Output '  Supplemental wlidsvc firewall rule: enforced'
@@ -4381,11 +4381,11 @@ function Write-DegdidStatusHuman {
       Write-Output '  Supplemental firewall: not required for this verified hosts/path state'
     }
   } elseif ($blockAbsent) {
-    Write-Output '  NOT CONFIGURED — Windows can contact Microsoft and mint another GDID.'
+    Write-Output '  NOT CONFIGURED: Windows can contact Microsoft and mint another GDID.'
     Write-Output '  Hosts block: absent'
     Write-Output '  Firewall block: absent'
   } else {
-    Write-Output '  INCOMPLETE — some protection exists, but it is not safe to rely on.'
+    Write-Output '  INCOMPLETE: some protection exists, but it is not safe to rely on.'
     Write-Output ('  Hosts block: {0}' -f $Report.Hosts.State)
     Write-Output ('  Firewall block: {0}' -f $Report.Firewall.Health)
     Write-Output ('  DeviceAdd path: {0}' -f $Report.MintPath.Health)
@@ -4455,11 +4455,11 @@ function Write-DegdidStatusHuman {
   Write-Output ''
   switch ($Report.Verdict) {
     'ProtectedNoRealGdid' {
-      Write-Output 'VERDICT: PROTECTED — no real GDID found and DeviceAdd is blocked.'
+      Write-Output 'VERDICT: PROTECTED. No real GDID found and DeviceAdd is blocked.'
       Write-Output 'No action is required. Re-run Status after major Windows or firewall changes.'
     }
     'RealGdidPresent' {
-      Write-Output 'VERDICT: REAL GDID PRESENT — Windows has identifiers it can use or send.'
+      Write-Output 'VERDICT: REAL GDID PRESENT. Windows has identifiers it can use or send.'
       Write-Output 'Recommended action: .\degdid.ps1 -Protect'
     }
     'BlockDegraded' {
@@ -4476,7 +4476,7 @@ function Write-DegdidStatusHuman {
       }
     }
     default {
-      Write-Output 'VERDICT: STATUS IS INCOMPLETE — do not assume the machine is clean.'
+      Write-Output 'VERDICT: STATUS IS INCOMPLETE. Do not assume the machine is clean.'
       foreach ($errorText in $Report.Environment.InspectionErrors) {
         Write-Output ('  - {0}' -f $errorText)
       }

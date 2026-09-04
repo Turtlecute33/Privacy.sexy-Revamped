@@ -22,7 +22,7 @@
 
         Deliberately not a live region. Its text mutates from 'Script preview' to 'Preparing script
         preview' when the chunk is requested, and a live region announces mutations even though it
-        never announces its initial content — so `role="status"` here would read the loading message
+        never announces its initial content. So `role="status"` here would read the loading message
         out on the first tap anywhere in the document, which is what triggers the load. The busy
         state is already on the shell as `aria-busy`.
       -->
@@ -52,8 +52,8 @@ import type {
 
 /*
   Ace is a 473 KB (133 KB gzipped) chunk. Importing it unconditionally from `onMounted` made it a
-  fourth serialized step in the cold-load waterfall — html -> entry -> collection data -> mount ->
-  Ace — where it competed for bandwidth with the content that decides LCP. Nothing above the fold
+  fourth serialized step in the cold-load waterfall (html -> entry -> collection data -> mount ->
+  Ace), where it competed for bandwidth with the content that decides LCP. Nothing above the fold
   needs it: below the vertical-view breakpoint the code pane sits under the entire selection UI.
   So the chunk is fetched on the first evidence that a human is going to read it, and a synthetic
   run that never scrolls and never clicks never pays for it.

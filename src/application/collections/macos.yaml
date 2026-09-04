@@ -8,7 +8,7 @@ scripting:
     language: shellscript
     startCode: |-
         #!/usr/bin/env bash
-        # {{ $homepage }} — v{{ $version }} — {{ $date }}
+        # {{ $homepage }} v{{ $version }} ({{ $date }})
         if [ "$EUID" -ne 0 ]; then
             script_path=$([[ "$0" = /* ]] && echo "$0" || echo "$PWD/${0#./}")
             sudo -- /usr/bin/env bash "$script_path" || {
@@ -217,7 +217,7 @@ actions:
                             [1]: https://web.archive.org/web/20240615101804/https://crucialsecurity.wordpress.com/2011/06/22/the-apple-system-log-%E2%80%93-part-1/ "The Apple System Log – Part 1 | Crucial Security Forensics Blog | crucialsecurity.wordpress.com"
                             [2]: https://web.archive.org/web/20221206012352/https://papers.put.as/papers/macosx/2012/Mac_Log_Analysis_Sarah_Edwards_DFIRSummit2012.pdf "Analysis & Correlation of Mac Logs | Sarah Edwards | papers.put.as"
                             [3]: https://web.archive.org/web/20240615101811/https://apple.stackexchange.com/questions/98197/is-it-safe-to-delete-system-logs "maintenance - Is it safe to delete system logs? - Ask Different | apple.stackexchange.com"
-                            [4]: https://web.archive.org/web/20240615101803/https://asl.readthedocs.io/en/latest/ "ASL – Apple System Log facility — ASL 1.1 documentation | asl.readthedocs.io"
+                            [4]: https://web.archive.org/web/20240615101803/https://asl.readthedocs.io/en/latest/ "ASL – Apple System Log facility | ASL 1.1 documentation | asl.readthedocs.io"
                             [5]: https://web.archive.org/web/20240615101809/https://www.stigviewer.com/stig/apple_macos_14_sonoma/2024-01-10/finding/V-259553 "The macOS system must configure Apple System Log files to be owned by root and group to wheel. | www.stigviewer.com"
                         call:
                             -
@@ -1418,8 +1418,8 @@ actions:
 
                             Two settings are changed in the system-wide crash reporter configuration [1]:
 
-                            - `AutoSubmit` — sends reports to Apple.
-                            - `ThirdPartyDataSubmit` — shares reports with the developers of the affected app.
+                            - `AutoSubmit` sends reports to Apple.
+                            - `ThirdPartyDataSubmit` shares reports with the developers of the affected app.
 
                             If you do not run this script, reports may continue to be submitted automatically.
 
@@ -1457,8 +1457,8 @@ actions:
                         docs: |-
                             This script stops your Mac from advertising and receiving activity for Handoff.
 
-                            Handoff continuously broadcasts what you are doing — the app you are using and the document
-                            or page you have open — over Bluetooth and Wi-Fi so that your other Apple devices can offer
+                            Handoff continuously broadcasts what you are doing (the app you are using and the document
+                            or page you have open) over Bluetooth and Wi-Fi so that your other Apple devices can offer
                             to continue it [1]. The broadcast is visible to nearby devices signed in to your account.
 
                             > **Consideration:** After running this script, Handoff and Universal Clipboard stop working
@@ -2831,7 +2831,7 @@ actions:
                             [3]: https://web.archive.org/web/20240321170400/https://www.tenable.com/audits/items/CIS_Apple_macOS_13.0_Ventura_v1.0.0_L1.audit:fe03c59a39c7c949507ff20d07f89993 "1.4 Ensure Install of macOS Updates Is Enabled | Tenable® | www.tenable.com"
                             [4]: https://web.archive.org/web/20240321170036/https://paper.bobylive.com/Security/CIS/CIS_Apple_macOS_10_14_Benchmark_v1_4_0_PDF.pdf "CIS Apple macOS 10.14 Benchmark v1.4.0 | paper.bobylive.com"
                             [5]: https://web.archive.org/web/20240321164917/https://www.ncsc.gov.uk/files/macos_provisioning_script.sh_.txt "macOS provisioning script | UK National Cyber Security Centre | www.ncsc.gov.uk"
-                            [6]: https://web.archive.org/web/20240321165118/https://macadminsdoc.readthedocs.io/en/master/Profiles-and-Settings/OS-X-Updates.html "macOS Updates — MacAdmins Community Documentation documentation | macadminsdoc.readthedocs.io"
+                            [6]: https://web.archive.org/web/20240321165118/https://macadminsdoc.readthedocs.io/en/master/Profiles-and-Settings/OS-X-Updates.html "macOS Updates | MacAdmins Community Documentation documentation | macadminsdoc.readthedocs.io"
                             [7]: https://web.archive.org/web/20240321165304/https://derflounder.wordpress.com/2014/12/29/managing-automatic-app-store-and-os-x-update-installation-on-yosemite/ "Managing automatic App Store and OS X update installation on Yosemite | Der Flounder | derflounder.wordpress.com"
                             [8]: https://web.archive.org/web/20240321170034/https://krypted.com/mac-os-x/app-store-preferences-set-server-5-4-macos-high-sierra/ "App Store Preferences To Set In On Server 5.4 for macOS High Sierra – krypted | krypted.com"
                             [9]: https://web.archive.org/web/20240321170251/https://derflounder.wordpress.com/2018/12/28/enabling-automatic-macos-software-updates-for-os-x-yosemite-through-macos-mojave/ "Enabling automatic macOS software updates for OS X Yosemite through macOS Mojave | Der Flounder | derflounder.wordpress.com"
@@ -2948,7 +2948,7 @@ actions:
 
                             [1]: https://archive.ph/2024.03.21-180353/https://developer.apple.com/documentation/devicemanagement/softwareupdate "SoftwareUpdate | Apple Developer Documentation | developer.apple.com"
                             [2]: https://web.archive.org/web/20240321201417/https://derflounder.wordpress.com/2014/12/24/managing-os-xs-automatic-security-updates/ "Managing OS X’s automatic security updates | Der Flounder | derflounder.wordpress.com"
-                            [3]: https://web.archive.org/web/20240321165118/https://macadminsdoc.readthedocs.io/en/master/Profiles-and-Settings/OS-X-Updates.html "macOS Updates — MacAdmins Community Documentation documentation | macadminsdoc.readthedocs.io"
+                            [3]: https://web.archive.org/web/20240321165118/https://macadminsdoc.readthedocs.io/en/master/Profiles-and-Settings/OS-X-Updates.html "macOS Updates | MacAdmins Community Documentation documentation | macadminsdoc.readthedocs.io"
                             [4]: https://web.archive.org/web/20240321165931/https://csrc.nist.gov/CSRC/media/Projects/national-vulnerability-database/documents/CCE/CCE-macos_monterey.xls "CCE-91129-7 | CCE-macos_monterey.xls | Sheet 1 - NIST Computer Security Resource Center | csrc.nist.gov"
                             [5]: https://web.archive.org/web/20240321201450/https://paper.bobylive.com/Security/CIS/CIS_Apple_OSX_10_9_Benchmark_v1_3_0.pdf "CIS Apple OSX 10.9 Benchmark | paper.bobylive.com"
                             [6]: https://web.archive.org/web/20240321201643/https://derflounder.wordpress.com/2014/12/27/managing-automatic-installation-of-configdata-and-security-software-updates-on-yosemite/ "Managing automatic installation of ConfigData and security software updates on Yosemite | Der Flounder | derflounder.wordpress.com"

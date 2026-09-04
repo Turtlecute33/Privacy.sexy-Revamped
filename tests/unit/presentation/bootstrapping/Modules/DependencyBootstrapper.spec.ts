@@ -269,8 +269,8 @@ function createCollectionWithScripts(scripts: readonly Script[]): CategoryCollec
 /*
   Compiling a script leaves no observable state: the result is memoized inside the script and a
   warmed read is indistinguishable from a cold one. The read itself is therefore the only evidence
-  that the warm-up ran at all, so the scripts under test replace `code` — the property
-  `canRevert()` reads, and the one production compiles through — with a recording getter.
+  that the warm-up ran at all, so the scripts under test replace `code` (the property
+  `canRevert()` reads, and the one production compiles through) with a recording getter.
 */
 function createScriptCodeReadLog() {
   const readScriptIds = new Array<ExecutableId>();

@@ -8,7 +8,7 @@ scripting:
     language: shellscript
     startCode: |-
       #!/usr/bin/env bash
-      # {{ $homepage }} — v{{ $version }} — {{ $date }}
+      # {{ $homepage }} v{{ $version }} ({{ $date }})
       if [ "$EUID" -ne 0 ]; then
         script_path=$([[ "$0" = /* ]] && echo "$0" || echo "$PWD/${0#./}")
         if ! command -v sudo >/dev/null 2>&1; then
@@ -2775,7 +2775,7 @@ actions:
                   For reasons of military security, it's recommended by the U.S. government (NIST 800-53) that
                   this data collection is disabled [4].
 
-                  [1]: https://web.archive.org/web/20221015102124/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines — Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
+                  [1]: https://web.archive.org/web/20221015102124/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines | Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
                   [2]: https://web.archive.org/web/20221015103136/https://bugzilla.mozilla.org/show_bug.cgi?id=1195552#c4
                   [3]: https://web.archive.org/web/20221015102419/https://bugzilla.mozilla.org/show_bug.cgi?id=1422689#c1
                   [4]: https://web.archive.org/web/20221015103404/https://www.stigviewer.com/stig/mozilla_firefox/2019-01-02/finding/V-79053
@@ -2803,7 +2803,7 @@ actions:
                   For reasons of military security, the U.S. government (NIST 800-53) recommends disabling this
                   setting [4].
 
-                  [1]: https://web.archive.org/web/20221015102124/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines — Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
+                  [1]: https://web.archive.org/web/20221015102124/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines | Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
                   [2]: https://web.archive.org/web/20221015102338/https://searchfox.org/mozilla-central/source/modules/libpref/Preferences.cpp#3213
                   [3]: https://web.archive.org/web/20221015102419/https://bugzilla.mozilla.org/show_bug.cgi?id=1422689#c1
                   [4]: https://web.archive.org/web/20221015102604/https://stigviewer.com/stig/mozilla_firefox/2020-12-10/finding/V-223170
@@ -2822,7 +2822,7 @@ actions:
                   For reasons of military security, the U.S. government (NIST 800-53) recommends disabling this
                   setting [2].
 
-                  [1]: https://web.archive.org/web/20221015102124/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines — Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
+                  [1]: https://web.archive.org/web/20221015102124/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines | Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
                   [2]: https://web.archive.org/web/20221015104801/https://stigviewer.com/stig/mozilla_firefox/2020-12-10/finding/V-223171
                 call:
                   function: AddFirefoxPrefs
@@ -2835,7 +2835,7 @@ actions:
                   Firefox logs telemetry information in various locations, such as the console and `stdout` [1].
                   This logged information reveals details about your usage pattern.
 
-                  [1]: https://web.archive.org/web/20221015102124/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines — Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
+                  [1]: https://web.archive.org/web/20221015102124/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines | Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
                 children:
                   -
                     name: Minimize Firefox telemetry logging verbosity
@@ -2853,8 +2853,8 @@ actions:
                       The available verbosity levels, in descending order, are `Trace`, `Debug`, `Config`, `Info`, `Warn` (default),
                       `Error`, and `Fatal` [1].
 
-                      [1]: https://web.archive.org/web/20221015102124/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines — Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
-                      [2]: https://web.archive.org/web/20221029134403/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/start/index.html "Getting started — Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
+                      [1]: https://web.archive.org/web/20221015102124/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines | Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
+                      [2]: https://web.archive.org/web/20221029134403/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/start/index.html "Getting started | Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
                       [3]: https://web.archive.org/web/20221025154541/https://hg.mozilla.org/comm-central/rev/f8a6cf1ee08f8223c36bb92414e29734d8d6c9d9 "comm-central: changeset 28531:f8a6cf1ee08f8223c36bb92414e29734d8d6c9d9 | hg.mozilla.org"
                       [4]: https://web.archive.org/web/20221025154517/https://hg.mozilla.org/comm-central/file/tip/mail/components/telemetry/README.md#l81 "comm-central: mail/components/telemetry/README.md@a2958dfb3462eac068cb1a2c75c5213fc4808b1a | hg.mozilla.org"
                     call:
@@ -2870,7 +2870,7 @@ actions:
                       This script adjusts the `toolkit.telemetry.log.dump` setting to its most restricted value.
                       This preference controls whether to dump telemetry log messages to `stdout` [1].
 
-                      [1]: https://web.archive.org/web/20221015102124/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines — Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
+                      [1]: https://web.archive.org/web/20221015102124/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines | Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
                     call:
                       function: AddFirefoxPrefs
                       parameters:
@@ -2898,7 +2898,7 @@ actions:
                   A telemetry ping refers to the data that Firefox transmits to Mozilla's Telemetry servers [1].
                   It comes in different types and includes information collected by telemetry [1].
 
-                  [1]: https://web.archive.org/web/20221025163526/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/concepts/pings.html "Telemetry pings — Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
+                  [1]: https://web.archive.org/web/20221025163526/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/concepts/pings.html "Telemetry pings | Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
                 children:
                   -
                     name: Disable pings to Firefox telemetry server
@@ -2907,7 +2907,7 @@ actions:
                       This script sets `toolkit.telemetry.server` to be empty.
                       This preference defines the server to which telemetry pings are sent [1].
 
-                      [1]: https://web.archive.org/web/20221015102124/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines — Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
+                      [1]: https://web.archive.org/web/20221015102124/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines | Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
                     call:
                       function: AddFirefoxPrefs
                       parameters:
@@ -2931,7 +2931,7 @@ actions:
                       `first-shutdown` ping [2].
 
                       [1]: https://web.archive.org/web/20221030201323/https://wiki.mozilla.org/QA/Shutdown_Ping#Test_Objectives "QA/Shutdown Ping - MozillaWiki | wiki.mozilla.org"
-                      [2]: https://web.archive.org/web/20221015102124/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines — Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
+                      [2]: https://web.archive.org/web/20221015102124/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines | Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
                     call:
                       -
                         function: AddFirefoxPrefs
@@ -2961,8 +2961,8 @@ actions:
                       This script sets the `toolkit.telemetry.newProfilePing.enabled` preference to disabled,
                       which effectively disables the `new-profile` ping for new profiles [2].
 
-                      [1]: https://web.archive.org/web/20221025172041/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/new-profile-ping.html "“new-profile” ping — Firefox Source Docs documentation"
-                      [2]: https://web.archive.org/web/20221015102124/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines — Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
+                      [1]: https://web.archive.org/web/20221025172041/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/new-profile-ping.html "“new-profile” ping | Firefox Source Docs documentation"
+                      [2]: https://web.archive.org/web/20221015102124/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines | Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
                     call:
                       function: AddFirefoxPrefs
                       parameters:
@@ -2980,8 +2980,8 @@ actions:
                       This script sets the `toolkit.telemetry.updatePing.enabled` preference to disabled,
                       which turns off the "update" ping associated with browser updates [2].
 
-                      [1]: https://web.archive.org/web/20221025174136/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/update-ping.html "“update” ping — Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
-                      [2]: https://web.archive.org/web/20221015102124/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines — Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
+                      [1]: https://web.archive.org/web/20221025174136/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/update-ping.html "“update” ping | Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
+                      [2]: https://web.archive.org/web/20221015102124/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines | Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
                     call:
                       function: AddFirefoxPrefs
                       parameters:
@@ -3003,9 +3003,9 @@ actions:
                       This script sets the `toolkit.telemetry.prioping.enabled` preference to disabled, which
                       turns off the `prio` ping [2].
 
-                      [1]: https://web.archive.org/web/20221025174031/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/prio-ping.html "“prio” ping — Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
-                      [2]: https://web.archive.org/web/20221015102124/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines — Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
-                      [3]: https://web.archive.org/web/20221025174037/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/collection/origin.html#origintelemetry "Origin Telemetry — Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
+                      [1]: https://web.archive.org/web/20221025174031/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/prio-ping.html "“prio” ping | Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
+                      [2]: https://web.archive.org/web/20221015102124/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines | Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
+                      [3]: https://web.archive.org/web/20221025174037/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/collection/origin.html#origintelemetry "Origin Telemetry | Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
                     call:
                       function: AddFirefoxPrefs
                       parameters:
