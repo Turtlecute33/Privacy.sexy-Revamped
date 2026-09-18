@@ -38,6 +38,11 @@ jobs:
         name: Build
         run: npm run build
       -
+        # Must run after `npm run build`, which empties the output directory. Also writes
+        # sitemap.xml, which is generated rather than committed so its `lastmod` tracks the deploy.
+        name: Generate static catalog pages
+        run: npm run generate:pages
+      -
         name: Cache Puppeteer browser
         uses: actions/cache@v6
         with:

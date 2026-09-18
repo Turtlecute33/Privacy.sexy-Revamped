@@ -24,9 +24,22 @@ import {
 } from 'vue';
 import { injectKey } from '@/presentation/injectionSymbols';
 import AppIcon from '@/presentation/components/Shared/Icon/AppIcon.vue';
+import { batchedDebounce } from '@/application/Common/Timing/BatchedDebounce';
 import type { ReadonlyFilterContext } from '@/application/Context/State/Filter/FilterContext';
 import type { FilterResult } from '@/application/Context/State/Filter/Result/FilterResult';
 import type { IEventSubscription } from '@/infrastructure/Events/IEventSource';
+
+/*
+  `LinearFilterStrategy` reads the code of every script whose name misses the query, and script
+  code compiles on first read (see `ScriptFactory.ts`), so a single keystroke can force the
+  compilation of everything the background warm-up has not reached yet. Running that once per
+  settled query instead of once per keypress keeps the worst case to one scan, and gives the
+  warm-up the pause in between to shrink it.
+
+  Waiting is only ever an input latency trade, never a results one: the query that finally runs is
+  the full one the user typed, matched against exactly the same scripts as before.
+*/
+const SearchDebounceInMs = 250;
 
 export default defineComponent({
   components: { AppIcon },
@@ -43,7 +56,12 @@ export default defineComponent({
 
     const searchQuery = ref<string | undefined>();
 
-    watch(searchQuery, (newFilter) => updateFilter(newFilter));
+    const queueFilterUpdate = batchedDebounce<string | undefined>(
+      (queuedFilters) => updateFilter(queuedFilters[queuedFilters.length - 1]),
+      SearchDebounceInMs,
+    );
+
+    watch(searchQuery, (newFilter) => queueFilterUpdate(newFilter));
 
     function updateFilter(newFilter: string | undefined) {
       modifyCurrentState((state) => {
