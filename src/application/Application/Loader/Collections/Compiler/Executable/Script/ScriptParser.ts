@@ -24,6 +24,8 @@ export interface ScriptParser {
   ): Script;
 }
 
+const ParseFailureContext = 'Failed to parse script.';
+
 export const parseScript: ScriptParser = (
   data,
   collectionContext,
@@ -38,12 +40,7 @@ export const parseScript: ScriptParser = (
     const script = scriptUtilities.createScript({
       executableId: data.name, // Pseudo-ID for uniqueness until real ID support
       name: data.name,
-      code: parseCode(
-        data,
-        collectionContext,
-        scriptUtilities.codeValidator,
-        scriptUtilities.createCode,
-      ),
+      code: createCodeFactory(data, collectionContext, validator, scriptUtilities),
       docs: scriptUtilities.parseDocs(data),
       level: parseLevel(data.recommend, scriptUtilities.levelParser),
     });
@@ -51,10 +48,39 @@ export const parseScript: ScriptParser = (
   } catch (error) {
     throw scriptUtilities.wrapError(
       error,
-      validator.createContextualErrorMessage('Failed to parse script.'),
+      validator.createContextualErrorMessage(ParseFailureContext),
     );
   }
 };
+
+/*
+  Compilation is deferred to the first read of `Script.code` (see `ScriptFactory.ts`), so it no
+  longer runs inside the `try` above and needs its own contextual wrapping to keep reporting which
+  script failed. The message is built inside the `catch` rather than captured here, because the
+  factory is created for all 1,163 scripts at load time and only a failing one ever needs it.
+*/
+function createCodeFactory(
+  script: ScriptData,
+  collectionContext: CategoryCollectionContext,
+  validator: ExecutableValidator,
+  scriptUtilities: ScriptParserUtilities,
+): () => ScriptCode {
+  return () => {
+    try {
+      return parseCode(
+        script,
+        collectionContext,
+        scriptUtilities.codeValidator,
+        scriptUtilities.createCode,
+      );
+    } catch (error) {
+      throw scriptUtilities.wrapError(
+        error,
+        validator.createContextualErrorMessage(ParseFailureContext),
+      );
+    }
+  };
+}
 
 function parseLevel(
   level: string | undefined,

@@ -29,7 +29,15 @@
         @focusout="scheduleTooltipHide"
       >
         <div class="tooltip__content">
-          <slot name="tooltip" />
+          <!--
+            `has-been-shown` lets consumers with expensive tooltip bodies keep them out of the
+            document until the first hover. The wrapper's own elements stay mounted so that styles,
+            the arrow and any `aria-describedby` target remain valid at all times.
+          -->
+          <slot
+            name="tooltip"
+            :has-been-shown="hasBeenShown"
+          />
         </div>
         <div
           ref="arrowElement"
@@ -46,7 +54,7 @@ import {
   useFloating, arrow, shift, flip, type Placement, offset, autoUpdate,
 } from '@floating-ui/vue';
 import {
-  defineComponent, shallowRef, computed, ref, onUnmounted,
+  defineComponent, shallowRef, computed, ref, onUnmounted, nextTick,
 } from 'vue';
 import { useResizeObserverPolyfill } from '@/presentation/components/Shared/Hooks/Resize/UseResizeObserverPolyfill';
 import { throttle } from '@/application/Common/Timing/Throttle';
@@ -77,11 +85,32 @@ export default defineComponent({
     const eventListener = injectKey((keys) => keys.useAutoUnsubscribedEventListener);
     useResizeObserverPolyfill();
 
+    /*
+      The tooltip overlay is hidden with `visibility`/`opacity` rather than `display: none`, so its
+      floating element is in the DOM from the very first paint. Handing that element to
+      `useFloating` immediately would make every tooltip on the page run `computePosition` and
+      install `autoUpdate` (two `ResizeObserver`s, an `IntersectionObserver` and ancestor
+      scroll/resize listeners each) at mount, with no user interaction. On the scripts view that is
+      79 tooltips and the dominant contributor to Lighthouse's "Forced reflow" insight.
+
+      Withholding the floating element until the first open avoids all of it: `useFloating`'s
+      `update()` early-returns while the floating ref is nullish, and its `attach()` skips
+      `whileElementsMounted` entirely. The watcher that calls `attach()` is `flush: 'sync'` and not
+      `immediate`, so positioning starts the instant this gate opens.
+
+      The flag is never reset: once a tooltip has been opened, keeping it positioned costs nothing
+      extra and avoids re-measuring on every subsequent hover.
+    */
+    const hasBeenShown = ref(false);
+    const floatingElementOnceShown = computed(
+      () => (hasBeenShown.value ? tooltipDisplayElement.value : undefined),
+    );
+
     const {
       floatingStyles, middlewareData, placement, update,
     } = useFloating(
       triggeringElement,
-      tooltipDisplayElement,
+      floatingElementOnceShown,
       {
         placement: DEFAULT_PLACEMENT,
         middleware: [
@@ -143,7 +172,18 @@ export default defineComponent({
           hide: hideTooltip,
         };
       }
+      const isFirstOpen = !hasBeenShown.value;
+      hasBeenShown.value = true;
       isTooltipVisible.value = true;
+      if (isFirstOpen) {
+        /*
+          Opening the gate re-attaches `useFloating` synchronously, which measures the floating
+          element before Vue has rendered the content this same open just revealed. That first
+          measurement sees an empty box and places the tooltip wrongly, so it is re-run once the
+          revealed content is in the DOM.
+        */
+        nextTick(() => update());
+      }
     }
 
     function scheduleTooltipHide() {
@@ -163,6 +203,7 @@ export default defineComponent({
       arrowElement,
       placement,
       isTooltipVisible,
+      hasBeenShown,
       showTooltip,
       scheduleTooltipHide,
       hideTooltip,

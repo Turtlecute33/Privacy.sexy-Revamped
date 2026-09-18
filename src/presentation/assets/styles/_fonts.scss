@@ -3,12 +3,53 @@
 // This file should only contain @font-face definitions
 // Helpful resource: https://gwfh.mranftl.com/fonts
 
+/*
+  'Slabo 27px' and 'Yesteryear' are ASCII subsets of the upstream gwfh downloads, not the downloads
+  themselves. Each face renders exactly one string that comes from package.json: the `.brand` <h1>
+  ("privacy.sexy" + "Revamped") and the `.slogan` ("Privacy is sexy") in TheHeader.vue. Both
+  are pure ASCII, so everything outside U+0020-007E was dead weight on the critical path. Slabo in
+  particular is `<link rel="preload">`ed, so its bytes block first paint.
+  Slabo 19,068 B -> 10,300 B, Yesteryear 23,008 B -> 15,852 B.
+
+  These are committed binaries with no regeneration step in the build, so a plain re-download from
+  gwfh would silently undo the saving. Regenerate with (fonttools 4.63.0, woff2 1.0.2):
+
+    woff2_decompress <gwfh-download>.woff2
+    pyftsubset <gwfh-download>.ttf --unicodes=U+0020-007E \
+      --output-file=slabo-27px-v14-ascii-regular.ttf
+    woff2_compress slabo-27px-v14-ascii-regular.ttf
+
+  The `slabo-27px-` file name prefix is load-bearing: `LCP_FONT_FILE_PATTERN` in vite.config.ts
+  matches it to emit the preload link, and the build throws when nothing matches.
+
+  `unicode-range` is required, not decorative. Without it the browser still selects these faces for
+  a non-ASCII character and paints .notdef tofu; with it, such a character falls through to the
+  serif/cursive fallback. `tests/unit/presentation/assets/fonts/DisplayFontSubset.spec.ts` fails CI
+  if the package.json strings ever leave ASCII.
+*/
+
+/*
+  `block` rather than `swap`, and this face only. The <h1> in TheHeader.vue is the LCP element and
+  is the sole consumer of this family. With `swap`, the prerendered snapshot paints the heading in
+  the serif fallback, then the same box repaints in Slabo once the font arrives. Slabo's glyphs ink
+  ~7% more area than the fallback's inside an identical box, and Chrome replaces an LCP candidate
+  whenever a *larger* one appears, so the swap registered a second candidate at ~5.7s and that
+  became the reported LCP. `block` holds the heading invisible until Slabo is ready, so the first
+  and only paint is the final one. Measured: LCP 5748-5800ms -> 680-692ms.
+
+  This works only in combination with the build-time `<link rel="preload">` that
+  `injectLcpFontPreload` in vite.config.ts emits. Without the preload, `block` hides the heading
+  for as long as the font takes to be discovered through the stylesheet. Keep the two together.
+  Cost: one 12-character heading is invisible for ~690ms on throttled 4G. The other two faces stay
+  on `swap` because they carry body and code text, where hiding text is the worse trade.
+*/
 @font-face {
-  font-display: swap;
+  font-display: block;
   font-family: 'Slabo 27px';
   font-style: normal;
   font-weight: 400;
-  src: url('#{$base-assets-path}/fonts/slabo-27px-v14-latin_latin-ext-regular.woff2') format('woff2');
+  src: url('#{$base-assets-path}/fonts/slabo-27px-v14-ascii-regular.woff2') format('woff2');
+  unicode-range: U+0020-007E;
 }
 
 @font-face {
@@ -16,7 +57,8 @@
   font-family: 'Yesteryear';
   font-style: normal;
   font-weight: 400;
-  src: url('#{$base-assets-path}/fonts/yesteryear-v18-latin-regular.woff2') format('woff2');
+  src: url('#{$base-assets-path}/fonts/yesteryear-v18-ascii-regular.woff2') format('woff2');
+  unicode-range: U+0020-007E;
 }
 
 /* source-code-pro-regular - latin */

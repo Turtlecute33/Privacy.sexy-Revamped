@@ -73,7 +73,7 @@ browser, and the website does not execute system changes for you.
 ## Features
 
 - **Windows, macOS, and Linux** privacy and security tweaks in one place
-- **Debloat Windows 10 and Windows 11** — remove preinstalled apps and bloatware
+- **Debloat Windows 10 and Windows 11**: remove preinstalled apps and bloatware
 - **Disable telemetry and tracking**, including modern Windows AI features such
   as Recall, Click to Do, and Copilot
 - **Harden macOS and Linux** privacy and security settings
@@ -82,7 +82,7 @@ browser, and the website does not execute system changes for you.
 - **Full visibility** into every generated command before you run it
 - **Revert commands** for supported changes
 - **Copy or download** scripts with no account and no install
-- **Fully open source** — code, scripts, tests, and build process
+- **Fully open source**: code, scripts, tests, and build process
 
 ## A note on safety
 

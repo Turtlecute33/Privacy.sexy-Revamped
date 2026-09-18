@@ -9,6 +9,10 @@ Key attributes of a good script:
 - ✅ Utilizes [shared functions](#shared-functions).
 - ✅ Has a [simple name](#name).
 
+Looking for something to work on? [script-proposals.md](./script-proposals.md) holds researched
+candidate scripts that are not in the catalog yet, each with a ready-to-paste YAML block and the
+sources it was checked against.
+
 ## Name
 
 - Choose a title that is easy to understand for all users, regardless of technical skill, yet remains technically accurate.

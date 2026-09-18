@@ -12,12 +12,21 @@
         aria-hidden="true"
       />
     </span>
-    <template #tooltip>
+    <!--
+      The documentation prose is rendered only after the first hover. The scripts view mounts one of
+      these per script, and their combined hidden bodies made up the majority of the document that
+      gates first paint. The labelled container itself stays mounted so the trigger's
+      `aria-describedby` never points at a missing element.
+    -->
+    <template #tooltip="{ hasBeenShown }">
       <div
         :id="tooltipId"
         role="tooltip"
       >
-        <DocumentationText :docs="docs" />
+        <DocumentationText
+          v-if="hasBeenShown"
+          :docs="docs"
+        />
       </div>
     </template>
   </TooltipWrapper>
