@@ -1648,11 +1648,23 @@ actions:
                                 children:
                                     -
                                         name: Clear Windows update and SFC scan logs
-                                        docs: https://web.archive.org/web/20231206191838/https://answers.microsoft.com/en-us/windows/forum/all/cwindowslogscbs/fe4e359a-bcb9-4988-954d-563ef83bac1c
+                                        docs: |-
+                                            This script clears the Component-Based Servicing (CBS) log directory, which records Windows Update
+                                            installation activity in the servicing stack [1] and the results of System File Checker (`sfc /scannow`) runs [2].
+
+                                            Besides the active `CBS.log`, the directory retains rotated archives (`CbsPersist_*.log` and `CbsPersist_*.cab`)
+                                            that can go back months, along with supporting traces such as `FilterList.log` and `container.etl` [3].
+
+                                            Note: `CBS.log` is held open by the TrustedInstaller (`Windows Modules Installer`) service while a servicing
+                                            operation is in progress. Locked files are skipped with a warning and the remaining contents are still cleared.
+
+                                            [1]: https://learn.microsoft.com/en-us/windows/deployment/update/windows-update-logs "Windows Update log files | Microsoft Learn"
+                                            [2]: https://support.microsoft.com/en-us/topic/use-the-system-file-checker-tool-to-repair-missing-or-corrupted-system-files-79aa86cb-ca52-166a-92a3-966e85d4094e "Use the System File Checker tool to repair missing or corrupted system files | Microsoft Support"
+                                            [3]: https://web.archive.org/web/20231206191838/https://answers.microsoft.com/en-us/windows/forum/all/cwindowslogscbs/fe4e359a-bcb9-4988-954d-563ef83bac1c "C:\Windows\Logs\CBS - Microsoft Community | answers.microsoft.com"
                                         call:
                                             function: ClearDirectoryContents
                                             parameters:
-                                                directoryGlob: '%SYSTEMROOT%\Temp\CBS'
+                                                directoryGlob: '%SYSTEMROOT%\Logs\CBS'
                                     -
                                         name: Clear Windows Update Medic Service logs
                                         docs: |-
@@ -1750,10 +1762,24 @@ actions:
                                                 directoryGlob: '%SYSTEMROOT%\Logs\SIH'
                                     -
                                         name: Clear Windows Update logs
+                                        docs: |-
+                                            This script clears the Windows Update client log directory.
+
+                                            Since Windows 8.1, the Windows Update client logs through Event Tracing for Windows (ETW) and writes
+                                            `.etl` trace files to `%SYSTEMROOT%\Logs\WindowsUpdate` [1]. These traces are what `Get-WindowsUpdateLog`
+                                            merges into a readable `WindowsUpdate.log` [1], and they record update scan, download and installation
+                                            history that can be used to reconstruct a timeline of system activity.
+
+                                            Known limitation: these `.etl` files are held open by an active ETW tracing session rather than by a
+                                            service process, so stopping Windows Update beforehand does not release them. Locked files are skipped
+                                            with a warning and the remaining contents are still cleared; clearing every file requires the tracing
+                                            session to be stopped first (for example from an offline or boot-time context).
+
+                                            [1]: https://learn.microsoft.com/en-us/windows/deployment/update/windows-update-logs "Windows Update log files | Microsoft Learn"
                                         call:
                                             function: ClearDirectoryContents
                                             parameters:
-                                                directoryGlob: '%SYSTEMROOT%\Traces\WindowsUpdate'
+                                                directoryGlob: '%SYSTEMROOT%\Logs\WindowsUpdate'
                             -
                                 name: Clear Optional Component Manager and COM+ components logs
                                 call:
@@ -1855,12 +1881,14 @@ actions:
                                         directoryGlob: '%SYSTEMROOT%\ServiceProfiles\LocalService\AppData\Local\Temp'
                             -
                                 name: Clear DISM (Deployment Image Servicing and Management) system logs
-                                docs: https://web.archive.org/web/20240314125948/https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/deployment-troubleshooting-and-log-files?view=windows-11
+                                docs: |-
+                                    This script clears the log file written by Deployment Image Servicing and Management (DISM) [1].
+
+                                    The Component-Based Servicing log (`%SYSTEMROOT%\Logs\CBS\CBS.log`) that DISM also writes to is cleared by
+                                    "Clear Windows update and SFC scan logs", which empties the whole CBS directory including its rotated archives.
+
+                                    [1]: https://web.archive.org/web/20240314125948/https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/deployment-troubleshooting-and-log-files?view=windows-11 "Deployment troubleshooting and log files | Microsoft Learn"
                                 call:
-                                    -
-                                        function: DeleteFiles
-                                        parameters:
-                                            fileGlob: '%SYSTEMROOT%\Logs\CBS\CBS.log'
                                     -
                                         function: DeleteFiles
                                         parameters:
@@ -7268,8 +7296,14 @@ actions:
 
                                     This script modifies:
 
+                                    - `HKCU\SOFTWARE\Policies\Microsoft\Windows\Explorer!DisableSearchBoxSuggestions` [7] [10].
                                     - `HKLM\SOFTWARE\Policies\Microsoft\Windows\Explorer!DisableSearchBoxSuggestions` [2] [3] [4].
                                     - `HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Search!DisableSearchBoxSuggestions` [8] [9].
+
+                                    The `HKCU` policy path is the location documented by Microsoft: the underlying ADMX policy
+                                    ("Turn off display of recent search entries in the File Explorer search box") is scoped to User Configuration [6] [7] [10].
+                                    The `HKLM` path is kept alongside it because it is what most third-party guidance applies [2] [3] [4] and removing it
+                                    would regress systems that are already relying on it.
 
                                     These keys replace older `BingSearchEnabled` registry value [2] [3].
                                     They apply to Windows 10 versions post 1909, including Windows 10 v2004 (20H1) and higher [5] [9].
@@ -7283,7 +7317,16 @@ actions:
                                     [7]: https://web.archive.org/web/20240120194340/https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-admx-windowsexplorer#disablesearchboxsuggestions "ADMX_WindowsExplorer Policy CSP - Windows Client Management | Microsoft Learn | learn.microsoft.com"
                                     [8]: https://archive.ph/2024.07.19-094152/https://www.pcastuces.com/pratique/astuces/6080-print.htm "PC Astuces - Désactiver les recommandations dans la recherche - Windows 10 | www.pcastuces.com"
                                     [9]: https://web.archive.org/web/20240120194547/https://www.deskmodder.de/phpBB3/viewtopic.php?t=23243 "Websuche in der Windows 10 Taskleiste deaktivieren - Deskmodder.de | www.deskmodder.de"
+                                    [10]: https://learn.microsoft.com/en-us/answers/questions/4097651/how-to-disable-search-the-web-completley-in-window "How to disable 'Search the web' completely in Windows 11 | Microsoft Q&A"
                                 call:
+                                    -
+                                        function: SetRegistryValue
+                                        parameters:
+                                            keyPath: HKCU\SOFTWARE\Policies\Microsoft\Windows\Explorer
+                                            valueName: DisableSearchBoxSuggestions
+                                            dataType: REG_DWORD
+                                            data: "1"
+                                            deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
                                     -
                                         function: SetRegistryValue
                                         parameters:
