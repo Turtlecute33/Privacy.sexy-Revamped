@@ -1223,28 +1223,50 @@ actions:
           Other applications use different paths, e.g. ksnip uses `ksnip_$Y$M$D-$T.png` by
           default in the home folder [5].
 
+          This script only looks at those default folders, and not inside their subfolders. The pictures
+          folder is the one your desktop reports through `xdg-user-dir`, and `~/Pictures` if it reports
+          none. In it, the script deletes files named like the screenshots above (`Screenshot from *.png`
+          and `Screenshot_*`), every file directly inside its `Screenshots` folder, and `ksnip_*` files
+          directly inside your home folder.
+
+          > **Caution:** Deleted files are not moved to the trash and cannot be recovered. Any file directly
+          > inside the `Screenshots` folder is deleted, even if a screenshot tool did not create it. Screenshots
+          > that you saved elsewhere, or that use a translated folder name or file name, are not deleted.
+
           [1]: https://web.archive.org/web/20221030163430/https://gitlab.gnome.org/GNOME/gnome-shell/-/issues/1950 "Save screenshots to dedicated Screenshots folder (#1950) · Issues · GNOME / gnome-shell | gitlab.gnome.org"
           [2]: https://web.archive.org/web/20221029155930/https://github.com/flameshot-org/flameshot/blob/fa6164bedf683d4deb9c879563506310908280bf/README.md#on-kde-plasma-desktop "flameshot/README.md · flameshot-org/flameshot | GitHub"
           [3]: https://web.archive.org/web/20221029160024/https://help.ubuntu.com/stable/ubuntu-help/screen-shot-record.html "Screenshots and screencasts | help.ubuntu.com"
           [4]: https://web.archive.org/web/20221029160018/https://docs.kde.org/stable5/en/spectacle/spectacle/ch04s02.html "Configure | docs.kde.org"
           [5]: https://web.archive.org/web/20221029160052/https://github.com/ksnip/ksnip/blob/89b7f3f1f5efc0c62797c091e985dc70be17e347/src/backend/config/Config.cpp#L232-L241 "ksnip/Config.cpp · ksnip/ksnip | GitHub"
-        code: |-
-          # Clear default directory for GNOME screenshots
-          rm -rfv ~/Pictures/Screenshots/*
-          if [ -d ~/Pictures ]; then
-            # Clear Ubuntu screenshots
-            find ~/Pictures -name 'Screenshot from *.png' | while read -r file_path; do
-              rm -fv "$file_path" # E.g. Screenshot from 2022-08-20 02-46-41.png
-            done
-            # Clear KDE (Spectatle) screenshots
-            find ~/Pictures -name 'Screenshot_*' | while read -r file_path; do
-              rm -fv "$file_path" # E.g. Screenshot_20220927_205646.png
-            done
-          fi
-          # Clear ksnip screenshots
-          find ~ -name 'ksnip_*' | while read -r file_path; do
-            rm -fv "$file_path" # E.g. ksnip_20220927-195151.png
-          done
+        # Only the tools' own default folders, one level deep, regular files only, deleted as the invoking
+        # user. `find ~ -name 'ksnip_*'` walked the whole home folder as root (mounted drives, backups and
+        # the trash included), and the `~/Pictures` searches deleted matching files in every subfolder.
+        call:
+          function: RunAsTargetUser
+          parameters:
+            code: |-
+              pictures_directory="$HOME/Pictures"
+              if command -v xdg-user-dir > /dev/null 2>&1; then
+                xdg_pictures_directory="$(run_as_target_user xdg-user-dir PICTURES 2>/dev/null)"
+                # `xdg-user-dir` prints the home folder itself when no pictures folder is configured.
+                if [ -n "$xdg_pictures_directory" ] && [ "$xdg_pictures_directory" != "$HOME" ] \
+                    && [ -d "$xdg_pictures_directory" ]; then
+                  pictures_directory="$xdg_pictures_directory"
+                fi
+              fi
+              # GNOME Shell 42 and later, Spectacle on Plasma 6, Flameshot: <Pictures>/Screenshots
+              if [ -d "$pictures_directory/Screenshots" ]; then
+                run_as_target_user find -H "$pictures_directory/Screenshots" -maxdepth 1 -type f \
+                  -exec rm -fv -- {} +
+              fi
+              # gnome-screenshot (e.g. Screenshot from 2022-08-20 02-46-41.png) and Spectacle on Plasma 5
+              # (e.g. Screenshot_20220927_205646.png): <Pictures>
+              if [ -d "$pictures_directory" ]; then
+                run_as_target_user find -H "$pictures_directory" -maxdepth 1 -type f \
+                  \( -name 'Screenshot from *.png' -o -name 'Screenshot_*' \) -exec rm -fv -- {} +
+              fi
+              # ksnip (e.g. ksnip_20220927-195151.png): the home folder
+              run_as_target_user find -H "$HOME" -maxdepth 1 -type f -name 'ksnip_*' -exec rm -fv -- {} +
   -
     category: Disable OS data collection
     docs: |-
@@ -1545,12 +1567,20 @@ actions:
                   `pkgstats` is set up to automatically run every week using systemd/timers [1]. Once disabled,
                   the data will only be sent once manually invoked [1]. The weekly timer is named `pkgstats.timer` [2].
 
+                  The package turns the timer on itself [3], through a link in
+                  `/usr/lib/systemd/system/timers.target.wants`, and the timer has no install section [4].
+                  `systemctl disable` therefore cannot turn it off (it reports the timer as `static`), and the timer
+                  would start again at the next boot. This script stops and masks the timer instead, and reverting
+                  unmasks it and starts it again if it was running.
+
                   [1]: https://web.archive.org/web/20221029161806/https://wiki.archlinux.org/title/Pkgstats "pkgstats - ArchWiki | wiki.archlinux.org"
                   [2]: https://web.archive.org/web/20221029162027/https://pkgstats.archlinux.de/ "Arch Linux package statistics | pkgstats.archlinux.de"
+                  [3]: https://web.archive.org/web/20221029161923/https://bugs.archlinux.org/task/51510?project=1&string=pkgstats "FS#51510 : [pkgstats] do not enable pkgstats.timer during install | bugs.archlinux.org"
+                  [4]: https://github.com/archlinux-de/pkgstats-cli/blob/3.5.7/justfile "pkgstats-cli justfile (version 3.5.7) | github.com"
                 call:
-                  function: DisableSystemdService
+                  function: MaskSystemdUnit
                   parameters:
-                    serviceName: pkgstats.timer
+                    unitName: pkgstats.timer
       -
         category: Disable Zorin OS telemetry
         docs: |-
@@ -1888,14 +1918,27 @@ actions:
                       Whoopsie works through a service file created in `/lib/systemd/system/whoopsie.service` [1].
                       This script disables this service to immobilize the main functionality of Whoopsie.
 
+                      Since Ubuntu 22.04, Whoopsie also ships `whoopsie.path`, which starts the service whenever the
+                      `/var/crash` folder changes [3]. The service itself has no install section there, so it cannot
+                      be disabled on its own: the script stops and disables `whoopsie.path` first, then stops the
+                      service. Reverting restores both units to the state recorded before the change.
+
                       This script is used as part of a post-installation script by the National Cyber Security Centre in the UK [2].
 
                       [1]: https://web.archive.org/web/20221029163615/https://packages.ubuntu.com/focal/all/whoopsie/filelist "Ubuntu – File list of package whoopsie/focal/all | packages.ubuntu.com"
                       [2]: https://web.archive.org/web/20221029163054/https://www.ncsc.gov.uk/files/ubuntu1804_post_install.sh_.txt "ubuntu1804_post_install.sh_.txt | nscs.gov.uk"
+                      [3]: https://git.launchpad.net/ubuntu/+source/whoopsie/tree/data/whoopsie.path?h=ubuntu/noble-updates "whoopsie.path | Ubuntu whoopsie source | git.launchpad.net"
+                    # The path unit goes first, so it cannot start the service again while the service is being
+                    # stopped. On Ubuntu 20.04 there is no `whoopsie.path`, and that call reports so and skips.
                     call:
-                      function: DisableSystemdService
-                      parameters:
-                        serviceName: whoopsie
+                      -
+                        function: DisableSystemdService
+                        parameters:
+                          serviceName: whoopsie.path
+                      -
+                        function: DisableSystemdService
+                        parameters:
+                          serviceName: whoopsie
                   -
                     name: Disable crash report submissions
                     recommend: standard
@@ -2070,24 +2113,74 @@ actions:
           This script ensures that this file is immutable by changing the file attributes [4], so Python can no
           longer update the file.
 
+          If the file does not exist yet, the script creates it as an empty file owned by you. Reverting removes
+          the immutable attribute, and also deletes the file again if this script created it and it is still
+          empty, so Python can create and write its history as before.
+
           [1]: https://web.archive.org/web/20221029170256/https://en.wikipedia.org/wiki/Python_%28programming_language%29 "Python (programming language) - Wikipedia | wikipedia.org"
           [2]: https://web.archive.org/web/20221029170303/https://github.com/python/cpython/blob/b2499669ef2e6dc9a2cdb49b4dc498e078167e26/Lib/site.py#L430-L451 "cpython/site.py at b2499669ef2e6dc9a2cdb49b4dc498e078167e26 · python/cpython · Source code that registers it | github.com"
           [3]: https://web.archive.org/web/20221029170501/https://bugs.python.org/issue20886 "Issue 20886: Disabling logging to ~/.python_history is not simple enough | Python tracker | bugs.python.org"
           [4]: https://web.archive.org/web/20221029170511/https://man7.org/linux/man-pages/man1/chattr.1.html "Chattr manpage | chattr - Linux manual page | man7.org"
-        code: |-
-          history_file="$HOME/.python_history"
-          if [ ! -f "$history_file" ]; then
-            touch "$history_file"
-            echo "Created $history_file."
-          fi
-          sudo chattr +i "$(realpath $history_file)" # realpath in case of symlink
-        revertCode: |-
-          history_file="$HOME/.python_history"
-          if [ ! -f "$history_file" ]; then
-            echo "Skipping, $history_file does not exist."
-          else
-            sudo chattr -i "$(realpath $history_file)" # realpath in case of symlink
-          fi
+        # The file is created as the invoking user: as root, `touch` created a root-owned file that stayed
+        # root-owned after revert removed the immutable flag, so Python could still never write it.
+        # Revert deletes the file only if this script recorded creating it and it is still empty. An empty,
+        # root-owned file is what earlier versions of this script left behind, so revert removes that too.
+        call:
+          function: RunAsTargetUser
+          parameters:
+            code: |-
+              history_file="$HOME/.python_history"
+              history_state_dir="$target_home/.local/state/privacy.sexy/python"
+              history_state_file="$history_state_dir/history-file-created"
+              if ! command -v chattr > /dev/null 2>&1; then
+                echo 'Skipping because "chattr" is not found.'
+              else
+                if [ ! -e "$history_file" ] && [ ! -L "$history_file" ]; then
+                  if ! run_as_target_user touch "$history_file"; then
+                    >&2 echo "Failed to create $history_file."
+                  elif run_as_target_user install --directory --mode=700 "$history_state_dir" \
+                      && run_as_target_user touch "$history_state_file"; then
+                    echo "Created $history_file."
+                  else
+                    >&2 echo "Created $history_file, but could not record that in \"$history_state_dir\"."
+                  fi
+                fi
+                if [ -f "$history_file" ]; then
+                  history_target="$(realpath -- "$history_file")" # realpath in case of symlink
+                  if sudo chattr +i "$history_target"; then
+                    echo "Made $history_target immutable."
+                  else
+                    >&2 echo "Failed to make $history_target immutable."
+                  fi
+                fi
+              fi
+            revertCode: |-
+              history_file="$HOME/.python_history"
+              history_state_file="$target_home/.local/state/privacy.sexy/python/history-file-created"
+              if [ ! -f "$history_file" ]; then
+                echo "Skipping, $history_file does not exist."
+                if [ -e "$history_state_file" ]; then
+                  run_as_target_user rm -f -- "$history_state_file"
+                fi
+              elif ! command -v chattr > /dev/null 2>&1; then
+                >&2 echo 'Cannot revert because "chattr" is not found.'
+              else
+                history_target="$(realpath -- "$history_file")" # realpath in case of symlink
+                if ! sudo chattr -i "$history_target"; then
+                  >&2 echo "Failed to remove the immutable attribute from $history_target."
+                else
+                  echo "Removed the immutable attribute from $history_target."
+                  if [ ! -L "$history_file" ] && [ ! -s "$history_file" ] \
+                      && { [ -e "$history_state_file" ] \
+                        || { [ "$(stat -c '%u' -- "$history_file")" = '0' ] && [ "$target_user_id" != '0' ]; }; }; then
+                    run_as_target_user rm -f -- "$history_file"
+                    echo "Removed the empty $history_file that privacy.sexy created."
+                  fi
+                  if [ -e "$history_state_file" ]; then
+                    run_as_target_user rm -f -- "$history_state_file"
+                  fi
+                fi
+              fi
       -
         category: Disable Visual Studio Code data collection
         docs: |-
@@ -3216,6 +3309,7 @@ actions:
 
               When this setting is `0`, any user can read the kernel log. Setting it to `1` restricts access to
               users with the `CAP_SYSLOG` capability [1]. Some distributions, including Ubuntu, already use `1`.
+              If the running value is already `1` or higher, the script leaves it unchanged.
 
               If you do not run this script, any local user may be able to read the kernel log.
 
@@ -3225,6 +3319,7 @@ actions:
               parameters:
                 key: kernel.dmesg_restrict
                 value: '1'
+                keepStricterValue: 'true'
           -
             name: Disable exposure of kernel memory addresses
             recommend: standard
@@ -3235,7 +3330,9 @@ actions:
               them to defeat kernel address space layout randomisation and to build a reliable exploit [1].
 
               When this setting is `0`, addresses are printed as-is. Setting it to `1` replaces them with zeros
-              for unprivileged users [1].
+              for unprivileged users [1]. `2` hides them from every user, including administrators [1]. If the
+              running value is already `1` or higher, the script leaves it unchanged, so a system that uses `2`
+              keeps it.
 
               If you do not run this script, kernel memory addresses may remain readable by unprivileged users.
 
@@ -3245,6 +3342,7 @@ actions:
               parameters:
                 key: kernel.kptr_restrict
                 value: '1'
+                keepStricterValue: 'true'
           -
             name: Disable process debugging by unrelated processes
             recommend: strict # Prevents debuggers and profilers from attaching to already-running processes
@@ -3257,7 +3355,9 @@ actions:
 
               When this setting is `0`, any process running as your user can attach to any other process of
               yours. Setting it to `1` allows attaching only to direct descendants [1]. Some distributions,
-              including Ubuntu, already use `1`.
+              including Ubuntu, already use `1`. `2` allows attaching only for administrators and `3` disables
+              attaching entirely [1]. If the running value is already `1` or higher, the script leaves it
+              unchanged, so a system that uses `2` or `3` keeps it.
 
               > **Consideration:** Debuggers and profilers can no longer attach to an already-running process,
               > for example `gdb --pid`. Starting a program from inside the debugger continues to work.
@@ -3268,6 +3368,7 @@ actions:
               parameters:
                 key: kernel.yama.ptrace_scope
                 value: '1'
+                keepStricterValue: 'true'
           -
             name: Disable unprivileged eBPF access
             recommend: strict # Prevents unprivileged use of tracing and profiling tools that rely on eBPF
@@ -3361,10 +3462,17 @@ functions:
     parameters:
       - name: setting
       - name: jsonValue
+    # Runs as the invoking user. As root, the state directory below (and any missing parent such as
+    # `~/.local/state`) was created root-owned, so later user-level scripts such as the Firefox ones
+    # could no longer write their own state there.
     call:
-      function: RunPython3Code
+      function: RunAsTargetUser
       parameters:
         code: |-
+          if ! command -v python3 > /dev/null 2>&1; then
+            echo 'Skipping because "python3" is not found.'
+          else
+            run_as_target_user python3 <<EOF
           from pathlib import Path
           import hashlib, os, json, sys
           property_name = '{{ $setting }}'
@@ -3417,7 +3525,13 @@ functions:
             except OSError:
               state_file.unlink(missing_ok=True)
               raise
+          EOF
+          fi
         revertCode: |-
+          if ! command -v python3 > /dev/null 2>&1; then
+            >&2 echo 'Cannot revert because "python3" is not found.'
+          else
+            run_as_target_user python3 <<EOF
           from pathlib import Path
           import hashlib, os, json, sys
           property_name = '{{ $setting }}'
@@ -3466,25 +3580,30 @@ functions:
             file.write_text(new_content)
             state_file.unlink()
             print(f'Successfully reverted "{property_name}" setting.')
+          EOF
+          fi
   -
     name: UninstallPacmanPackage
     parameters:
       - name: packageName
+    # `pacman -Q <name>` matches the installed package exactly; `-Qs` is a regex search over names and
+    # descriptions, so it also matched packages that merely mention the name. `-Rns` without `-c`, so
+    # packages that depend on this one are never removed along with it unprompted.
     call:
       function: RunIfCommandExists
       parameters:
         command: pacman
         code: |-
           pkg_package_name='{{ $packageName }}'
-          if pacman -Qs "$pkg_package_name" > /dev/null ; then
+          if pacman -Q "$pkg_package_name" > /dev/null 2>&1; then
             echo "\"$pkg_package_name\" is installed and will be uninstalled."
-            sudo pacman -Rcns "$pkg_package_name" --noconfirm
+            sudo pacman -Rns "$pkg_package_name" --noconfirm
           else
             echo "The package $pkg_package_name is not installed"
           fi
         revertCode: |-
           pkg_package_name='{{ $packageName }}'
-          if pacman -Qs "$pkg_package_name" > /dev/null ; then
+          if pacman -Q "$pkg_package_name" > /dev/null 2>&1; then
             echo "Skipping, no action needed because \"$pkg_package_name\" is already installed."
           else
             echo "\"$pkg_package_name\" is not installed and will be reinstalled."
@@ -3518,6 +3637,13 @@ functions:
           fi
   -
     name: DisableSystemdService
+    # ❗️ A `static` unit has no [Install] section, so `systemctl disable` cannot change it and
+    #   `is-enabled` keeps reporting `static` (exit code 0) afterwards. Such a unit is only stopped and
+    #   recorded as `static`; revert then only checks whether it is running again. Recording it as
+    #   `enabled` made every revert report that the unit had "changed" and skip, which is what happened
+    #   to `whoopsie.service` on Ubuntu 22.04 and later. Units that are enabled the usual way are handled
+    #   exactly as before.
+    #   Use `MaskSystemdUnit` for units that a package enables through a vendor `.wants` link.
     parameters:
       - name: serviceName
     call:
@@ -3534,17 +3660,23 @@ functions:
             echo "Skipping, $service does not exist."
           else
             if systemctl is-enabled --quiet "$service"; then
+              enabled_state='enabled'
+              if [ "$(systemctl is-enabled "$service" 2>/dev/null)" = 'static' ]; then
+                enabled_state='static'
+              fi
               sudo install --directory --mode=700 "$service_state_dir"
               if [ ! -e "$service_state_file" ]; then
                 active_state="$(systemctl is-active "$service" 2>/dev/null || true)"
-                printf 'enabled\n%s\n' "$active_state" | sudo tee "$service_state_file" > /dev/null
+                printf '%s\n%s\n' "$enabled_state" "$active_state" | sudo tee "$service_state_file" > /dev/null
                 sudo chmod 600 "$service_state_file"
                 echo "Recorded the original state of $service."
               fi
               if systemctl is-active --quiet "$service" && ! sudo systemctl stop "$service"; then
                 >&2 echo "Could not stop $service."
               fi
-              if sudo systemctl disable "$service"; then
+              if [ "$enabled_state" = 'static' ]; then
+                echo "Stopped $service. It is a static unit, so it cannot be disabled and only starts when another unit needs it."
+              elif sudo systemctl disable "$service"; then
                 echo "Successfully disabled $service."
               else
                 >&2 echo "Failed to disable $service."
@@ -3558,13 +3690,18 @@ functions:
           service_state_dir='/var/lib/privacy.sexy/state/systemd'
           service_state_name="$(printf '%s' "$service" | tr --complement '[:alnum:].@_-' '_')"
           service_state_file="$service_state_dir/$service_state_name"
-          if [ ! -e "$service_state_file" ]; then
-            echo "Skipping, no original state recorded for $service was found."
-          elif systemctl is-enabled --quiet "$service" || systemctl is-active --quiet "$service"; then
-            >&2 echo "Skipping revert because $service changed after privacy.sexy disabled it."
-          else
+          original_enabled=''
+          original_active=''
+          if [ -e "$service_state_file" ]; then
             original_enabled="$(sudo sed --silent '1p' "$service_state_file")"
             original_active="$(sudo sed --silent '2p' "$service_state_file")"
+          fi
+          if [ ! -e "$service_state_file" ]; then
+            echo "Skipping, no original state recorded for $service was found."
+          elif systemctl is-active --quiet "$service" \
+              || { [ "$original_enabled" != 'static' ] && systemctl is-enabled --quiet "$service"; }; then
+            >&2 echo "Skipping revert because $service changed after privacy.sexy disabled it."
+          else
             restore_failed='false'
             if [ "$original_enabled" = 'enabled' ] && ! sudo systemctl enable "$service"; then
               >&2 echo "Failed to restore the enabled state of $service."
@@ -3577,6 +3714,94 @@ functions:
             if [ "$restore_failed" = 'false' ]; then
               sudo rm --force "$service_state_file"
               echo "Restored the original state of $service."
+            fi
+          fi
+  -
+    name: MaskSystemdUnit
+    # 💡 Purpose:
+    #   Stops and masks a unit that its package enables through a vendor symlink, such as
+    #   `/usr/lib/systemd/system/timers.target.wants/pkgstats.timer`. `systemctl disable` only removes
+    #   enablement symlinks under `/etc`, so for such a unit it does nothing: `systemctl is-enabled`
+    #   reports it as `static` (no install section, like `pkgstats.timer`) or `disabled`, and it still
+    #   starts at every boot. A mask (`/etc/systemd/system/<unit>` linked to `/dev/null`) overrides the
+    #   vendor symlink.
+    #   Use `DisableSystemdService` for units that are enabled the usual way.
+    # ❗️ State: same directory and file name as `DisableSystemdService`. Line 1 is what `is-enabled`
+    #   reported before masking, line 2 what `is-active` reported. Revert unmasks only while the unit is
+    #   still masked and stopped, and starts it again only if it was active.
+    # References:
+    #   - https://man7.org/linux/man-pages/man1/systemctl.1.html (see `mask`, `--now` and `is-enabled`)
+    parameters:
+      - name: unitName
+    call:
+      function: RunIfCommandExists
+      parameters:
+        command: systemctl
+        code: |-
+          unit='{{ $unitName }}'
+          unit_state_dir='/var/lib/privacy.sexy/state/systemd'
+          unit_state_name="$(printf '%s' "$unit" | tr --complement '[:alnum:].@_-' '_')"
+          unit_state_file="$unit_state_dir/$unit_state_name"
+          load_state="$(systemctl show --property=LoadState --value "$unit" 2>/dev/null)"
+          enabled_state="$(systemctl is-enabled "$unit" 2>/dev/null)"
+          if [ -z "$load_state" ] || [ "$load_state" = 'not-found' ]; then
+            echo "Skipping, $unit does not exist."
+          elif [ "$load_state" = 'masked' ] || [ "$enabled_state" = 'masked' ]; then
+            echo "Skipping, $unit is already masked."
+          else
+            recorded_now='false'
+            if [ ! -e "$unit_state_file" ]; then
+              active_state="$(systemctl is-active "$unit" 2>/dev/null || true)"
+              if sudo install --directory --mode=700 "$unit_state_dir" \
+                  && printf '%s\n%s\n' "$enabled_state" "$active_state" | sudo tee "$unit_state_file" > /dev/null; then
+                sudo chmod 600 "$unit_state_file"
+                recorded_now='true'
+                echo "Recorded the original state of $unit."
+              fi
+            fi
+            if [ ! -e "$unit_state_file" ]; then
+              >&2 echo "Skipping, could not record the original state of $unit."
+            elif sudo systemctl mask --now "$unit"; then
+              echo "Successfully stopped and masked $unit."
+            elif [ "$(systemctl is-enabled "$unit" 2>/dev/null)" = 'masked' ]; then
+              >&2 echo "Masked $unit, but could not stop it; it stays stopped after a reboot."
+            else
+              if [ "$recorded_now" = 'true' ]; then
+                sudo rm --force "$unit_state_file"
+              fi
+              >&2 echo "Failed to mask $unit."
+            fi
+          fi
+        revertCode: |-
+          unit='{{ $unitName }}'
+          unit_state_dir='/var/lib/privacy.sexy/state/systemd'
+          unit_state_name="$(printf '%s' "$unit" | tr --complement '[:alnum:].@_-' '_')"
+          unit_state_file="$unit_state_dir/$unit_state_name"
+          if [ ! -e "$unit_state_file" ]; then
+            echo "Skipping, no original state recorded for $unit was found."
+          elif [ "$(systemctl is-enabled "$unit" 2>/dev/null)" != 'masked' ] || systemctl is-active --quiet "$unit"; then
+            >&2 echo "Skipping revert because $unit changed after privacy.sexy masked it."
+          else
+            original_enabled="$(sudo sed --silent '1p' "$unit_state_file")"
+            original_active="$(sudo sed --silent '2p' "$unit_state_file")"
+            restore_failed='false'
+            if ! sudo systemctl unmask "$unit"; then
+              >&2 echo "Failed to unmask $unit."
+              restore_failed='true'
+            else
+              if [ "$original_enabled" = 'enabled' ] && ! systemctl is-enabled --quiet "$unit" \
+                  && ! sudo systemctl enable "$unit"; then
+                >&2 echo "Failed to restore the enabled state of $unit."
+                restore_failed='true'
+              fi
+              if [ "$original_active" = 'active' ] && ! sudo systemctl start "$unit"; then
+                >&2 echo "Failed to restore the active state of $unit."
+                restore_failed='true'
+              fi
+            fi
+            if [ "$restore_failed" = 'false' ]; then
+              sudo rm --force "$unit_state_file"
+              echo "Restored the original state of $unit."
             fi
           fi
   -
@@ -4130,46 +4355,61 @@ functions:
     #   script ran. Instead, the value found before the change is recorded as a comment in the same drop-in
     #   file and restored on revert. When no recorded value is available, the running value is deliberately
     #   left alone rather than guessed at.
+    # ❗️ Why `keepStricterValue` exists:
+    #   For restriction levels such as `kernel.kptr_restrict` and `kernel.yama.ptrace_scope`, a higher number
+    #   is stricter. Hardened systems run `kptr_restrict=2` or `ptrace_scope=2`/`3`, and writing `1` there
+    #   (and persisting it in a drop-in that overrides theirs) lowered the protection this script promises
+    #   to raise. With `keepStricterValue`, a running value that is already at least the target value is
+    #   left alone: nothing is recorded, persisted or applied.
     # References:
     #   - https://web.archive.org/web/20240523090109/https://man7.org/linux/man-pages/man5/sysctl.d.5.html
     #   - https://web.archive.org/web/20240418183746/https://man7.org/linux/man-pages/man8/sysctl.8.html
     parameters:
       - name: key
       - name: value
+      - name: keepStricterValue # When set, skips if the running value is a number that is at least `value`.
+        optional: true
     code: |-
       kernel_key='{{ $key }}'
       kernel_value='{{ $value }}'
+      kernel_keep_stricter_value='{{ with $keepStricterValue }}true{{ end }}'
       config_file='/etc/sysctl.d/60-privacy-sexy.conf'
       previous_marker="# privacy.sexy-previous:$kernel_key="
       if ! command -v sysctl > /dev/null 2>&1; then
         >&2 echo 'Cannot configure kernel parameters because "sysctl" is not found.'
       else
-        if ! [ -e "$config_file" ] && ! sudo install --mode=644 /dev/null "$config_file"; then
-          >&2 echo "Failed to create \"$config_file\"."
+        current_value="$(sysctl --values "$kernel_key" 2>/dev/null | head --lines=1)"
+        if [ "$kernel_keep_stricter_value" = 'true' ] && [[ "$current_value" =~ ^[0-9]+$ ]] \
+            && [ "$current_value" -ge "$kernel_value" ]; then
+          echo "Skipping, \"$kernel_key\" is already \"$current_value\", which is at least as strict as \"$kernel_value\"."
         else
-          if grep --fixed-strings --quiet "$previous_marker" "$config_file"; then
-            echo "The value found before the first change is already recorded in \"$config_file\"."
+          if ! [ -e "$config_file" ] && ! sudo install --mode=644 /dev/null "$config_file"; then
+            >&2 echo "Failed to create \"$config_file\"."
           else
-            previous_value="$(sysctl --values "$kernel_key" 2>/dev/null | head --lines=1)"
-            if [ -z "$previous_value" ]; then
-              echo "Could not read the current value of \"$kernel_key\"; recording it as unset."
-              previous_value='unset'
+            if grep --fixed-strings --quiet "$previous_marker" "$config_file"; then
+              echo "The value found before the first change is already recorded in \"$config_file\"."
+            else
+              previous_value="$current_value"
+              if [ -z "$previous_value" ]; then
+                echo "Could not read the current value of \"$kernel_key\"; recording it as unset."
+                previous_value='unset'
+              fi
+              printf '%s%s\n' "$previous_marker" "$previous_value" | sudo tee -a "$config_file" > /dev/null
+              echo "Recorded the previous value of \"$kernel_key\" as \"$previous_value\"."
             fi
-            printf '%s%s\n' "$previous_marker" "$previous_value" | sudo tee -a "$config_file" > /dev/null
-            echo "Recorded the previous value of \"$kernel_key\" as \"$previous_value\"."
+            if ! sudo sed --in-place "\|^[[:space:]]*$kernel_key[[:space:]]*=|d" "$config_file"; then
+              >&2 echo "Failed to update \"$config_file\"."
+            elif ! printf '%s = %s\n' "$kernel_key" "$kernel_value" | sudo tee -a "$config_file" > /dev/null; then
+              >&2 echo "Failed to write \"$kernel_key\" to \"$config_file\"."
+            else
+              echo "Successfully persisted \"$kernel_key = $kernel_value\" in \"$config_file\"."
+            fi
           fi
-          if ! sudo sed --in-place "\|^[[:space:]]*$kernel_key[[:space:]]*=|d" "$config_file"; then
-            >&2 echo "Failed to update \"$config_file\"."
-          elif ! printf '%s = %s\n' "$kernel_key" "$kernel_value" | sudo tee -a "$config_file" > /dev/null; then
-            >&2 echo "Failed to write \"$kernel_key\" to \"$config_file\"."
+          if sudo sysctl --write "$kernel_key=$kernel_value" > /dev/null 2>&1; then
+            echo "Successfully applied \"$kernel_key = $kernel_value\" to the running kernel."
           else
-            echo "Successfully persisted \"$kernel_key = $kernel_value\" in \"$config_file\"."
+            >&2 echo "Failed to apply \"$kernel_key\" to the running kernel; it applies after a reboot."
           fi
-        fi
-        if sudo sysctl --write "$kernel_key=$kernel_value" > /dev/null 2>&1; then
-          echo "Successfully applied \"$kernel_key = $kernel_value\" to the running kernel."
-        else
-          >&2 echo "Failed to apply \"$kernel_key\" to the running kernel; it applies after a reboot."
         fi
       fi
     revertCode: |-

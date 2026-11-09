@@ -122,7 +122,11 @@ if (($windowsVersion.Major -lt 10) -or ($windowsVersion.Build -lt 22621)) {
 
 if ($Action -eq 'Disable') {
     Save-OriginalState
-    New-Item -Path $policyPath -Force | Out-Null
+    # Guarded because `New-Item -Force` on an existing registry key deletes and re-creates it,
+    # which would wipe any other Paint policy set by Group Policy or MDM.
+    if (-not (Test-Path -LiteralPath $policyPath)) {
+        New-Item -Path $policyPath -Force | Out-Null
+    }
     foreach ($name in $valueNames) {
         New-ItemProperty -LiteralPath $policyPath -Name $name -PropertyType DWord -Value 1 -Force | Out-Null
         Write-Host "Disabled Paint feature through policy `"$name`"."

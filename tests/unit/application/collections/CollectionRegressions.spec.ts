@@ -54,7 +54,110 @@ describe('compiled collection regressions', () => {
     ]));
   });
 
+  it('never ends the generated file from inside a selected script', () => {
+    /*
+      Every selected script is pasted inline into one file, so an `exit` in one of them ends the
+      whole run: the scripts after it never run, and the Windows `pause` never shows the error
+      before a double-clicked window closes. The embedded PowerShell runner and the macOS
+      preference helper both did this on failure. Report the failure and carry on instead.
+      PowerShell lines are excluded because `Exit` there only ends that PowerShell process.
+    */
+    const batchExit = /(^|[\s&|(])exit(\s|$)/i;
+    const shellExit = /^(.*[;&|]\s*)?exit\b/;
+    // Quoted text is not this shell's code, e.g. `awk '{ print $2; exit }'` only ends awk.
+    const withoutQuotedText = (line: string) => line.replace(/'[^']*'|"(?:[^"\\]|\\.)*"/g, "''");
+    const offenders = collections.flatMap((collection) => collection
+      .getAllScripts()
+      .flatMap((script) => (['execute', 'revert'] as const).flatMap((kind) => (
+        (script.code[kind] ?? '')
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter((line) => (collection.os === OperatingSystem.Windows
+            ? !/^PowerShell\s/i.test(line) && batchExit.test(line)
+            : shellExit.test(withoutQuotedText(line))))
+          .map((line) => `${OperatingSystem[collection.os]}: ${script.name} (${kind}): ${line}`)
+      ))));
+
+    expect(offenders).to.deep.equal([], formatAssertionMessage([
+      'A script ends the whole generated file:',
+      ...offenders,
+    ]));
+  });
+
+  it('passes file names to inline shell code as arguments, never inside the code', () => {
+    /*
+      `find -exec sh -c '... file="{}" ...' {} \;` pastes each file name into the code, which runs
+      as root, so a downloaded file named `$(...).zip` ran its own commands. Pass it as `$1`
+      instead: `-exec bash -c '... file="$1" ...' _ {} \;`.
+    */
+    const inlineShellCode = /\b(?:ba)?sh\s+-c[\s\\]*'([^']*)'/g;
+    const offenders = collections
+      .filter((collection) => collection.os !== OperatingSystem.Windows)
+      .flatMap((collection) => collection.getAllScripts())
+      .filter((script) => [script.code.execute, script.code.revert ?? '']
+        .some((code) => [...code.matchAll(inlineShellCode)].some((match) => match[1].includes('{}'))))
+      .map((script) => script.name);
+
+    expect(offenders).to.deep.equal([]);
+  });
+
   describe('Windows', () => {
+    it('keeps every generated batch line within the cmd line-length limit', () => {
+      /*
+        cmd rejects a line longer than 8191 characters once `%VAR%` references are expanded ("The
+        input line is too long."), so that command never runs. The longest generated lines are
+        within a few dozen characters of the limit, so expansion is estimated with long but
+        realistic values: a profile folder name of 32 characters and the longest program folder.
+      */
+      const maximumLineLength = 8191;
+      const userProfileFolder = `C:\\Users\\${'u'.repeat(32)}\\AppData\\Local`;
+      const expand = (line: string) => line
+        .replace(/%(LOCALAPPDATA|APPDATA|USERPROFILE|TEMP|TMP)%/gi, userProfileFolder)
+        .replace(/%[A-Za-z_]+(\(x86\))?%/gi, 'C:\\Program Files (x86)');
+      const offenders = getScripts(OperatingSystem.Windows).flatMap((script) => (
+        (['execute', 'revert'] as const).flatMap((kind) => (script.code[kind] ?? '')
+          .split(/\r?\n/)
+          .map((line) => expand(line).length)
+          .filter((length) => length > maximumLineLength)
+          .map((length) => `${script.name} (${kind}): ${length} characters`))
+      ));
+
+      expect(offenders).to.deep.equal([], formatAssertionMessage([
+        `A generated line exceeds ${maximumLineLength} characters after expansion:`,
+        ...offenders,
+      ]));
+    });
+
+    it('opts out of Internet Explorer CEIP with the value the policy maps to "enabled"', () => {
+      // inetres.admx maps the enabled "Prevent participation" policy to 0. Writing 1 allowed it.
+      const script = getScript(
+        OperatingSystem.Windows,
+        'Disable Internet Explorer Customer Experience Improvement Program (CEIP) participation',
+      );
+
+      const write = script.code.execute
+        .split('\n')
+        .find((line) => line.includes("/v 'DisableCustomerImprovementProgram'"));
+
+      expect(write).to.include("$data =  '0';");
+    });
+
+    it('writes User Configuration policies to the user hive', () => {
+      // These ADMX policies are `class="User"`, so Windows only reads them from HKCU.
+      const policies = [
+        { script: 'Disable tailored experiences with diagnostic data', valueName: 'DisableTailoredExperiencesWithDiagnosticData' },
+        { script: 'Disable Windows Spotlight (shows random wallpapers on lock screen)', valueName: 'DisableWindowsSpotlightFeatures' },
+        { script: 'Disable local search history (breaks recent suggestions)', valueName: 'DisableSearchHistory' },
+      ];
+      for (const policy of policies) {
+        const hkcuWrite = getScript(OperatingSystem.Windows, policy.script).code.execute
+          .split('\n')
+          .find((line) => line.includes(`'${policy.valueName}'`) && /HKCU\\Software\\Policies/i.test(line));
+
+        expect(hkcuWrite, policy.script).to.not.equal(undefined);
+      }
+    });
+
     it('keeps the CPU vendor guards of the Spectre and Meltdown mitigation', () => {
       // `RunPowerShellWithOptionalElevation` used to read an undeclared `$setupCode`, which
       // silently dropped every caller-provided guard. Both vendor-specific values were then
@@ -82,8 +185,29 @@ describe('compiled collection regressions', () => {
       // capability removal was irreversible in practice.
       const script = getScript(OperatingSystem.Windows, 'Remove ".NET Framework" capability');
 
-      expect(script.code.revert).to.include('$_.Name');
+      expect(script.code.revert).to.include('Add-WindowsCapability -Online -Name $capability.Name');
       expect(script.code.revert).to.not.include('"$capability.Name"');
+    });
+
+    it('keeps double quotes in registry string data', () => {
+      // Windows PowerShell 5.1 passes `"` to reg.exe unescaped, which stripped them: the Outlook
+      // block list was written as `[MS_Outlook]` instead of the JSON `["MS_Outlook"]`.
+      const script = getScript(OperatingSystem.Windows, 'Disable Outlook automatic installation');
+
+      expect(script.code.execute).to.include(
+        "New-ItemProperty -LiteralPath $providerPath -Name 'BlockedOobeUpdaters'",
+      );
+    });
+
+    it('re-adds only the capabilities that privacy.sexy removed', () => {
+      // Revert used to add every capability matching the prefix, so reverting "Remove OpenSSH
+      // Server" installed sshd on machines that never had it.
+      const script = getScript(OperatingSystem.Windows, 'Remove ".NET Framework" capability');
+
+      expect(script.code.execute).to.include("'privacy.sexy\\state\\capabilities'");
+      expect(script.code.execute).to.include("Where-Object { \"^\"\"$($_.State)\"^\"\" -eq 'Installed' }");
+      expect(script.code.execute).to.include('[IO.File]::WriteAllText($statePath, $capability.Name)');
+      expect(script.code.revert).to.include('if (-Not (Test-Path -LiteralPath $statePath)) { continue; }');
     });
 
     it('restores optional features only when privacy.sexy disabled them', () => {
@@ -96,6 +220,33 @@ describe('compiled collection regressions', () => {
       );
       expect(script.code.revert).to.include('Remove-Item -LiteralPath $statePath -Force');
       expect(script.code.revert).to.not.include('$disabledByDefault');
+    });
+
+    it('never splits a PowerShell call across lines inside its argument list', () => {
+      /*
+        The compiler joins every source line with `; `, so a call whose argument list opens at the
+        end of a line becomes `Method(; $argument; )`, a parse error that aborts the whole
+        `-Command` before a single statement runs. `DisableWindowsFeature` hit this and silently
+        disabled nothing.
+
+        `@(` and `$(` are exempt: they hold statement lists, so `@(; $item; )` and `$(; $item; )`
+        parse, and the collection relies on the first. Keep such a call on one line, or continue
+        it with a backtick. `CompiledPowerShellSyntax.spec.ts` checks the same output with the
+        real parser wherever PowerShell is installed; this pattern keeps the most common case
+        covered everywhere else.
+      */
+      const brokenCall = /(?<![@$])\(;/;
+      const offenders = getScripts(OperatingSystem.Windows).flatMap((script) => (
+        (['execute', 'revert'] as const)
+          .map((kind) => ({ kind, code: script.code[kind] ?? '' }))
+          .filter((candidate) => brokenCall.test(candidate.code))
+          .map((candidate) => `${script.name} (${candidate.kind})`)
+      ));
+
+      expect(offenders).to.deep.equal([], formatAssertionMessage([
+        'A call has its argument list broken across lines, so the generated code does not parse:',
+        ...offenders,
+      ]));
     });
 
     it('adds a rule when blocking executables from running', () => {
@@ -319,6 +470,24 @@ describe('compiled collection regressions', () => {
 
       expect(script).to.not.equal(undefined);
       expect(script?.code.revert).to.match(/job_name='[^']+'/);
+    });
+
+    it('edits Visual Studio Code settings as the invoking user', () => {
+      // As root, the helper created `~/.local/state/privacy.sexy` root-owned, so the user-level
+      // Firefox scripts that run later could no longer record their own state there.
+      const script = getScript(OperatingSystem.Linux, 'Disable Visual Studio Code telemetry');
+
+      expect(script.code.execute).to.include('run_as_target_user python3 <<EOF');
+      expect(script.code.revert).to.include('run_as_target_user python3 <<EOF');
+    });
+
+    it('removes pacman packages by exact name and without cascading to dependents', () => {
+      const script = getScripts(OperatingSystem.Linux)
+        .find((candidate) => candidate.code.execute.includes('sudo pacman -R'));
+
+      expect(script?.code.execute).to.include('pacman -Q "$pkg_package_name"');
+      expect(script?.code.execute).to.not.include('pacman -Qs');
+      expect(script?.code.execute).to.include('sudo pacman -Rns ');
     });
 
     it('clears user-owned paths rather than filesystem-root paths', () => {

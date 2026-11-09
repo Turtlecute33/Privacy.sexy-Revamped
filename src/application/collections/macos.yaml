@@ -678,10 +678,20 @@ actions:
                             rm -rfv ~/Library/Application\ Support/Google/DriveFS/[0-9a-zA-Z]*/content_cache &>/dev/null
                     -
                         name: Clear Composer cache
-                        code: |-
-                            if type "composer" &> /dev/null; then
-                                composer clearcache &> /dev/null
-                            fi
+                        # Runs as the invoking user, like the other developer tools below: they are found through the
+                        # user's `PATH` and usually live in user-writable locations, so running them as root let any
+                        # program that replaced one of them run with administrator rights.
+                        call:
+                            function: RunAsTargetUser
+                            parameters:
+                                code: |-
+                                    if ! run_as_target_user type composer &> /dev/null; then
+                                        echo 'Skipping, Composer is not installed.'
+                                    elif run_as_target_user composer clearcache &> /dev/null; then
+                                        echo 'Successfully cleared the Composer cache.'
+                                    else
+                                        >&2 echo 'Failed to clear the Composer cache.'
+                                    fi
                     -
                         name: Clear Homebrew cache
                         # Homebrew refuses to run as root, and the generated script re-executes itself as
@@ -703,10 +713,21 @@ actions:
                                     fi
                     -
                         name: Clear old Ruby gem versions
-                        code: |-
-                            if type "gem" &> /dev/null; then
-                                gem cleanup &>/dev/null
-                            fi
+                        docs: |-
+                            This script runs `gem cleanup` as your user account, which removes old versions of the gems you
+                            installed. Gems that were installed system-wide with `sudo gem install` are left in place,
+                            because the script does not run `gem` with administrator rights.
+                        call:
+                            function: RunAsTargetUser
+                            parameters:
+                                code: |-
+                                    if ! run_as_target_user type gem &> /dev/null; then
+                                        echo 'Skipping, RubyGems is not installed.'
+                                    elif run_as_target_user gem cleanup &> /dev/null; then
+                                        echo 'Successfully cleared old Ruby gem versions.'
+                                    else
+                                        >&2 echo 'Failed to clear some old Ruby gem versions.'
+                                    fi
                     -
                         name: Clear unused Docker data
                         docs: |-
@@ -741,30 +762,66 @@ actions:
                             - Remove all images not used by any container.
                             - Remove all build cache.
 
+                            The command runs as your user account, so it uses your Docker context and configuration.
+
                             [1]: https://web.archive.org/web/20230810171526/https://docs.docker.com/engine/reference/commandline/system_prune/ "docker system prune | Docker Documentation"
-                        code: |-
-                            if type "docker" &> /dev/null; then
-                                docker system prune -af
-                            fi
+                        call:
+                            function: RunAsTargetUser
+                            parameters:
+                                code: |-
+                                    if ! run_as_target_user type docker &> /dev/null; then
+                                        echo 'Skipping, Docker is not installed.'
+                                    elif ! run_as_target_user docker system prune -af; then
+                                        >&2 echo 'Failed to clear unused Docker data. Is Docker running?'
+                                    fi
                     -
                         name: Clear Pyenv-Virtualenv cache
-                        code: |-
-                            if [ "$PYENV_VIRTUALENV_CACHE_PATH" ]; then
-                                rm -rfv $PYENV_VIRTUALENV_CACHE_PATH &>/dev/null
-                            fi
+                        docs: |-
+                            This script empties the download cache that `pyenv-virtualenv` shares with `pyenv install`.
+
+                            The cache is `~/.pyenv/cache`, which both tools use when `PYENV_ROOT`,
+                            `PYENV_VIRTUALENV_CACHE_PATH` and `PYTHON_BUILD_CACHE_PATH` are not set. Those variables, when
+                            set in your shell profile, are not visible to this script, which runs with administrator rights in
+                            a clean environment, so a cache in a custom location is not cleared. The cache directory itself is
+                            kept, because `pyenv install` only caches downloads while it exists.
+                        call:
+                            function: RunAsTargetUser
+                            parameters:
+                                code: |-
+                                    pyenv_cache_directory="$target_home/.pyenv/cache"
+                                    if [ -z "$target_home" ] || [ ! -d "$pyenv_cache_directory" ]; then
+                                        echo 'Skipping, no pyenv download cache was found.'
+                                    elif run_as_target_user find "$pyenv_cache_directory" -mindepth 1 -maxdepth 1 \
+                                            -exec rm -rf -- {} + ; then
+                                        echo "Successfully cleared \"$pyenv_cache_directory\"."
+                                    else
+                                        >&2 echo "Failed to clear \"$pyenv_cache_directory\"."
+                                    fi
                     -
                         name: Clear NPM cache
-                        code: |-
-                            if type "npm" &> /dev/null; then
-                                npm cache clean --force
-                            fi
+                        call:
+                            function: RunAsTargetUser
+                            parameters:
+                                code: |-
+                                    if ! run_as_target_user type npm &> /dev/null; then
+                                        echo 'Skipping, npm is not installed.'
+                                    elif ! run_as_target_user npm cache clean --force; then
+                                        >&2 echo 'Failed to clear the npm cache.'
+                                    fi
                     -
                         name: Clear Yarn cache
-                        code: |-
-                            if type "yarn" &> /dev/null; then
-                                echo 'Cleanup Yarn Cache...'
-                                yarn cache clean --force
-                            fi
+                        call:
+                            function: RunAsTargetUser
+                            parameters:
+                                code: |-
+                                    if ! run_as_target_user type yarn &> /dev/null; then
+                                        echo 'Skipping, Yarn is not installed.'
+                                    else
+                                        echo 'Cleanup Yarn Cache...'
+                                        if ! run_as_target_user yarn cache clean --force; then
+                                            >&2 echo 'Failed to clear the Yarn cache.'
+                                        fi
+                                    fi
             -
                 category: Clear iOS usage data
                 children:
@@ -1269,14 +1326,27 @@ actions:
                         deleteOnRevert: 'true'
             -
                 name: Remove Google Software Update service
-                code: |-
-                    googleUpdateFile=~/Library/Google/GoogleSoftwareUpdate/GoogleSoftwareUpdate.bundle/Contents/Resources/ksinstall
-                    if [ -f "$googleUpdateFile" ]; then
-                        $googleUpdateFile --nuke
-                        echo 'Uninstalled Google update'
-                    else
-                        echo 'Google update file does not exist'
-                    fi
+                docs: |-
+                    This script removes the per-user copy of Google Software Update (Keystone) by running its own
+                    uninstaller, `ksinstall --nuke`, from `~/Library/Google/GoogleSoftwareUpdate`.
+
+                    The uninstaller runs as your user account, not as an administrator: it lives in a folder that any
+                    program running as you can modify. A system-wide copy in `/Library/Google` is not removed.
+                # `ksinstall` lives in the user-writable `~/Library`, so running it as root handed administrator
+                # rights to whatever had replaced it. The per-user install also registers per-user launch agents,
+                # which only the user's own `launchctl` session can unload.
+                call:
+                    function: RunAsTargetUser
+                    parameters:
+                        code: |-
+                            google_update_tool="$HOME/Library/Google/GoogleSoftwareUpdate/GoogleSoftwareUpdate.bundle/Contents/Resources/ksinstall"
+                            if [ ! -f "$google_update_tool" ]; then
+                                echo 'Skipping, Google Software Update is not installed for this user.'
+                            elif run_as_target_user "$google_update_tool" --nuke; then
+                                echo 'Uninstalled Google Software Update.'
+                            else
+                                >&2 echo 'Failed to uninstall Google Software Update.'
+                            fi
             -
                 name: Disable Homebrew user behavior analytics
                 recommend: standard
@@ -1489,8 +1559,57 @@ actions:
                 children:
                     -
                         name: Disable remote management service
-                        code: sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart -deactivate -stop
-                        revertCode: sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart -activate -restart -agent -console
+                        docs: |-
+                            This script turns off Remote Management (Apple Remote Desktop), which lets other computers
+                            observe and control this Mac, using `kickstart -deactivate -stop` [1] [2].
+
+                            The script first checks whether Remote Management is set to start, and does nothing if it is
+                            not. Only when this script turned it off does reverting turn it back on, so reverting never
+                            enables Remote Management on a Mac where it was never on.
+
+                            > **Note:** Turning off Remote Management this way also turns off Screen Sharing. On macOS 12.1
+                            > and later, `kickstart` cannot enable Screen Sharing [1], so after reverting you may need to
+                            > allow it again in System Settings > General > Sharing.
+
+                            [1]: https://web.archive.org/web/20250125164950/https://support.apple.com/guide/remote-desktop/enable-remote-management-apd8b1c65bd/mac "Enable remote management for Remote Desktop - Apple Support | support.apple.com"
+                            [2]: https://web.archive.org/web/20231211024827/https://support.apple.com/en-us/101439 "Use the kickstart command-line utility in Apple Remote Desktop - Apple Support | support.apple.com"
+                        # Revert used to run `kickstart -activate` unconditionally, which turned Remote Management on
+                        # for Macs where it had never been on. `kickstart -activate` writes `enabled` to
+                        # `RemoteManagement.launchd`, the `KeepAlive` path of the launch agent that starts ARDAgent, and
+                        # `-deactivate` deletes it, so that file is what tells whether Remote Management is on.
+                        # `mdmclient QuerySecurityInfo` is deliberately not used: its `RemoteDesktopEnabled = 1` also
+                        # appears when only plain Screen Sharing is running, and treating that as "on" would make
+                        # revert enable Remote Management where it had never been on.
+                        code: |-
+                            kickstart_tool='/System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart'
+                            remote_management_flag='/Library/Application Support/Apple/Remote Desktop/RemoteManagement.launchd'
+                            remote_management_state='/var/db/privacy.sexy-remote-management-state'
+                            if grep -q 'enabled' "$remote_management_flag" 2>/dev/null; then
+                                printf 'on\n' > "$remote_management_state"
+                                chmod 600 "$remote_management_state"
+                                if sudo "$kickstart_tool" -deactivate -stop; then
+                                    echo 'Disabled Remote Management.'
+                                else
+                                    rm -f "$remote_management_state"
+                                    >&2 echo 'Failed to disable Remote Management.'
+                                fi
+                            else
+                                echo 'Skipping, Remote Management is already disabled.'
+                            fi
+                        revertCode: |-
+                            kickstart_tool='/System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart'
+                            remote_management_flag='/Library/Application Support/Apple/Remote Desktop/RemoteManagement.launchd'
+                            remote_management_state='/var/db/privacy.sexy-remote-management-state'
+                            if [ ! -e "$remote_management_state" ]; then
+                                echo 'Skipping, no Remote Management state recorded by privacy.sexy was found.'
+                            elif grep -q 'enabled' "$remote_management_flag" 2>/dev/null; then
+                                >&2 echo 'Skipping revert because Remote Management changed after privacy.sexy disabled it.'
+                            elif sudo "$kickstart_tool" -activate -restart -agent -console; then
+                                rm -f "$remote_management_state"
+                                echo 'Restored Remote Management to its original enabled state.'
+                            else
+                                >&2 echo 'Failed to restore Remote Management.'
+                            fi
                     -
                         name: Remove Apple Remote Desktop Settings
                         code: |-
@@ -1652,15 +1771,41 @@ actions:
                         deleteOnRevert: 'true'
             -
                 name: Disable display of recent applications on Dock
-                docs: https://web.archive.org/web/20210516210037/https://developer.apple.com/documentation/devicemanagement/dock
+                docs: |-
+                    This script hides the section of the Dock that shows recently used applications, by setting the
+                    `show-recents` preference of the Dock to `false` [1].
+
+                    The Dock only reads this preference when it starts, so the script restarts the Dock afterwards,
+                    both when applying and when reverting. The Dock disappears for a moment and comes back on its
+                    own.
+
+                    [1]: https://web.archive.org/web/20210516210037/https://developer.apple.com/documentation/devicemanagement/dock "Dock | Apple Developer Documentation | developer.apple.com"
                 call:
-                    function: SetUserPreference
-                    parameters:
-                        domain: com.apple.dock
-                        key: show-recents
-                        valueType: bool
-                        value: 'false'
-                        deleteOnRevert: 'true'
+                    -
+                        function: SetUserPreference
+                        parameters:
+                            domain: com.apple.dock
+                            key: show-recents
+                            valueType: bool
+                            value: 'false'
+                            deleteOnRevert: 'true'
+                    -
+                        # As the invoking user, so only their own Dock restarts: as root, `killall Dock` also
+                        # restarted the Dock of every other signed-in user.
+                        function: RunAsTargetUser
+                        parameters:
+                            code: |-
+                                if run_as_target_user killall Dock 2>/dev/null; then
+                                    echo 'Restarted the Dock to apply the change.'
+                                else
+                                    echo 'The Dock is not running; the change applies the next time it starts.'
+                                fi
+                            revertCode: |-
+                                if run_as_target_user killall Dock 2>/dev/null; then
+                                    echo 'Restarted the Dock to apply the change.'
+                                else
+                                    echo 'The Dock is not running; the change applies the next time it starts.'
+                                fi
             -
                 name: Disable AirDrop file sharing
                 recommend: strict
@@ -2004,12 +2149,72 @@ actions:
                     -
                         name: Enable application firewall
                         recommend: standard
-                        docs:
-                            - https://web.archive.org/web/20241125065059/https://www.stigviewer.com/stig/apple_os_x_10.13/2018-10-01/finding/V-81681
-                            - https://web.archive.org/web/20250313120219/https://daiderd.com/nix-darwin/manual/index.html
-                            - https://web.archive.org/web/20211209015035/https://developer.apple.com/documentation/devicemanagement/firewall
-                        code: sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on
-                        revertCode: sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate off
+                        docs: |-
+                            This script turns on the macOS application firewall [1] [2] [3].
+
+                            The script records whether the firewall was already on. Reverting turns it off only if this
+                            script turned it on, so a firewall that you, your organization or a configuration profile had
+                            already enabled stays on.
+
+                            [1]: https://web.archive.org/web/20241125065059/https://www.stigviewer.com/stig/apple_os_x_10.13/2018-10-01/finding/V-81681 "Apple OS X 10.13 STIG V-81681 | www.stigviewer.com"
+                            [2]: https://web.archive.org/web/20250313120219/https://daiderd.com/nix-darwin/manual/index.html "nix-darwin manual | daiderd.com"
+                            [3]: https://web.archive.org/web/20211209015035/https://developer.apple.com/documentation/devicemanagement/firewall "Firewall | Apple Developer Documentation | developer.apple.com"
+                        # Revert used to run `--setglobalstate off` unconditionally, which turned off a firewall that
+                        # was on before privacy.sexy ran (for example one enabled by the user or by MDM).
+                        # `--getglobalstate` prints `Firewall is enabled. (State = 1)`, `(State = 0)` when off, and
+                        # `(State = 2)` when it blocks all incoming connections; state 2 counts as already on.
+                        code: |-
+                            firewall_tool='/usr/libexec/ApplicationFirewall/socketfilterfw'
+                            firewall_state_file='/var/db/privacy.sexy-application-firewall-state'
+                            firewall_state_pattern='State = ([0-9]+)'
+                            firewall_output="$("$firewall_tool" --getglobalstate 2>/dev/null)"
+                            current_state=''
+                            if [[ "$firewall_output" =~ $firewall_state_pattern ]]; then
+                                current_state="${BASH_REMATCH[1]}"
+                            elif [[ "$firewall_output" == *disabled* ]]; then
+                                current_state='0'
+                            elif [[ "$firewall_output" == *enabled* ]]; then
+                                current_state='1'
+                            fi
+                            if [ "$current_state" = '0' ]; then
+                                printf 'off\n' > "$firewall_state_file"
+                                chmod 600 "$firewall_state_file"
+                                if sudo "$firewall_tool" --setglobalstate on; then
+                                    echo 'Enabled the application firewall.'
+                                else
+                                    rm -f "$firewall_state_file"
+                                    >&2 echo 'Failed to enable the application firewall.'
+                                fi
+                            elif [ -n "$current_state" ]; then
+                                echo 'Skipping, the application firewall is already enabled.'
+                            else
+                                >&2 echo "Could not determine the application firewall state: $firewall_output"
+                            fi
+                        revertCode: |-
+                            firewall_tool='/usr/libexec/ApplicationFirewall/socketfilterfw'
+                            firewall_state_file='/var/db/privacy.sexy-application-firewall-state'
+                            firewall_state_pattern='State = ([0-9]+)'
+                            if [ ! -e "$firewall_state_file" ]; then
+                                echo 'Skipping, no application firewall state recorded by privacy.sexy was found.'
+                            else
+                                firewall_output="$("$firewall_tool" --getglobalstate 2>/dev/null)"
+                                current_state=''
+                                if [[ "$firewall_output" =~ $firewall_state_pattern ]]; then
+                                    current_state="${BASH_REMATCH[1]}"
+                                elif [[ "$firewall_output" == *disabled* ]]; then
+                                    current_state='0'
+                                elif [[ "$firewall_output" == *enabled* ]]; then
+                                    current_state='1'
+                                fi
+                                if [ "$current_state" != '1' ]; then
+                                    >&2 echo 'Skipping revert because the application firewall changed after privacy.sexy enabled it.'
+                                elif sudo "$firewall_tool" --setglobalstate off; then
+                                    rm -f "$firewall_state_file"
+                                    echo 'Restored the application firewall to its original disabled state.'
+                                else
+                                    >&2 echo 'Failed to restore the application firewall.'
+                                fi
+                            fi
                     -
                         name: Enable firewall logging
                         recommend: standard
@@ -2048,12 +2253,67 @@ actions:
                     -
                         name: Enable stealth mode
                         recommend: standard
-                        docs:
-                            - https://web.archive.org/web/20241125030015/https://www.stigviewer.com/stig/apple_os_x_10.8_mountain_lion_workstation/2015-02-10/finding/V-51327
-                            - https://web.archive.org/web/20250313120219/https://daiderd.com/nix-darwin/manual/index.html
-                            - https://web.archive.org/web/20211209015035/https://developer.apple.com/documentation/devicemanagement/firewall
-                        code: sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode on
-                        revertCode: sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode off
+                        docs: |-
+                            This script turns on stealth mode of the macOS application firewall, so this Mac does not answer
+                            probing requests such as ping [1] [2] [3].
+
+                            The script records whether stealth mode was already on. Reverting turns it off only if this
+                            script turned it on, so stealth mode that you, your organization or a configuration profile had
+                            already enabled stays on.
+
+                            [1]: https://web.archive.org/web/20241125030015/https://www.stigviewer.com/stig/apple_os_x_10.8_mountain_lion_workstation/2015-02-10/finding/V-51327 "Apple OS X 10.8 STIG V-51327 | www.stigviewer.com"
+                            [2]: https://web.archive.org/web/20250313120219/https://daiderd.com/nix-darwin/manual/index.html "nix-darwin manual | daiderd.com"
+                            [3]: https://web.archive.org/web/20211209015035/https://developer.apple.com/documentation/devicemanagement/firewall "Firewall | Apple Developer Documentation | developer.apple.com"
+                        # Revert used to run `--setstealthmode off` unconditionally, which turned off stealth mode that
+                        # was on before privacy.sexy ran. `--getstealthmode` prints `Stealth mode enabled`/`disabled`
+                        # on older releases and `Firewall stealth mode is on`/`off` on newer ones (macOS 15 and later);
+                        # its output is not a stable interface, so anything else is reported instead of guessed.
+                        code: |-
+                            firewall_tool='/usr/libexec/ApplicationFirewall/socketfilterfw'
+                            stealth_state_file='/var/db/privacy.sexy-firewall-stealth-mode-state'
+                            stealth_output="$("$firewall_tool" --getstealthmode 2>/dev/null | tr '[:upper:]' '[:lower:]')"
+                            current_state=''
+                            if [[ "$stealth_output" == *disabled* ]] || [[ "$stealth_output" == *'is off'* ]]; then
+                                current_state='off'
+                            elif [[ "$stealth_output" == *enabled* ]] || [[ "$stealth_output" == *'is on'* ]]; then
+                                current_state='on'
+                            fi
+                            if [ "$current_state" = 'off' ]; then
+                                printf 'off\n' > "$stealth_state_file"
+                                chmod 600 "$stealth_state_file"
+                                if sudo "$firewall_tool" --setstealthmode on; then
+                                    echo 'Enabled stealth mode.'
+                                else
+                                    rm -f "$stealth_state_file"
+                                    >&2 echo 'Failed to enable stealth mode.'
+                                fi
+                            elif [ "$current_state" = 'on' ]; then
+                                echo 'Skipping, stealth mode is already enabled.'
+                            else
+                                >&2 echo "Could not determine the stealth mode state: $stealth_output"
+                            fi
+                        revertCode: |-
+                            firewall_tool='/usr/libexec/ApplicationFirewall/socketfilterfw'
+                            stealth_state_file='/var/db/privacy.sexy-firewall-stealth-mode-state'
+                            if [ ! -e "$stealth_state_file" ]; then
+                                echo 'Skipping, no stealth mode state recorded by privacy.sexy was found.'
+                            else
+                                stealth_output="$("$firewall_tool" --getstealthmode 2>/dev/null | tr '[:upper:]' '[:lower:]')"
+                                current_state=''
+                                if [[ "$stealth_output" == *disabled* ]] || [[ "$stealth_output" == *'is off'* ]]; then
+                                    current_state='off'
+                                elif [[ "$stealth_output" == *enabled* ]] || [[ "$stealth_output" == *'is on'* ]]; then
+                                    current_state='on'
+                                fi
+                                if [ "$current_state" != 'on' ]; then
+                                    >&2 echo 'Skipping revert because stealth mode changed after privacy.sexy enabled it.'
+                                elif sudo "$firewall_tool" --setstealthmode off; then
+                                    rm -f "$stealth_state_file"
+                                    echo 'Restored stealth mode to its original disabled state.'
+                                else
+                                    >&2 echo 'Failed to restore stealth mode.'
+                                fi
+                            fi
                     -
                         category: Disable automatic permission for incoming traffic in applications
                         children:
@@ -2558,21 +2818,48 @@ actions:
                     -
                         name: Disable local printer sharing with other computers
                         recommend: standard
-                        docs: https://web.archive.org/web/20250313120855/https://www.cups.org/doc/man-cupsctl.html
-                        code: cupsctl --no-share-printers
-                        revertCode: cupsctl --share-printers
+                        docs: |-
+                            This script stops this Mac from sharing its printers with other computers on the network, using
+                            `cupsctl --no-share-printers` [1].
+
+                            Printer sharing is off by default. The script records whether it was on, and reverting turns it
+                            back on only if this script turned it off.
+
+                            [1]: https://web.archive.org/web/20250313120855/https://www.cups.org/doc/man-cupsctl.html "cupsctl(8) | CUPS | www.cups.org"
+                        call:
+                            function: DisableCupsSetting
+                            parameters:
+                                setting: share_printers
                     -
                         name: Disable printing from external addresses, including the internet
                         recommend: standard
-                        docs: https://web.archive.org/web/20250313120855/https://www.cups.org/doc/man-cupsctl.html
-                        code: cupsctl --no-remote-any
-                        revertCode: cupsctl --remote-any
+                        docs: |-
+                            This script stops the printing system from accepting connections from any address, including
+                            the internet, using `cupsctl --no-remote-any` [1].
+
+                            This access is off by default. The script records whether it was on, and reverting turns it back
+                            on only if this script turned it off.
+
+                            [1]: https://web.archive.org/web/20250313120855/https://www.cups.org/doc/man-cupsctl.html "cupsctl(8) | CUPS | www.cups.org"
+                        call:
+                            function: DisableCupsSetting
+                            parameters:
+                                setting: remote_any
                     -
                         name: Disable remote printer administration
                         recommend: standard
-                        docs: https://web.archive.org/web/20250313120855/https://www.cups.org/doc/man-cupsctl.html
-                        code: cupsctl --no-remote-admin
-                        revertCode: cupsctl --remote-admin
+                        docs: |-
+                            This script stops other computers from administering the printing system of this Mac, using
+                            `cupsctl --no-remote-admin` [1].
+
+                            Remote administration is off by default. The script records whether it was on, and reverting
+                            turns it back on only if this script turned it off.
+
+                            [1]: https://web.archive.org/web/20250313120855/https://www.cups.org/doc/man-cupsctl.html "cupsctl(8) | CUPS | www.cups.org"
+                        call:
+                            function: DisableCupsSetting
+                            parameters:
+                                setting: remote_admin
     -
         category: Privacy over security
         docs: |-
@@ -2635,14 +2922,17 @@ actions:
                                 # Not part of a preset: stripping the attribute means macOS no longer checks those
                                 # files before they run for the first time.
                                 docs: https://web.archive.org/web/20250313121726/https://superuser.com/questions/28384/what-should-i-do-about-com-apple-quarantine
+                                # The file name reaches the shell as an argument (`$1`), never inside the code: pasting
+                                # `{}` into the quoted code let a downloaded file named, for example, `$(...).zip` run
+                                # commands as root. `bash`, not `sh`, because the code uses `[[`.
                                 code: |-
                                     find ~/Downloads        \
                                             -type f         \
                                             -exec           \
-                                                sh -c       \
+                                                bash -c     \
                                                     '
                                                         attr="com.apple.quarantine"
-                                                        file="{}"
+                                                        file="$1"
                                                         if [[ $(xattr "$file") = *$attr* ]]; then
                                                             if xattr -d "$attr" "$file" 2>/dev/null; then
                                                                 echo "🧹 Cleaned attribute from \"$file\""
@@ -2653,7 +2943,7 @@ actions:
                                                             echo "No attribute in \"$file\""
                                                         fi
                                                     '       \
-                                                {} \;
+                                                _ {} \;
                     -
                         category: Disable macOS File Quarantine tracking for downloaded files
                         children:
@@ -2972,36 +3262,119 @@ functions:
         # ❗ Every write goes through `run_as_target_user`. The generated script runs as root with `HOME`
         #   pointed at the invoking user's home, so plain `touch`/`>>` created root-owned `.bash_profile`
         #   and `.zprofile` that the user could no longer edit without sudo.
-        # ❗ `grep -F` and a `\|…|` sed address, because the configuration is a shell command line that
-        #   normally contains `/` and other regex metacharacters.
+        # ❗ A bash login shell reads only the FIRST of `~/.bash_profile`, `~/.bash_login` and `~/.profile`
+        #   that exists. This function used to create `~/.bash_profile` unconditionally, which silently
+        #   stopped bash from reading an existing `~/.profile` (and the `PATH` and other settings in it).
+        #   It now appends to the file bash actually reads and creates `~/.bash_profile` only when none of
+        #   them exists. zsh reads `~/.zprofile` in addition to its other files, so that one is safe to create.
+        # ❗ Revert removes only what this function added: each file it changed is recorded under
+        #   `~/.local/state/privacy.sexy/shell-profile`, with whether privacy.sexy created the file and
+        #   whether it had to add a missing final newline first. Revert drops the one matching line, restores
+        #   the missing final newline, and deletes a file privacy.sexy created once nothing else is in it. A
+        #   line the user wrote themselves is never recorded, so it is never removed.
+        # ❗ Whole-line `grep -xF` and an `awk` string comparison, because the configuration is a shell
+        #   command line that normally contains `/` and other regex metacharacters, and a substring match
+        #   also matched the line when it was commented out. Files are rewritten in place with `tee`, so a
+        #   profile that is a symbolic link (for example into a dotfiles repository) stays one.
         parameters:
             - name: configuration
         call:
             function: RunAsTargetUser
             parameters:
                 code: |-
-                    command='{{ $configuration }}'
-                    for profile_file in "$HOME/.bash_profile" "$HOME/.zprofile"
-                    do
-                        run_as_target_user touch "$profile_file"
-                        if ! grep -qF -- "$command" "$profile_file" 2>/dev/null; then
-                            printf '%s\n' "$command" | run_as_target_user tee -a "$profile_file" > /dev/null
+                    profile_line='{{ $configuration }}'
+                    profile_state_id="$(printf '%s' "$profile_line" | shasum -a 256 | awk '{ print $1 }')"
+                    profile_state_dir="$target_home/.local/state/privacy.sexy/shell-profile/$profile_state_id"
+                    bash_profile_file=''
+                    for profile_candidate in "$HOME/.bash_profile" "$HOME/.bash_login" "$HOME/.profile"; do
+                        if [ -e "$profile_candidate" ]; then
+                            bash_profile_file="$profile_candidate"
+                            break
+                        fi
+                    done
+                    if [ -z "$bash_profile_file" ]; then
+                        bash_profile_file="$HOME/.bash_profile"
+                    fi
+                    for profile_file in "$bash_profile_file" "$HOME/.zprofile"; do
+                        profile_state_file="$profile_state_dir/${profile_file##*/}"
+                        if grep -qxF -- "$profile_line" "$profile_file" 2>/dev/null; then
+                            echo "[$profile_file] No need for any action, already configured"
+                            continue
+                        fi
+                        profile_prefix=''
+                        if [ ! -e "$profile_file" ]; then
+                            profile_origin='created'
+                        elif [ -s "$profile_file" ] && [ -n "$(run_as_target_user tail -c 1 "$profile_file")" ]; then
+                            profile_origin='existing-without-final-newline'
+                            profile_prefix=$'\n'
+                        else
+                            profile_origin='existing'
+                        fi
+                        profile_recorded_origin=''
+                        if [ -f "$profile_state_file" ]; then
+                            profile_recorded_origin="$(run_as_target_user cat "$profile_state_file")"
+                        fi
+                        if [ "$profile_origin" = 'existing' ] && [ "$profile_recorded_origin" = 'created' ]; then
+                            : # An earlier run created this file, so revert may still remove it once it is empty.
+                        elif ! run_as_target_user install -d -m 700 "$profile_state_dir" \
+                            || ! printf '%s\n' "$profile_origin" | run_as_target_user tee "$profile_state_file" > /dev/null; then
+                            >&2 echo "[$profile_file] Skipping, could not record the change in \"$profile_state_dir\"."
+                            continue
+                        fi
+                        if printf '%s%s\n' "$profile_prefix" "$profile_line" | run_as_target_user tee -a "$profile_file" > /dev/null; then
                             echo "[$profile_file] Configured"
                         else
-                            echo "[$profile_file] No need for any action, already configured"
+                            >&2 echo "[$profile_file] Failed to configure"
                         fi
                     done
                 revertCode: |-
-                    command='{{ $configuration }}'
-                    for profile_file in "$HOME/.bash_profile" "$HOME/.zprofile"
-                    do
-                        if grep -qF -- "$command" "$profile_file" 2>/dev/null; then
-                            run_as_target_user sed -i '' "\|$command|d" "$profile_file"
-                            echo "[$profile_file] Reverted configuration"
-                        else
-                            echo "[$profile_file] No need for any action, configuration does not exist"
-                        fi
-                    done
+                    profile_line='{{ $configuration }}'
+                    profile_state_id="$(printf '%s' "$profile_line" | shasum -a 256 | awk '{ print $1 }')"
+                    profile_state_dir="$target_home/.local/state/privacy.sexy/shell-profile/$profile_state_id"
+                    if [ ! -d "$profile_state_dir" ]; then
+                        echo "Skipping, privacy.sexy has no record of adding \"$profile_line\" to a shell profile."
+                    else
+                        for profile_name in .bash_profile .bash_login .profile .zprofile; do
+                            profile_file="$HOME/$profile_name"
+                            profile_state_file="$profile_state_dir/$profile_name"
+                            if [ ! -f "$profile_state_file" ]; then
+                                continue
+                            fi
+                            profile_origin="$(run_as_target_user cat "$profile_state_file")"
+                            profile_restored='true'
+                            if ! grep -qxF -- "$profile_line" "$profile_file" 2>/dev/null; then
+                                echo "[$profile_file] No need for any action, configuration does not exist"
+                            else
+                                profile_content="$(mktemp)"
+                                profile_new_content="$(mktemp)"
+                                if run_as_target_user cat "$profile_file" > "$profile_content" \
+                                    && profile_line="$profile_line" profile_origin="$profile_origin" awk '
+                                        { lines[NR] = $0; if ($0 == ENVIRON["profile_line"]) added = NR }
+                                        END {
+                                            restore_missing_newline = (ENVIRON["profile_origin"] == "existing-without-final-newline" && added == NR)
+                                            for (i = 1; i <= NR; i++) {
+                                                if (i == added) { continue }
+                                                if (restore_missing_newline && i == NR - 1) { printf "%s", lines[i] } else { print lines[i] }
+                                            }
+                                        }' "$profile_content" > "$profile_new_content" \
+                                    && run_as_target_user tee "$profile_file" < "$profile_new_content" > /dev/null; then
+                                    echo "[$profile_file] Reverted configuration"
+                                else
+                                    profile_restored='false'
+                                    >&2 echo "[$profile_file] Failed to revert configuration"
+                                fi
+                                rm -f "$profile_content" "$profile_new_content"
+                            fi
+                            if [ "$profile_restored" = 'true' ]; then
+                                if [ "$profile_origin" = 'created' ] && [ -f "$profile_file" ] && [ ! -s "$profile_file" ]; then
+                                    run_as_target_user rm -f "$profile_file"
+                                    echo "[$profile_file] Removed the empty file that privacy.sexy created"
+                                fi
+                                run_as_target_user rm -f "$profile_state_file"
+                            fi
+                        done
+                        run_as_target_user rmdir "$profile_state_dir" 2>/dev/null || true
+                    fi
     -
         name: RunIfCommandExists # Skips if command does not exist
         #   Marked: refactor-with-partials
@@ -3132,6 +3505,60 @@ functions:
                 fi
             fi
     -
+        name: DisableCupsSetting
+        # 💡 Purpose:
+        #   Turns off a CUPS server setting and turns it back on during revert only if this function turned
+        #   it off. macOS ships with printer sharing, remote access and remote administration all off, so a
+        #   revert that always ran `cupsctl --share-printers` (or `--remote-any`, `--remote-admin`) opened
+        #   them on Macs where they had never been on.
+        #   `cupsctl` without options prints the current settings as `_share_printers=0` and similar lines.
+        # References:
+        #   - https://web.archive.org/web/20250313120855/https://www.cups.org/doc/man-cupsctl.html
+        parameters:
+            - name: setting # Setting as `cupsctl` prints it, without the leading `_`: `share_printers`, `remote_any` or `remote_admin`.
+        code: |-
+            cups_setting='{{ $setting }}'
+            cups_option="${cups_setting//_/-}"
+            cups_state_file="/var/db/privacy.sexy-cups-$cups_option-state"
+            if ! command -v cupsctl > /dev/null 2>&1; then
+                echo 'Skipping because "cupsctl" is not found.'
+            else
+                current_state="$(cupsctl 2>/dev/null | awk -F= -v key="_$cups_setting" '$1 == key && !found { print $2; found = 1 }')"
+                if [ "$current_state" = '1' ]; then
+                    printf 'on\n' > "$cups_state_file"
+                    chmod 600 "$cups_state_file"
+                    if cupsctl "--no-$cups_option"; then
+                        echo "Disabled the CUPS \"$cups_option\" setting."
+                    else
+                        rm -f "$cups_state_file"
+                        >&2 echo "Failed to disable the CUPS \"$cups_option\" setting."
+                    fi
+                elif [ "$current_state" = '0' ]; then
+                    echo "Skipping, the CUPS \"$cups_option\" setting is already off."
+                else
+                    >&2 echo "Could not determine the CUPS \"$cups_option\" setting: $current_state"
+                fi
+            fi
+        revertCode: |-
+            cups_setting='{{ $setting }}'
+            cups_option="${cups_setting//_/-}"
+            cups_state_file="/var/db/privacy.sexy-cups-$cups_option-state"
+            if [ ! -e "$cups_state_file" ]; then
+                echo "Skipping, no CUPS \"$cups_option\" state recorded by privacy.sexy was found."
+            elif ! command -v cupsctl > /dev/null 2>&1; then
+                >&2 echo 'Cannot revert because "cupsctl" is not found.'
+            else
+                current_state="$(cupsctl 2>/dev/null | awk -F= -v key="_$cups_setting" '$1 == key && !found { print $2; found = 1 }')"
+                if [ "$current_state" != '0' ]; then
+                    >&2 echo "Skipping revert because the CUPS \"$cups_option\" setting changed after privacy.sexy applied it."
+                elif cupsctl "--$cups_option"; then
+                    rm -f "$cups_state_file"
+                    echo "Restored the CUPS \"$cups_option\" setting to its original enabled state."
+                else
+                    >&2 echo "Failed to restore the CUPS \"$cups_option\" setting."
+                fi
+            fi
+    -
         name: RunInlineCode
         #   Marked: refactor-with-partials
         #     Same function in macOS, Linux, Windows
@@ -3185,8 +3612,14 @@ functions:
         name: DeleteGlob
         # 💡 Usage:
         #   This is a low-level function. Favor higher-level functions like `ClearDirectoryContents` and `DeleteFiles`.
+        # ❗ Only the last path component is a pattern. The directory part is always quoted: this ran
+        #   `rm -rfv $glob_pattern` unquoted as root, so a home directory such as `/Users/Jane Doe` split
+        #   into `/Users/Jane` and `Doe/Library/Logs/*`, and `rm -rf` received both. The pattern is expanded in
+        #   a subshell with an empty `IFS` (no word splitting) and `nullglob` (no match deletes nothing,
+        #   instead of passing the literal pattern), and `--` stops a match that starts with `-` from being
+        #   read as an option.
         parameters:
-            - name: pathGlob            # Glob pattern for search.
+            - name: pathGlob            # Absolute path. Only its last component may contain `*`, `?` or `[...]`.
             - name: grantPermissions    # Grants permission on items of the parent directory recursively (including all files and directories) to be able to delete them.
               optional: true
             - name: recurse             # If set, deletes all files and directories recursively.
@@ -3195,8 +3628,30 @@ functions:
             function: RunInlineCode
             parameters:
                 code: |-
-                    glob_pattern="{{ $pathGlob }}"
-                    {{ with $grantPermissions }}sudo{{ end }} rm -{{ with $recurse }}r{{end}}fv $glob_pattern
+                    (
+                        glob_pattern="{{ $pathGlob }}"
+                        glob_directory="${glob_pattern%/*}"
+                        glob_name="${glob_pattern##*/}"
+                        if [[ "$glob_pattern" != /*/* ]] || [ -z "$glob_name" ]; then
+                            >&2 echo "Skipping, \"$glob_pattern\" is not an absolute path to delete."
+                        elif [ ! -d "$glob_directory" ]; then
+                            echo "Skipping, \"$glob_directory\" does not exist."
+                        else
+                            IFS=''
+                            shopt -s nullglob
+                            glob_matches=()
+                            for glob_match in "$glob_directory"/$glob_name; do
+                                if [ -e "$glob_match" ] || [ -L "$glob_match" ]; then
+                                    glob_matches+=("$glob_match")
+                                fi
+                            done
+                            if [ "${#glob_matches[@]}" -eq 0 ]; then
+                                echo "Skipping, nothing matches \"$glob_pattern\"."
+                            else
+                                {{ with $grantPermissions }}sudo{{ end }} rm -{{ with $recurse }}r{{ end }}fv -- "${glob_matches[@]}"
+                            fi
+                        fi
+                    )
     -
         name: DeleteFiles
         # 💡 Purpose:
@@ -3292,25 +3747,31 @@ functions:
                     preference_key='{{ $key }}'
                     preference_state_id="$(printf '%s\0%s' "$preference_domain" "$preference_key" | shasum -a 256 | awk '{ print $1 }')"
                     preference_state_dir="$target_home/.local/state/privacy.sexy/defaults/$preference_state_id"
+                    # Skips only this preference: every selected script runs in one shell, so `exit` here
+                    # ended the whole run and silently dropped every script after it.
+                    preference_unsupported='false'
                     if [ ! -d "$preference_state_dir" ]; then
                         original_type="$(run_as_target_user defaults read-type "$preference_domain" "$preference_key" 2>/dev/null \
                             | sed 's/^Type is //')"
                         if [[ ! "$original_type" =~ ^(boolean|integer|float|string)?$ ]]; then
-                            >&2 echo "Cannot safely preserve unsupported preference type \"$original_type\"."
-                            exit 1
-                        fi
-                        run_as_target_user install -d -m 700 "$preference_state_dir"
-                        if [ -n "$original_type" ]; then
-                            printf '%s\n' "$original_type" | run_as_target_user tee "$preference_state_dir/original-type" > /dev/null
-                            run_as_target_user defaults read "$preference_domain" "$preference_key" \
-                                | run_as_target_user tee "$preference_state_dir/original-value" > /dev/null
+                            >&2 echo "Skipping \"{{ $domain }}\" preference \"{{ $key }}\": cannot safely preserve its \"$original_type\" value."
+                            preference_unsupported='true'
                         else
-                            printf 'absent\n' | run_as_target_user tee "$preference_state_dir/original-type" > /dev/null
-                            run_as_target_user touch "$preference_state_dir/original-value"
+                            run_as_target_user install -d -m 700 "$preference_state_dir"
+                            if [ -n "$original_type" ]; then
+                                printf '%s\n' "$original_type" | run_as_target_user tee "$preference_state_dir/original-type" > /dev/null
+                                run_as_target_user defaults read "$preference_domain" "$preference_key" \
+                                    | run_as_target_user tee "$preference_state_dir/original-value" > /dev/null
+                            else
+                                printf 'absent\n' | run_as_target_user tee "$preference_state_dir/original-type" > /dev/null
+                                run_as_target_user touch "$preference_state_dir/original-value"
+                            fi
+                            run_as_target_user chmod 600 "$preference_state_dir/original-type" "$preference_state_dir/original-value"
                         fi
-                        run_as_target_user chmod 600 "$preference_state_dir/original-type" "$preference_state_dir/original-value"
                     fi
-                    if run_as_target_user defaults write "$preference_domain" "$preference_key" -{{ $valueType }} '{{ $value }}'; then
+                    if [ "$preference_unsupported" = 'true' ]; then
+                        : # Reported above; the preference is left as it is.
+                    elif run_as_target_user defaults write "$preference_domain" "$preference_key" -{{ $valueType }} '{{ $value }}'; then
                         run_as_target_user defaults read-type "$preference_domain" "$preference_key" \
                             | sed 's/^Type is //' | run_as_target_user tee "$preference_state_dir/applied-type" > /dev/null
                         run_as_target_user defaults read "$preference_domain" "$preference_key" \

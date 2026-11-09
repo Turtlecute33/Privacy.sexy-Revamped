@@ -473,7 +473,8 @@ actions:
                             - `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32\OpenSavePidlMRU\<Extension>` [2] [3] [5]
                               for Windows 7 [3], Windows Vista [2] [5], Windows 8 [3] and Windows 10 [3].
                             - `%APPDATA%\Microsoft\Windows\Recent` [1] [4]
-                              for Windows 10 [1] and Windows 11.
+                              for Windows 10 [1] and Windows 11. Only the shortcuts directly in this folder are deleted;
+                              taskbar jump lists and pinned items in its subfolders are left to the Quick Access scripts.
 
                             > **Caution:**
                             > Clearing this history may disrupt your workflow by removing quick access to frequently used
@@ -501,11 +502,15 @@ actions:
                                     keyPath: HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32\OpenSavePidlMRU
                                     deleteSubkeyValuesRecursively: 'true' # Data is stored in subkeys for each file extension.
                             -
-                                function: ClearDirectoryContents
+                                function: DeleteFiles
                                 parameters:
                                     # `Recent`, not `Recent Items`: the latter is the display name shown in
                                     # Explorer, not a real directory, so nothing was ever deleted.
-                                    directoryGlob: '%APPDATA%\Microsoft\Windows\Recent'
+                                    # Only the shortcuts directly inside it: its `AutomaticDestinations` and
+                                    # `CustomDestinations` folders hold every taskbar jump list, including pinned
+                                    # items, and are cleared by the dedicated Quick Access scripts, one of which is
+                                    # deliberately opt-in because it removes pins.
+                                    fileGlob: '%APPDATA%\Microsoft\Windows\Recent\*'
                     -
                         name: Clear Windows Media Player recent activity history
                         docs: |-
@@ -850,7 +855,7 @@ actions:
 
                                             [1]: https://developercommunity.visualstudio.com/t/visual-studio-installer-crashes-after-updating-to/1356122 "Visual Studio Installer crashes after updating to version 16.9.0 - Visual Studio Feedback | Visual Studio Developer Community"
                                             [2]: https://developercommunity.visualstudio.com/t/microsoft-visual-studio-1/588200#T-N588861-N594783 "MSTF help | Visual Studio Developer Community"
-                                            [3]: https://github.com/microsoft/live-share/issues/3584 "Agent logs in %TEMP%\VSFeedbackVSRTCLogs taking up over 87GB · Issue #3584 · MicrosoftDocs/live-share | GitHub"
+                                            [3]: https://web.archive.org/web/20240314091831/https://github.com/microsoft/live-share/issues/3584 "Agent logs in %TEMP%\VSFeedbackVSRTCLogs taking up over 87GB · Issue #3584 · MicrosoftDocs/live-share | GitHub"
                                             [4]: https://developercommunity.visualstudio.com/t/please-keep-my-temp-folder-clean/731637 "Please keep my TEMP folder clean! - Visual Studio Feedback | Visual Studio Developer Community"
                                             [5]: https://web.archive.org/web/20240314062744/https://stackoverflow.com/questions/60974427/reduce-log-and-other-temporary-file-creation-in-visual-studio-2019 "Reduce log and other temporary file creation in Visual Studio 2019 | Stack Overflow | stackoverflow.com"
                                             [6]: https://web.archive.org/web/20240314063145/https://stackoverflow.com/questions/72341126/visual-studio-2022-telemetry-related-temp-folders "Visual Studio 2022 - Telemetry related temp folders - Stack Overflow | stackoverflow.com"
@@ -2365,7 +2370,7 @@ actions:
                                 parameters:
                                     fileGlob: '%LOCALAPPDATA%\Microsoft\Outlook\extend.dat'
                     -
-                        name: Clear Outlook user data
+                        name: Clear Outlook user data (permanently deletes local mail, signatures and macros)
                         recommend: null # High impact, clears user settings/data
                         docs: |-
                             This script removes locally stored Outlook data from your computer, including web storage, 
@@ -2770,7 +2775,7 @@ actions:
                     unrelated identifier has been removed [3] [4].
 
                     [1]: https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/ucdostatus "UCDOStatus - Azure Monitor | Microsoft Learn"
-                    [2]: https://www.justice.gov/usao-ndil/media/1450651/dl?inline= "United States v. Peter Stokes - Superseding Criminal Complaint | U.S. Department of Justice"
+                    [2]: https://web.archive.org/web/20260710195510/https://www.justice.gov/usao-ndil/media/1450651/dl?inline= "United States v. Peter Stokes - Superseding Criminal Complaint | U.S. Department of Justice"
                     [3]: https://github.com/yegors/deGDID/blob/068263f4fd9f1e6632c78c365b1a98027f6c2912/README.md "deGDID documentation | GitHub"
                     [4]: https://github.com/yegors/deGDID/blob/068263f4fd9f1e6632c78c365b1a98027f6c2912/docs/countermeasures.md "deGDID countermeasures and limitations | GitHub"
                     [5]: https://github.com/yegors/deGDID/issues/3 "Protect mode blocks Windows host-side NAT sharing | GitHub"
@@ -4738,7 +4743,7 @@ actions:
 
                                     [1]: https://web.archive.org/web/20231002104948/https://learn.microsoft.com/en-us/services-hub/health/other/work-with-results/assessmentplanreport_windowsclientassessmentplus.xlsx "Windows Client Assessment Recommendations Report generated on: 06/13/2019 | microsoft.com"
                                     [2]: https://web.archive.org/web/20231011231107/https://plid.obywatel.gov.pl/wp-content/uploads/2014/08/Wymagania-dla-stacji-koncowych-SRP-v-5-0.pdf "WYMAGANIA - dla stacji roboczych stanowisk obsługi dla użytkowników końcowych SRP | plid.obywatel.gov.pl"
-                                    [3]: https://archive.ph/2023.10.17-193954/http://onc-ftp1.argentinacompra.gov.ar/0091/000/020000042017001000/CNV-000736230001.xml "A complete task sequence for deploying a client operating system (snapshot from http://onc-ftp1.argentinacompra.gov.ar/0091/000/020000042017001000/CNV-000736230001.xml) | Government of Argentina"
+                                    [3]: https://archive.ph/2023.10.17-193954/http://onc-ftp1.argentinacompra.gov.ar/0091/000/020000042017001000/CNV-000736230001.xml "A complete task sequence for deploying a client operating system (snapshot from onc-ftp1.argentinacompra.gov.ar) | Government of Argentina"
                                     [4]: https://web.archive.org/web/20220120073244/https://docs.microsoft.com/en-us/archive/blogs/jeff_stokes/hot-off-the-presses-get-it-now-the-windows-8-vdi-optimization-script-courtesy-of-pfe "Hot off the presses, get it now, the Windows 8 VDI optimization script, courtesy of PFE! | Microsoft Docs"
                                 call:
                                     function: DisableScheduledTask
@@ -4772,7 +4777,7 @@ actions:
                                     | Windows 11 22H2  | 🟡 N/A (missing) |
                                     | Windows 11 23H2  | 🟡 N/A (missing) |
 
-                                    [1]: https://archive.ph/2023.10.17-193954/http://onc-ftp1.argentinacompra.gov.ar/0091/000/020000042017001000/CNV-000736230001.xml "A complete task sequence for deploying a client operating system (snapshot from http://onc-ftp1.argentinacompra.gov.ar/0091/000/020000042017001000/CNV-000736230001.xml) | Government of Argentina"
+                                    [1]: https://archive.ph/2023.10.17-193954/http://onc-ftp1.argentinacompra.gov.ar/0091/000/020000042017001000/CNV-000736230001.xml "A complete task sequence for deploying a client operating system (snapshot from onc-ftp1.argentinacompra.gov.ar) | Government of Argentina"
                                     [2]: https://web.archive.org/web/20231123073336/https://www.mspb.gov/foia/files/VMWareHealthCheckReport.pdf "VMware Desktop Virtualization Health Check Services Health Check Report | www.mspb.gov"
                                     [3]: https://web.archive.org/web/20231130072051/http://windows.fyicenter.com/4363_AitAgent_Scheduled_Task_on_Windows_8.html '"AitAgent" Scheduled Task on Windows 8'
                                     [4]: https://web.archive.org/web/20231017193840/https://docs.vmware.com/en/VMware-Horizon-7/7.13/horizon-virtual-desktops/GUID-BE82165B-13BC-4FD9-A9CF-FBEF6343D98A.html "Disable the Windows Customer Experience Improvement Program | docs.vmware.com"
@@ -7516,7 +7521,8 @@ actions:
 
                             The script configures the following registry keys:
                             
-                            - `HKLM\SOFTWARE\Policies\Microsoft\Windows\Explorer!DisableSearchHistory` registry key [1] [2].
+                            - `HKCU\SOFTWARE\Policies\Microsoft\Windows\Explorer!DisableSearchHistory` registry key, where Windows reads this
+                              User Configuration policy [1] [2], and the same value under `HKLM`, kept for systems already relying on it.
                             - `HKCU\Software\Microsoft\Windows\CurrentVersion\SearchSettings!IsDeviceSearchHistoryEnabled` [5].
 
                             [1]: https://web.archive.org/web/20240120195206/https://admx.help/?Category=Windows_10_2016&Policy=FullArmor.Policies.3B9EA2B5_A1D1_4CD5_9EDE_75B22990BC21::DisableSearchHistory "Turn off storage and display of search history | admx.help"
@@ -7527,6 +7533,16 @@ actions:
                             [6]: https://web.archive.org/web/20240120211431/https://technoresult.com/how-to-disable-windows-search-history-feature-in-windows-10/ "How to Disable Windows Search History Feature in Windows 10? - Technoresult | technoresult.com"
                             [7]: https://web.archive.org/web/20240120211444/https://www.thewindowsclub.com/clear-windows-10-search-history-and-remove-recent-activities "How to clear Windows Search History and remove Recent Activities | www.thewindowsclub.com"
                         call:
+                            -
+                                # The policy is scoped to User Configuration (`class="User"` in Search.admx), so Windows
+                                # reads it from HKCU. The HKLM value below is kept for systems already relying on it.
+                                function: SetRegistryValue
+                                parameters:
+                                    keyPath: HKCU\Software\Policies\Microsoft\Windows\Explorer
+                                    valueName: DisableSearchHistory
+                                    dataType: REG_DWORD
+                                    data: "1"
+                                    deleteOnRevert: 'true' # Missing by default
                             -
                                 function: SetRegistryValue
                                 parameters:
@@ -7689,13 +7705,24 @@ actions:
                                     [3]: https://web.archive.org/web/20230911110911/https://learn.microsoft.com/en-us/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services#25-windows-spotlight "Manage connections from Windows 10 and Windows 11 Server/Enterprise editions operating system components to Microsoft services - Windows Privacy | Microsoft Learn"
                                     [4]: https://web.archive.org/web/20230911110921/https://download.microsoft.com/download/8/F/B/8FBD2E85-8852-45EC-8465-92756EBD9365/Windows10andWindowsServer2016PolicySettings.xlsx "Group Policy Settings Reference - Microsoft"
                                 call:
-                                    function: SetRegistryValue
-                                    parameters:
-                                        keyPath: HKLM\Software\Policies\Microsoft\Windows\CloudContent
-                                        valueName: DisableWindowsSpotlightFeatures
-                                        dataType: REG_DWORD
-                                        data: "1"
-                                        deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 21H2) and Windows 11 Pro (≥ 22H2)
+                                    -
+                                        # The policy is scoped to User Configuration (`class="User"` in CloudContent.admx), so
+                                        # Windows reads it from HKCU. The HKLM value below is kept for systems already relying on it.
+                                        function: SetRegistryValue
+                                        parameters:
+                                            keyPath: HKCU\Software\Policies\Microsoft\Windows\CloudContent
+                                            valueName: DisableWindowsSpotlightFeatures
+                                            dataType: REG_DWORD
+                                            data: "1"
+                                            deleteOnRevert: 'true' # Missing by default
+                                    -
+                                        function: SetRegistryValue
+                                        parameters:
+                                            keyPath: HKLM\Software\Policies\Microsoft\Windows\CloudContent
+                                            valueName: DisableWindowsSpotlightFeatures
+                                            dataType: REG_DWORD
+                                            data: "1"
+                                            deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 21H2) and Windows 11 Pro (≥ 22H2)
                             -
                                 name: Disable Microsoft Consumer Experiences
                                 recommend: standard
@@ -7865,12 +7892,13 @@ actions:
                                     This script stops Windows from asking you to finish setting up your device after signing in.
 
                                     These full-screen prompts encourage you to enable Microsoft services such as OneDrive, Microsoft
-                                    365 and browser synchronisation [1]. Which prompts appear depends on what Windows knows about
+                                    365 and browser synchronisation. Which prompts appear depends on what Windows knows about
                                     your account and your usage.
 
-                                    If you do not run this script, these prompts continue to appear after updates and sign-ins.
+                                    This is the setting behind *Settings > System > Notifications > Additional settings >
+                                    Suggest ways to get the most out of Windows and finish setting up this device*.
 
-                                    [1]: https://web.archive.org/web/20240517030214/https://learn.microsoft.com/en-us/answers/questions/699414/how-to-disable-lets-finish-setting-up-your-device "Disable the finish setting up your device screen | Microsoft Learn"
+                                    If you do not run this script, these prompts continue to appear after updates and sign-ins.
                                 call:
                                     function: SetRegistryValue
                                     parameters:
@@ -7917,13 +7945,24 @@ actions:
 
                                     [1]: https://web.archive.org/web/20230911110911/https://learn.microsoft.com/en-us/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services "Manage connections from Windows operating system components to Microsoft services | Microsoft Learn"
                                 call:
-                                    function: SetRegistryValue
-                                    parameters:
-                                        keyPath: HKLM\SOFTWARE\Policies\Microsoft\Windows\CloudContent
-                                        valueName: DisableTailoredExperiencesWithDiagnosticData
-                                        dataType: REG_DWORD
-                                        data: "1"
-                                        deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
+                                    -
+                                        # The policy is scoped to User Configuration (`class="User"` in CloudContent.admx), so
+                                        # Windows reads it from HKCU. The HKLM value below is kept for systems already relying on it.
+                                        function: SetRegistryValue
+                                        parameters:
+                                            keyPath: HKCU\SOFTWARE\Policies\Microsoft\Windows\CloudContent
+                                            valueName: DisableTailoredExperiencesWithDiagnosticData
+                                            dataType: REG_DWORD
+                                            data: "1"
+                                            deleteOnRevert: 'true' # Missing by default
+                                    -
+                                        function: SetRegistryValue
+                                        parameters:
+                                            keyPath: HKLM\SOFTWARE\Policies\Microsoft\Windows\CloudContent
+                                            valueName: DisableTailoredExperiencesWithDiagnosticData
+                                            dataType: REG_DWORD
+                                            data: "1"
+                                            deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
             -
                 category: Disable biometrics (breaks fingerprinting/facial login)
                 children:
@@ -11482,7 +11521,9 @@ actions:
                                         keyPath: HKLM\SOFTWARE\Policies\Microsoft\Internet Explorer\SQM
                                         valueName: DisableCustomerImprovementProgram
                                         dataType: REG_DWORD
-                                        data: "1"
+                                        # Despite the value name, 0 is the opt-out: inetres.admx maps the enabled
+                                        # "Prevent participation" policy to 0 and the disabled one to 1.
+                                        data: "0"
                                         deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 21H1) and Windows 11 Pro (≥ 22H2)
                             -
                                 name: Disable legacy WCM policy calls
@@ -31015,11 +31056,16 @@ actions:
                                 packageName: Microsoft.549981C3F5F10 # Get-AppxPackage Microsoft.549981C3F5F10
                                 publisherId: 8wekyb3d8bbwe
                     -
-                        name: Remove "App Installer" app
+                        name: Remove "App Installer" app (breaks winget and app installer files)
                         docs: |-
                             [Microsoft Store Page](https://web.archive.org/web/20231003200344/https://apps.microsoft.com/store/detail/app-installer/9NBLGGH4NNS1)
 
                             It's also known as "Desktop App Installer" app [1].
+
+                            > **Caution:**
+                            > App Installer provides the `winget` command-line package manager and opens `.msix`,
+                            > `.msixbundle` and `.appinstaller` files. Removing it breaks both until it is reinstalled
+                            > from the Microsoft Store.
 
                             ### Overview of default preinstallation
 
@@ -34632,13 +34678,15 @@ actions:
                                 #   This guard ensures that no file or non-empty directory is accidentally deleted.
                                 #   It checks each path; if it's a file or a non-empty directory, the script skips deletion for that path.
                                 #   This step is designed to prevent unintended data loss during script execution.
+                                #   The emptiness check uses `-Force` so hidden and system items count: without it, a folder
+                                #   holding only hidden files looked empty and was deleted along with them.
                                 duringIteration: |-
                                     try {
                                         if (Test-Path -Path $path -PathType Leaf) {
                                             Write-Warning "Retaining file `"$path`" to safeguard your data."
                                             continue;
                                         } elseif (Test-Path -Path $path -PathType Container) {
-                                            if ((Get-ChildItem "$path" -Recurse | Measure-Object).Count -gt 0) {
+                                            if ((Get-ChildItem -LiteralPath "$path" -Recurse -Force | Measure-Object).Count -gt 0) {
                                                 Write-Warning "Preserving non-empty folder `"$path`" to protect your files."
                                                 continue;
                                             }
@@ -34815,12 +34863,11 @@ actions:
                                 #   Windows 10 Pro (≥ 20H2) : 🔴 Missing
                                 #   Windows 11 Pro (≥ 23H2) : 🔴 Missing
                                 evaluateDataAsPowerShell: 'true'
-                                dataOnRevert: > # Multilines are not supported
-                                    if ([Environment]::Is64BitOperatingSystem) {
-                                        "$env:SYSTEMROOT\SysWOW64\OneDriveSetup.exe /silent"
-                                    } else {
-                                        "$env:SYSTEMROOT\System32\OneDriveSetup.exe /silent"
-                                    }
+                                # Keep this on one line. The expression is repeated after a `#` comment in the generated
+                                # code, so a line break ends the comment early and the revert no longer parses. A folded
+                                # `>` block keeps the break before every more-indented line.
+                                dataOnRevert: >-
+                                    if ([Environment]::Is64BitOperatingSystem) { "$env:SYSTEMROOT\SysWOW64\OneDriveSetup.exe /silent" } else { "$env:SYSTEMROOT\System32\OneDriveSetup.exe /silent" }
                                 dataTypeOnRevert: REG_SZ
                                 minimumWindowsVersion: Windows10-1909
                                 maximumWindowsVersion: Windows10-1909
@@ -38474,6 +38521,8 @@ functions:
             -
                 function: RunPowerShell
                 parameters:
+                    # A pending disable (run again before a restart) or a removed payload already counts as
+                    # disabled, instead of failing as a "transitional state".
                     code: |-
                         $featureName = '{{ $featureName }}'
                         $feature = Get-WindowsOptionalFeature `
@@ -38484,8 +38533,9 @@ functions:
                             Write-Output "Skipping: The feature `"$featureName`" is not found. No action required."
                             Exit 0
                         }
-                        if ($feature.State -eq [Microsoft.Dism.Commands.FeatureState]::Disabled) {
-                            Write-Output "Skipping: The feature `"$featureName`" is already disabled. No action required."
+                        $disabledStates = @('Disabled', 'DisablePending', 'DisabledWithPayloadRemoved')
+                        if ($disabledStates -contains "$($feature.State)") {
+                            Write-Output "Skipping: The feature `"$featureName`" is already disabled ($($feature.State)). No action required."
                             Exit 0
                         }
                         if ($feature.State -ne [Microsoft.Dism.Commands.FeatureState]::Enabled) {
@@ -38494,9 +38544,7 @@ functions:
                         }
                         $stateDirectory = Join-Path $env:ProgramData 'privacy.sexy\state\features'
                         $sha256 = [Security.Cryptography.SHA256]::Create()
-                        $stateId = ([BitConverter]::ToString(
-                            $sha256.ComputeHash([Text.Encoding]::UTF8.GetBytes($featureName))
-                        )).Replace('-', '')
+                        $stateId = ([BitConverter]::ToString($sha256.ComputeHash([Text.Encoding]::UTF8.GetBytes($featureName)))).Replace('-', '')
                         $sha256.Dispose()
                         $statePath = Join-Path $stateDirectory "$stateId.txt"
                         New-Item -ItemType Directory -Path $stateDirectory -Force | Out-Null
@@ -38533,9 +38581,7 @@ functions:
                         $featureName = '{{ $featureName }}'
                         $stateDirectory = Join-Path $env:ProgramData 'privacy.sexy\state\features'
                         $sha256 = [Security.Cryptography.SHA256]::Create()
-                        $stateId = ([BitConverter]::ToString(
-                            $sha256.ComputeHash([Text.Encoding]::UTF8.GetBytes($featureName))
-                        )).Replace('-', '')
+                        $stateId = ([BitConverter]::ToString($sha256.ComputeHash([Text.Encoding]::UTF8.GetBytes($featureName)))).Replace('-', '')
                         $sha256.Dispose()
                         $statePath = Join-Path $stateDirectory "$stateId.txt"
                         if (-Not (Test-Path -LiteralPath $statePath)) {
@@ -38840,15 +38886,89 @@ functions:
                     recurse: 'true'
     -
         name: UninstallCapability
+        # 💡 Purpose:
+        #   Removes installed Windows capabilities matching a name prefix, recording each one it removes so
+        #   revert re-adds exactly those. Without the record, revert added every matching capability, so
+        #   reverting "Remove OpenSSH Server" installed sshd (and opened its firewall rule) on machines that
+        #   never had it. Capabilities removed by older versions have no record and are left alone.
         parameters:
             - name: capabilityName
         call:
             function: RunPowerShell
             parameters:
-                code: Get-WindowsCapability -Online -Name '{{ $capabilityName }}*' | Remove-WindowsCapability -Online
+                code: |-
+                    $capabilityPattern = '{{ $capabilityName }}*'
+                    $stateDirectory = Join-Path $env:ProgramData 'privacy.sexy\state\capabilities'
+                    $installedCapabilities = @(Get-WindowsCapability -Online -Name $capabilityPattern -ErrorAction Stop | Where-Object { "$($_.State)" -eq 'Installed' })
+                    if ($installedCapabilities.Count -eq 0) {
+                        Write-Output "Skipping: No installed capability matches `"$capabilityPattern`". No action required."
+                        Exit 0
+                    }
+                    New-Item -ItemType Directory -Path $stateDirectory -Force | Out-Null
+                    & "$env:SystemRoot\System32\icacls.exe" $stateDirectory /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' | Out-Null
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "Failed to protect state directory `"$stateDirectory`"."
+                    }
+                    $hasFailed = $false
+                    foreach ($capability in $installedCapabilities) {
+                        $sha256 = [Security.Cryptography.SHA256]::Create()
+                        $stateId = ([BitConverter]::ToString($sha256.ComputeHash([Text.Encoding]::UTF8.GetBytes($capability.Name)))).Replace('-', '')
+                        $sha256.Dispose()
+                        $statePath = Join-Path $stateDirectory "$stateId.txt"
+                        [IO.File]::WriteAllText($statePath, $capability.Name)
+                        try {
+                            Write-Host "Removing capability: `"$($capability.Name)`"."
+                            Remove-WindowsCapability -Online -Name $capability.Name -ErrorAction Stop | Out-Null
+                            Write-Output "Successfully removed the capability `"$($capability.Name)`"."
+                        } catch {
+                            Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue
+                            Write-Error "Failed to remove the capability `"$($capability.Name)`": $($_.Exception.Message)"
+                            $hasFailed = $true
+                        }
+                    }
+                    if ($hasFailed) {
+                        Exit 1
+                    }
                 revertCode: |-
-                    Get-WindowsCapability -Online -Name '{{ $capabilityName }}*' `
-                        | ForEach-Object { Add-WindowsCapability -Online -Name $_.Name }
+                    $capabilityPattern = '{{ $capabilityName }}*'
+                    $stateDirectory = Join-Path $env:ProgramData 'privacy.sexy\state\capabilities'
+                    $hasFailed = $false
+                    $restoredCount = 0
+                    foreach ($capability in @(Get-WindowsCapability -Online -Name $capabilityPattern -ErrorAction Stop)) {
+                        $sha256 = [Security.Cryptography.SHA256]::Create()
+                        $stateId = ([BitConverter]::ToString($sha256.ComputeHash([Text.Encoding]::UTF8.GetBytes($capability.Name)))).Replace('-', '')
+                        $sha256.Dispose()
+                        $statePath = Join-Path $stateDirectory "$stateId.txt"
+                        if (-Not (Test-Path -LiteralPath $statePath)) {
+                            continue
+                        }
+                        if ([IO.File]::ReadAllText($statePath) -ne $capability.Name) {
+                            Write-Error "Refusing to use invalid state for capability `"$($capability.Name)`"."
+                            $hasFailed = $true
+                            continue
+                        }
+                        if ("$($capability.State)" -eq 'Installed') {
+                            Write-Output "Skipping: The capability `"$($capability.Name)`" is already installed."
+                            Remove-Item -LiteralPath $statePath -Force
+                            continue
+                        }
+                        try {
+                            Write-Host "Restoring capability: `"$($capability.Name)`"."
+                            Add-WindowsCapability -Online -Name $capability.Name -ErrorAction Stop | Out-Null
+                            Remove-Item -LiteralPath $statePath -Force
+                            $restoredCount++
+                            Write-Output "Successfully restored the capability `"$($capability.Name)`"."
+                        } catch {
+                            Write-Error "Failed to restore the capability `"$($capability.Name)`": $($_.Exception.Message)"
+                            $hasFailed = $true
+                        }
+                    }
+                    if (($restoredCount -eq 0) -And (-Not $hasFailed)) {
+                        Write-Output "Skipping: privacy.sexy did not remove any capability matching `"$capabilityPattern`"."
+                    }
+                    if ($hasFailed) {
+                        Exit 1
+                    }
     -
         name: SoftDeleteFiles
         # 💡 Purpose:
@@ -38978,8 +39098,11 @@ functions:
                         {{ end }}
                     # Marked: refactor-with-variables
                     #   Granting permission is identical to `DisableScheduledTask`.
+                    # `-LiteralPath` throughout: these are enumerated paths, and names such as `cache[1].dat` are
+                    # wildcard patterns to `-Path`, so they looked missing or could not be read. A missing file
+                    # moves on to the next one: `exit` there ended the command and skipped every remaining file.
                     duringIteration: |-
-                        if (Test-Path -Path $path -PathType Container) {
+                        if (Test-Path -LiteralPath $path -PathType Container) {
                             Write-Host "Skipping folder (not its contents): `"$path`"."
                             $skippedCount++
                             continue
@@ -38999,19 +39122,19 @@ functions:
                         }
                         $originalFilePath = $path
                         Write-Host "Processing file: `"$originalFilePath`"."
-                        if (-Not (Test-Path $originalFilePath)) {
+                        if (-Not (Test-Path -LiteralPath $originalFilePath)) {
                             Write-Host "Skipping, file `"$originalFilePath`" not found."
                             $skippedCount++
-                            exit 0
+                            continue
                         }
                         {{ with $grantPermissions }}
-                            $originalAcl = Get-Acl -Path "$originalFilePath"
+                            $originalAcl = Get-Acl -LiteralPath "$originalFilePath"
                             $accessGranted = $false
                             try {
-                                $acl = Get-Acl -Path "$originalFilePath"
+                                $acl = Get-Acl -LiteralPath "$originalFilePath"
                                 $acl.SetOwner($adminAccount) # Take Ownership (because file is owned by TrustedInstaller)
                                 $acl.AddAccessRule($adminFullControlAccessRule) # Grant rights to be able to move the file
-                                Set-Acl -Path $originalFilePath -AclObject $acl -ErrorAction Stop
+                                Set-Acl -LiteralPath $originalFilePath -AclObject $acl -ErrorAction Stop
                                 $accessGranted = $true
                             } catch {
                                 Write-Warning "Failed to grant access to `"$originalFilePath`": $($_.Exception.Message)"
@@ -39029,7 +39152,7 @@ functions:
                             {{ with $grantPermissions }}
                                 if ($accessGranted) {
                                     try {
-                                        Set-Acl -Path $newFilePath -AclObject $originalAcl -ErrorAction Stop
+                                        Set-Acl -LiteralPath $newFilePath -AclObject $originalAcl -ErrorAction Stop
                                     } catch {
                                         Write-Warning "Failed to restore access on `"$newFilePath`": $($_.Exception.Message)"
                                     }
@@ -39041,7 +39164,7 @@ functions:
                             {{ with $grantPermissions }}
                                 if ($accessGranted) {
                                     try {
-                                        Set-Acl -Path $originalFilePath -AclObject $originalAcl -ErrorAction Stop
+                                        Set-Acl -LiteralPath $originalFilePath -AclObject $originalAcl -ErrorAction Stop
                                     } catch {
                                         Write-Warning "Failed to restore access on `"$originalFilePath`": $($_.Exception.Message)"
                                     }
@@ -39075,6 +39198,12 @@ functions:
                 # dotted key into WinGet produces a property it never reads.
                 name: parentPropertyKey
                 optional: true
+            -
+                # When set, a missing file is created as `{}` if its folder exists, so the setting still
+                # applies. Without it a missing file is skipped. WinGet only writes its settings file once
+                # the user opens `winget settings`, so on most systems the WinGet scripts did nothing.
+                name: createMissingFile
+                optional: true
         docs: |-
             Updates a property in a specified a JSON configuration file.
         call:
@@ -39099,18 +39228,26 @@ functions:
                 #   block, WinGet's `installBehavior.preferences.architectures`) came back as a string like
                 #   `@{source=PowerShell}`. Plain `Set-Content` writes the ANSI code page on 5.1 and mangles
                 #   non-ASCII values, hence the explicit encoding.
+                # ❗ Both readers pass `-Encoding UTF8` to match: Windows PowerShell 5.1 otherwise reads the file
+                #   with the ANSI code page and corrupts every non-ASCII character when it is written back.
                 parameters:
                     code: |-
                         $rawJsonFilePath = "{{ $jsonFilePath }}"
                         $propertyKey = '{{ $propertyKey }}'
                         $desiredValue = {{ $powerShellValueExpression }}
                         $jsonFilePath = [System.Environment]::ExpandEnvironmentVariables($rawJsonFilePath)
+                        {{ with $createMissingFile }}
+                        if ((-Not (Test-Path -LiteralPath $jsonFilePath -PathType Leaf)) -And (Test-Path -LiteralPath (Split-Path -Parent $jsonFilePath) -PathType Container)) {
+                            Write-Host "Creating the missing JSON file at '$jsonFilePath'."
+                            [System.IO.File]::WriteAllText($jsonFilePath, '{}', (New-Object System.Text.UTF8Encoding($false)))
+                        }
+                        {{ end }}
                         if (!(Test-Path $jsonFilePath -PathType Leaf)) {
                             Write-Host "Skipping, JSON file not found at '$jsonFilePath'."
                             exit 0
                         }
                         try {
-                            $fileContent = Get-Content $jsonFilePath -ErrorAction Stop
+                            $fileContent = Get-Content -LiteralPath $jsonFilePath -Encoding UTF8 -ErrorAction Stop
                         } catch {
                             throw "Failed to read the JSON file: '$jsonFilePath'. Error: $_"
                         }
@@ -39157,7 +39294,7 @@ functions:
                                 exit 0
                             }
                             try {
-                                $fileContent = Get-Content $jsonFilePath -ErrorAction Stop
+                                $fileContent = Get-Content -LiteralPath $jsonFilePath -Encoding UTF8 -ErrorAction Stop
                             } catch {
                                 throw "Failed to read the JSON file: '$jsonFilePath'. Error: $_"
                             }
@@ -39243,10 +39380,15 @@ functions:
             -
                 function: RunInlineCode
                 parameters:
-                    code: PowerShell -ExecutionPolicy Unrestricted -Command "{{ $code | inlinePowerShell | escapeDoubleQuotes }}"
+                    # `-NoProfile`: a full run starts PowerShell hundreds of times, and loading the user's
+                    # profile each time (conda, prompt themes) made runs minutes slower and could change how
+                    # commands behave (aliases, `$ErrorActionPreference`, strict mode).
+                    # Keep this prefix short: the longest generated lines are within a few dozen characters
+                    # of cmd's 8191-character line limit (see the line-length test).
+                    code: PowerShell -NoProfile -ExecutionPolicy Unrestricted -Command "{{ $code | inlinePowerShell | escapeDoubleQuotes }}"
                     revertCode: |-
                         {{ with $revertCode }}
-                            PowerShell -ExecutionPolicy Unrestricted -Command "{{ . | inlinePowerShell | escapeDoubleQuotes }}"
+                            PowerShell -NoProfile -ExecutionPolicy Unrestricted -Command "{{ . | inlinePowerShell | escapeDoubleQuotes }}"
                         {{ end }}
     -
         name: RunEmbeddedPowerShellScript
@@ -39268,61 +39410,52 @@ functions:
             -
                 function: RunInlineCode
                 parameters:
+                    # The generated file runs every selected script inline in one batch body, so an `exit /b`
+                    # here would end the whole run: later scripts and the closing `pause` would never run, and a
+                    # double-clicked window would close before the error could be read. Each step is therefore
+                    # its own line gated on a status, which also lets `%ERRORLEVEL%` expand after the step before
+                    # it ran (delayed expansion is off, so it would expand too early inside a block).
                     code: |-
                         set "privacy_sexy_embedded_base=%TEMP%\privacy-sexy-embedded-%RANDOM%-%RANDOM%"
                         set "privacy_sexy_embedded_payload=%privacy_sexy_embedded_base%.b64"
                         set "privacy_sexy_embedded_script=%privacy_sexy_embedded_base%.ps1"
-                        if exist "%privacy_sexy_embedded_payload%" (
-                            echo Failed to allocate a temporary payload file. 1>&2
-                            exit /b 1
+                        set "privacy_sexy_embedded_status=ready"
+                        if exist "%privacy_sexy_embedded_payload%" set "privacy_sexy_embedded_status=collision"
+                        if exist "%privacy_sexy_embedded_script%" set "privacy_sexy_embedded_status=collision"
+                        if "%privacy_sexy_embedded_status%"=="ready" (
+                            > "%privacy_sexy_embedded_payload%" (
+                                {{ $resourceName | embedCollectionResource | toBaseSixtyFourBatchLines }}
+                            )
                         )
-                        if exist "%privacy_sexy_embedded_script%" (
-                            echo Failed to allocate a temporary script file. 1>&2
-                            exit /b 1
-                        )
-                        > "%privacy_sexy_embedded_payload%" (
-                            {{ $resourceName | embedCollectionResource | toBaseSixtyFourBatchLines }}
-                        )
-                        PowerShell -NoProfile -NonInteractive -Command "$encoded=[System.IO.File]::ReadAllText($env:privacy_sexy_embedded_payload); $bytes=[System.Convert]::FromBase64String($encoded); [System.IO.File]::WriteAllBytes($env:privacy_sexy_embedded_script,$bytes)"
-                        if errorlevel 1 (
-                            del /f /q "%privacy_sexy_embedded_payload%" 2>nul
-                            del /f /q "%privacy_sexy_embedded_script%" 2>nul
-                            echo Failed to prepare the embedded PowerShell script. 1>&2
-                            exit /b 1
-                        )
-                        PowerShell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%privacy_sexy_embedded_script%" {{ $arguments }}
-                        set "privacy_sexy_embedded_exit_code=%ERRORLEVEL%"
-                        del /f /q "%privacy_sexy_embedded_payload%" 2>nul
-                        del /f /q "%privacy_sexy_embedded_script%" 2>nul
-                        if not "%privacy_sexy_embedded_exit_code%"=="0" exit /b %privacy_sexy_embedded_exit_code%
+                        if "%privacy_sexy_embedded_status%"=="ready" PowerShell -NoProfile -NonInteractive -Command "$encoded=[System.IO.File]::ReadAllText($env:privacy_sexy_embedded_payload); $bytes=[System.Convert]::FromBase64String($encoded); [System.IO.File]::WriteAllBytes($env:privacy_sexy_embedded_script,$bytes)"
+                        if "%privacy_sexy_embedded_status%"=="ready" if errorlevel 1 set "privacy_sexy_embedded_status=undecodable"
+                        if "%privacy_sexy_embedded_status%"=="ready" PowerShell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%privacy_sexy_embedded_script%" {{ $arguments }}
+                        if "%privacy_sexy_embedded_status%"=="ready" if not "%ERRORLEVEL%"=="0" echo The embedded PowerShell script exited with code %ERRORLEVEL%. 1>&2
+                        if not "%privacy_sexy_embedded_status%"=="collision" del /f /q "%privacy_sexy_embedded_payload%" 2>nul
+                        if not "%privacy_sexy_embedded_status%"=="collision" del /f /q "%privacy_sexy_embedded_script%" 2>nul
+                        if "%privacy_sexy_embedded_status%"=="collision" echo Failed to allocate temporary files for the embedded PowerShell script. 1>&2
+                        if "%privacy_sexy_embedded_status%"=="undecodable" echo Failed to prepare the embedded PowerShell script. 1>&2
                     revertCode: |-
                         {{ with $revertArguments }}
                             set "privacy_sexy_embedded_base=%TEMP%\privacy-sexy-embedded-%RANDOM%-%RANDOM%"
                             set "privacy_sexy_embedded_payload=%privacy_sexy_embedded_base%.b64"
                             set "privacy_sexy_embedded_script=%privacy_sexy_embedded_base%.ps1"
-                            if exist "%privacy_sexy_embedded_payload%" (
-                                echo Failed to allocate a temporary payload file. 1>&2
-                                exit /b 1
+                            set "privacy_sexy_embedded_status=ready"
+                            if exist "%privacy_sexy_embedded_payload%" set "privacy_sexy_embedded_status=collision"
+                            if exist "%privacy_sexy_embedded_script%" set "privacy_sexy_embedded_status=collision"
+                            if "%privacy_sexy_embedded_status%"=="ready" (
+                                > "%privacy_sexy_embedded_payload%" (
+                                    {{ $resourceName | embedCollectionResource | toBaseSixtyFourBatchLines }}
+                                )
                             )
-                            if exist "%privacy_sexy_embedded_script%" (
-                                echo Failed to allocate a temporary script file. 1>&2
-                                exit /b 1
-                            )
-                            > "%privacy_sexy_embedded_payload%" (
-                                {{ $resourceName | embedCollectionResource | toBaseSixtyFourBatchLines }}
-                            )
-                            PowerShell -NoProfile -NonInteractive -Command "$encoded=[System.IO.File]::ReadAllText($env:privacy_sexy_embedded_payload); $bytes=[System.Convert]::FromBase64String($encoded); [System.IO.File]::WriteAllBytes($env:privacy_sexy_embedded_script,$bytes)"
-                            if errorlevel 1 (
-                                del /f /q "%privacy_sexy_embedded_payload%" 2>nul
-                                del /f /q "%privacy_sexy_embedded_script%" 2>nul
-                                echo Failed to prepare the embedded PowerShell script. 1>&2
-                                exit /b 1
-                            )
-                            PowerShell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%privacy_sexy_embedded_script%" {{ . }}
-                            set "privacy_sexy_embedded_exit_code=%ERRORLEVEL%"
-                            del /f /q "%privacy_sexy_embedded_payload%" 2>nul
-                            del /f /q "%privacy_sexy_embedded_script%" 2>nul
-                            if not "%privacy_sexy_embedded_exit_code%"=="0" exit /b %privacy_sexy_embedded_exit_code%
+                            if "%privacy_sexy_embedded_status%"=="ready" PowerShell -NoProfile -NonInteractive -Command "$encoded=[System.IO.File]::ReadAllText($env:privacy_sexy_embedded_payload); $bytes=[System.Convert]::FromBase64String($encoded); [System.IO.File]::WriteAllBytes($env:privacy_sexy_embedded_script,$bytes)"
+                            if "%privacy_sexy_embedded_status%"=="ready" if errorlevel 1 set "privacy_sexy_embedded_status=undecodable"
+                            if "%privacy_sexy_embedded_status%"=="ready" PowerShell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%privacy_sexy_embedded_script%" {{ . }}
+                            if "%privacy_sexy_embedded_status%"=="ready" if not "%ERRORLEVEL%"=="0" echo The embedded PowerShell script exited with code %ERRORLEVEL%. 1>&2
+                            if not "%privacy_sexy_embedded_status%"=="collision" del /f /q "%privacy_sexy_embedded_payload%" 2>nul
+                            if not "%privacy_sexy_embedded_status%"=="collision" del /f /q "%privacy_sexy_embedded_script%" 2>nul
+                            if "%privacy_sexy_embedded_status%"=="collision" echo Failed to allocate temporary files for the embedded PowerShell script. 1>&2
+                            if "%privacy_sexy_embedded_status%"=="undecodable" echo Failed to prepare the embedded PowerShell script. 1>&2
                         {{ end }}
     -
         name: DisablePerUserService
@@ -40781,6 +40914,8 @@ functions:
                 #   `[char]35` is used in place of `#` because otherwise, the compiler interprets it
                 #   as an inline PowerShell comment. This workaround allows for the inclusion of the
                 #   hash symbol in strings without confusing the PowerShell parser.
+                # A line break is prepended when the file does not end with one: otherwise the entry was glued
+                # onto the user's last line, breaking both that entry and this one.
                 codeComment: 'Add hosts entries for {{ $domain }}'
                 code: |-
                     $domain ='{{ $domain }}'
@@ -40827,10 +40962,14 @@ functions:
                             Write-Output 'Skipping, entry already exists.'
                             continue
                         }
+                        $hostsEntryValue = $hostsEntryLine
+                        if ((-Not [String]::IsNullOrEmpty($hostsFileContents)) -And (-Not $hostsFileContents.EndsWith("`n"))) {
+                            $hostsEntryValue = [Environment]::NewLine + $hostsEntryLine
+                        }
                         try {
                             Add-Content `
                                 -Path $hostsFilePath `
-                                -Value $hostsEntryLine `
+                                -Value $hostsEntryValue `
                                 -Encoding $hostsFileEncoding `
                                 -ErrorAction Stop
                             Write-Output 'Successfully added the entry.'
@@ -41267,14 +41406,28 @@ functions:
                     #   - Logic for `evaluateDataAsPowerShell` is same as in `DeleteRegistryValue`
                     # Marked: refactor-with-if
                     #   - Logic for `evaluateDataAsPowerShell` can be much cleaner
+                    # String data containing `"` is written through the registry provider instead of `reg add`:
+                    # Windows PowerShell 5.1 passes `"` to native commands unescaped, so reg.exe stripped them
+                    # (`["MS_Outlook"]` was written as `[MS_Outlook]`, a quoted startup command lost its quotes),
+                    # and no escaping survives both PowerShell's and reg.exe's quoting rules for every value.
                     code: |-
                         $registryPath = '{{ $keyPath }}'
                         $data = {{ with $evaluateDataAsPowerShell }}$({{ $data }}) # {{ end }} '{{ $data }}'
-                        reg add '{{ $keyPath }}' `
-                            /v '{{ $valueName }}' `
-                            /t '{{ $dataType }}' `
-                            /d "$data" `
-                            /f
+                        if ("$data".Contains('"') -And (@('REG_SZ', 'REG_EXPAND_SZ') -contains '{{ $dataType }}')) {
+                            $providerPath = $registryPath -replace '^([^\\]+)\\', '$1:\'
+                            if (-Not (Test-Path -LiteralPath $providerPath)) {
+                                New-Item -Path $providerPath -Force -ErrorAction Stop | Out-Null
+                            }
+                            $propertyType = if ('{{ $dataType }}' -eq 'REG_EXPAND_SZ') { 'ExpandString' } else { 'String' }
+                            New-ItemProperty -LiteralPath $providerPath -Name '{{ $valueName }}' -Value "$data" -PropertyType $propertyType -Force -ErrorAction Stop | Out-Null
+                            Write-Host 'The operation completed successfully.'
+                        } else {
+                            reg add '{{ $keyPath }}' `
+                                /v '{{ $valueName }}' `
+                                /t '{{ $dataType }}' `
+                                /d "$data" `
+                                /f
+                        }
                     revertCode: |-
                         {{ with $deleteOnRevert }}
                             reg delete '{{ $keyPath }}' `
@@ -41282,11 +41435,21 @@ functions:
                                 /f 2>$null
                         {{ end }}{{ with $dataOnRevert }}
                             $revertData = {{ with $evaluateDataAsPowerShell }}$({{ $dataOnRevert }}) # {{ end }} '{{ $dataOnRevert }}'
-                            reg add '{{ $keyPath }}' `
-                                /v '{{ $valueName }}' `
-                                /t '{{ $dataType }}' `
-                                /d "$revertData" `
-                                /f
+                            if ("$revertData".Contains('"') -And (@('REG_SZ', 'REG_EXPAND_SZ') -contains '{{ $dataType }}')) {
+                                $providerPath = '{{ $keyPath }}' -replace '^([^\\]+)\\', '$1:\'
+                                if (-Not (Test-Path -LiteralPath $providerPath)) {
+                                    New-Item -Path $providerPath -Force -ErrorAction Stop | Out-Null
+                                }
+                                $propertyType = if ('{{ $dataType }}' -eq 'REG_EXPAND_SZ') { 'ExpandString' } else { 'String' }
+                                New-ItemProperty -LiteralPath $providerPath -Name '{{ $valueName }}' -Value "$revertData" -PropertyType $propertyType -Force -ErrorAction Stop | Out-Null
+                                Write-Host 'The operation completed successfully.'
+                            } else {
+                                reg add '{{ $keyPath }}' `
+                                    /v '{{ $valueName }}' `
+                                    /t '{{ $dataType }}' `
+                                    /d "$revertData" `
+                                    /f
+                            }
                         {{ end }}
     -
         name: EnableTLSProtocol
@@ -43333,6 +43496,7 @@ functions:
                     parentPropertyKey: '{{ with $parentSettingName }}{{ . }}{{ end }}'
                     powerShellValueExpression: '{{ $powerShellValueExpression }}'
                     deleteOnRevert: 'true' # Default WinGet has no explicit settings
+                    createMissingFile: 'true' # WinGet only creates the file when the user opens `winget settings`
             -
                 function: Comment
                 parameters:
@@ -43346,6 +43510,7 @@ functions:
                     parentPropertyKey: '{{ with $parentSettingName }}{{ . }}{{ end }}'
                     powerShellValueExpression: '{{ $powerShellValueExpression }}'
                     deleteOnRevert: 'true' # Default WinGet has no explicit settings
+                    createMissingFile: 'true' # WinGet only creates the file when the user opens `winget settings`
     -
         name: SetMpPreference
         # Configures preferences for Microsoft Defender scans and updates.
