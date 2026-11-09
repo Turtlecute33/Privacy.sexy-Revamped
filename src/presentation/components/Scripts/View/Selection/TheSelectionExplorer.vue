@@ -5,7 +5,7 @@
       :items="outlineItems"
       :selected-script-ids="selectedScriptIds"
       :active-category-id="activeItem?.categoryId"
-      @category-activated="activeCategoryId = $event"
+      @category-activated="openCategoryId = $event"
     />
     <!--
       Remounting per category resets the list scroll position, so opening a category
@@ -23,7 +23,9 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref } from 'vue';
+import {
+  computed, defineComponent, useModel, type PropType,
+} from 'vue';
 import { injectKey } from '@/presentation/injectionSymbols';
 import type { ExecutableId } from '@/domain/Executables/Identifiable';
 import CategoryRail from './CategoryRail.vue';
@@ -38,7 +40,23 @@ export default defineComponent({
     CategoryRail,
     ScriptListPanel,
   },
-  setup() {
+  props: {
+    /**
+     * The open category, bound with `v-model` so that it can outlive this component: the scripts
+     * view unmounts the explorer while search results are shown, and a value held only in here
+     * reset to the first category whenever a search was closed. Kept locally when not bound.
+     */
+    activeCategoryId: {
+      type: String as PropType<ExecutableId>,
+      default: undefined,
+    },
+  },
+  emits: {
+    /* eslint-disable @typescript-eslint/no-unused-vars */
+    'update:activeCategoryId': (categoryId: ExecutableId | undefined) => true,
+    /* eslint-enable @typescript-eslint/no-unused-vars */
+  },
+  setup(props) {
     const { currentState } = injectKey((keys) => keys.useCollectionState);
     const { selectedScriptIds, revertedStatusByScriptId } = useSelectedScriptIds(
       injectKey((keys) => keys.useUserSelectionState),
@@ -48,14 +66,14 @@ export default defineComponent({
       () => createCategoryOutline(currentState.value.collection),
     );
 
-    const activeCategoryId = ref<ExecutableId | undefined>();
+    const openCategoryId = useModel(props, 'activeCategoryId');
 
     /*
       Falling back to the first category covers both the initial render and switching to
       an operating system whose collection does not have the previously opened category.
     */
     const activeItem = computed<CategoryOutlineItem | undefined>(
-      () => outlineItems.value.find((item) => item.categoryId === activeCategoryId.value)
+      () => outlineItems.value.find((item) => item.categoryId === openCategoryId.value)
         ?? outlineItems.value[0],
     );
 
@@ -72,7 +90,7 @@ export default defineComponent({
 
     return {
       outlineItems,
-      activeCategoryId,
+      openCategoryId,
       activeItem,
       groups,
       selectedScriptIds,

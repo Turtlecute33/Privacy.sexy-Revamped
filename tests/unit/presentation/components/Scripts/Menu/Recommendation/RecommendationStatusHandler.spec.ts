@@ -12,6 +12,9 @@ import { expectExists } from '@tests/shared/Assertions/ExpectExists';
 import { scrambledEqual } from '@/application/Common/Array';
 import type { Script } from '@/domain/Executables/Script/Script';
 import { RecommendationStatusType } from '@/presentation/components/Scripts/Menu/Recommendation/RecommendationStatusType';
+import type { SelectedScript } from '@/application/Context/State/Selection/Script/SelectedScript';
+import type { ScriptSelectionChangeCommand } from '@/application/Context/State/Selection/Script/ScriptSelectionChange';
+import { SelectedScriptStub } from '@tests/unit/shared/Stubs/SelectedScriptStub';
 import { RecommendationStatusTestScenario } from './RecommendationStatusTestScenario';
 
 describe('RecommendationStatusHandler', () => {
@@ -92,6 +95,56 @@ describe('RecommendationStatusHandler', () => {
         });
       });
     });
+    describe('applies the reverted scripts of the chosen preset', () => {
+      // Otherwise the preset stays "Custom" no matter how often it is chosen.
+      const scenario = new RecommendationStatusTestScenario();
+      const testScenarios: ReadonlyArray<{
+        readonly givenType: RecommendationStatusType;
+        readonly revertedScript: SelectedScript;
+      }> = [
+        {
+          givenType: RecommendationStatusType.Standard,
+          revertedScript: asReverted(scenario.allStandard[0]),
+        },
+        {
+          givenType: RecommendationStatusType.Strict,
+          revertedScript: asReverted(scenario.allStrict[0]),
+        },
+        {
+          givenType: RecommendationStatusType.All,
+          revertedScript: asReverted(scenario.allUnrecommended[0]),
+        },
+      ];
+      testScenarios.forEach(({ givenType, revertedScript }) => {
+        it(RecommendationStatusType[givenType], () => {
+          // arrange
+          const { stateStub, scriptsStub } = scenario.generateState([revertedScript]);
+          // act
+          setCurrentRecommendationStatus(givenType, createMutationContext(stateStub));
+          // assert
+          const changes = scriptsStub.callHistory
+            .filter((call) => call.methodName === 'processChanges')
+            .flatMap((call) => (call.args[0] as ScriptSelectionChangeCommand).changes);
+          expect(changes).to.deep.equal([{
+            scriptId: revertedScript.id,
+            newStatus: { isSelected: true, isReverted: false },
+          }]);
+        });
+      });
+      it('leaves reverted scripts outside the preset alone', () => {
+        // arrange
+        const revertedScript = asReverted(scenario.allUnrecommended[0]);
+        const { stateStub, scriptsStub } = scenario.generateState([revertedScript]);
+        // act
+        setCurrentRecommendationStatus(
+          RecommendationStatusType.Standard,
+          createMutationContext(stateStub),
+        );
+        // assert
+        expect(scriptsStub.callHistory.filter((call) => call.methodName === 'processChanges'))
+          .to.have.lengthOf(0);
+      });
+    });
   });
   describe('getCurrentRecommendationStatus', () => {
     // arrange
@@ -128,6 +181,10 @@ describe('RecommendationStatusHandler', () => {
       name: 'when all scripts are selected',
       selection: scenario.all,
       expected: RecommendationStatusType.All,
+    }, {
+      name: 'when all scripts are selected but one is reverted',
+      selection: [...scenario.all.slice(1), asReverted(scenario.all[0])],
+      expected: RecommendationStatusType.Custom,
     }];
     for (const testCase of testCases) {
       it(testCase.name, () => {
@@ -158,6 +215,10 @@ function createMutationContext(state: ICategoryCollectionState): SelectionMutati
     selection: state.selection.scripts,
     collection: state.collection,
   };
+}
+
+function asReverted(selected: SelectedScript): SelectedScript {
+  return new SelectedScriptStub(selected.script).withRevert(true);
 }
 
 function createCheckContext(state: ICategoryCollectionState): SelectionCheckContext {

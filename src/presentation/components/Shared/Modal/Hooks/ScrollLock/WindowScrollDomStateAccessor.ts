@@ -7,6 +7,19 @@ export function getWindowDomState(): ScrollDomStateAccessor {
   return new WindowScrollDomState();
 }
 
+/*
+  Restoring the scroll position is not a navigation, so it must not animate. A plain assignment
+  honours the global `scroll-behavior: smooth`, which made closing a modal jump to the top and then
+  glide back down. Overriding the inline value for the duration of the assignment works in every
+  browser, unlike `scrollTo({ behavior: 'instant' })`, which older engines reject.
+*/
+function scrollInstantly(scroll: () => void): void {
+  const { scrollBehavior } = HtmlElement.style;
+  HtmlElement.style.scrollBehavior = 'auto';
+  scroll();
+  HtmlElement.style.scrollBehavior = scrollBehavior;
+}
+
 class WindowScrollDomState implements ScrollDomStateAccessor {
   get bodyStyleOverflowX(): string { return BodyElement.style.overflowX; }
 
@@ -18,11 +31,11 @@ class WindowScrollDomState implements ScrollDomStateAccessor {
 
   get htmlScrollLeft(): number { return HtmlElement.scrollLeft; }
 
-  set htmlScrollLeft(value: number) { HtmlElement.scrollLeft = value; }
+  set htmlScrollLeft(value: number) { scrollInstantly(() => { HtmlElement.scrollLeft = value; }); }
 
   get htmlScrollTop(): number { return HtmlElement.scrollTop; }
 
-  set htmlScrollTop(value: number) { HtmlElement.scrollTop = value; }
+  set htmlScrollTop(value: number) { scrollInstantly(() => { HtmlElement.scrollTop = value; }); }
 
   get bodyStyleLeft(): string { return BodyElement.style.left; }
 

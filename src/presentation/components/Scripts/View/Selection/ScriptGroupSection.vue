@@ -37,7 +37,7 @@
     </header>
     <ul class="group__scripts">
       <ScriptRow
-        v-for="script of group.scripts"
+        v-for="script of renderedScripts"
         :key="script.scriptId"
         :script="script"
         :is-script-selected="selectedScriptIds.has(script.scriptId)"
@@ -57,7 +57,7 @@ import type { ExecutableId } from '@/domain/Executables/Identifiable';
 import type { ScriptSelectionChange } from '@/application/Context/State/Selection/Script/ScriptSelectionChange';
 import SelectionCheckbox from './SelectionCheckbox.vue';
 import ScriptRow from './ScriptRow.vue';
-import type { ScriptGroup } from './Model/ScriptGroup';
+import type { ScriptGroup, ScriptGroupItem } from './Model/ScriptGroup';
 
 export default defineComponent({
   components: {
@@ -71,6 +71,15 @@ export default defineComponent({
       type: Object as PropType<ScriptGroup>,
       required: true,
     },
+    /**
+     * How many of the group's scripts to render as rows, so a long list can fill in gradually.
+     * Everything else in the section, such as its counts and its "select all" checkbox, always
+     * covers the whole group. Renders every script when omitted.
+     */
+    renderedScriptCount: {
+      type: Number,
+      default: undefined,
+    },
     selectedScriptIds: {
       type: Object as PropType<ReadonlySet<ExecutableId>>,
       required: true,
@@ -82,6 +91,12 @@ export default defineComponent({
   },
   setup(props) {
     const { modifyCurrentSelection } = injectKey((keys) => keys.useUserSelectionState);
+
+    const renderedScripts = computed<ReadonlyArray<ScriptGroupItem>>(
+      () => (props.renderedScriptCount === undefined
+        ? props.group.scripts
+        : props.group.scripts.slice(0, props.renderedScriptCount)),
+    );
 
     const selectedCount = computed<number>(() => props.group.scripts.filter(
       (script) => props.selectedScriptIds.has(script.scriptId),
@@ -136,6 +151,7 @@ export default defineComponent({
 
     return {
       checkboxId: useId(),
+      renderedScripts,
       isWhollyReversible,
       isGroupReverted,
       selectedCount,

@@ -121,6 +121,41 @@ describe('TheScriptsView.vue', () => {
     });
   });
 
+  describe('active category', () => {
+    it('returns to the category that was open before the search', async () => {
+      // arrange
+      const expectedCategoryId = 'category-opened-before-search';
+      const filterStub = new FilterContextStub();
+      const stateStub = new UseCollectionStateStub().withFilter(filterStub);
+      const wrapper = mountComponent({
+        useCollectionState: stateStub.get(),
+      });
+      wrapper.findComponent(TheSelectionExplorer).vm.$emit('update:activeCategoryId', expectedCategoryId);
+      await wrapper.vm.$nextTick();
+
+      // act
+      filterStub.notifyFilterChange(FilterChangeDetailsStub.forApply(
+        new FilterResultStub().withQueryAndSomeMatches(),
+      ));
+      await wrapper.vm.$nextTick();
+      filterStub.notifyFilterChange(FilterChangeDetailsStub.forClear());
+      await wrapper.vm.$nextTick();
+
+      // assert
+      const explorer = wrapper.findComponent(TheSelectionExplorer);
+      expect(explorer.props('activeCategoryId')).to.equal(expectedCategoryId);
+    });
+
+    it('leaves the category to the explorer until one is chosen', () => {
+      // act
+      const wrapper = mountComponent();
+
+      // assert
+      const explorer = wrapper.findComponent(TheSelectionExplorer);
+      expect(explorer.props('activeCategoryId')).to.equal(undefined);
+    });
+  });
+
   describe('clearing the search', () => {
     it('clears the filter when the search results request it', async () => {
       // arrange

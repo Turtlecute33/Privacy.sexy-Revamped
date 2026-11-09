@@ -54,14 +54,14 @@ import {
   useFloating, arrow, shift, flip, type Placement, offset, autoUpdate,
 } from '@floating-ui/vue';
 import {
-  defineComponent, shallowRef, computed, ref, onUnmounted, nextTick,
+  defineComponent, shallowRef, computed, ref, onUnmounted, nextTick, watch,
 } from 'vue';
 import { useResizeObserverPolyfill } from '@/presentation/components/Shared/Hooks/Resize/UseResizeObserverPolyfill';
 import { throttle } from '@/application/Common/Timing/Throttle';
 import { type TargetEventListener } from '@/presentation/components/Shared/Hooks/UseAutoUnsubscribedEventListener';
 import { injectKey } from '@/presentation/injectionSymbols';
 import { getArrowStyles } from './TooltipArrowStyles';
-import type { CSSProperties } from 'vue';
+import type { CSSProperties, Ref } from 'vue';
 
 const GAP_BETWEEN_TOOLTIP_AND_TRIGGER_IN_PX = 2;
 const ARROW_SIZE_IN_PX = 4;
@@ -85,32 +85,39 @@ export default defineComponent({
     const eventListener = injectKey((keys) => keys.useAutoUnsubscribedEventListener);
     useResizeObserverPolyfill();
 
+    const isTooltipVisible = ref(false);
+
+    /*
+      Only the first open renders the tooltip body (see the `has-been-shown` slot prop); it then
+      stays rendered, so later opens do not rebuild it.
+    */
+    const hasBeenShown = ref(false);
+
     /*
       The tooltip overlay is hidden with `visibility`/`opacity` rather than `display: none`, so its
       floating element is in the DOM from the very first paint. Handing that element to
-      `useFloating` immediately would make every tooltip on the page run `computePosition` and
+      `useFloating` permanently would make every tooltip on the page run `computePosition` and
       install `autoUpdate` (two `ResizeObserver`s, an `IntersectionObserver` and ancestor
-      scroll/resize listeners each) at mount, with no user interaction. On the scripts view that is
-      79 tooltips and the dominant contributor to Lighthouse's "Forced reflow" insight.
+      scroll/resize listeners each), with no user interaction. On the scripts view that is one per
+      script row, and the dominant contributor to Lighthouse's "Forced reflow" insight.
 
-      Withholding the floating element until the first open avoids all of it: `useFloating`'s
+      Handing it over only while the tooltip is visible avoids all of it: `useFloating`'s
       `update()` early-returns while the floating ref is nullish, and its `attach()` skips
-      `whileElementsMounted` entirely. The watcher that calls `attach()` is `flush: 'sync'` and not
-      `immediate`, so positioning starts the instant this gate opens.
-
-      The flag is never reset: once a tooltip has been opened, keeping it positioned costs nothing
-      extra and avoids re-measuring on every subsequent hover.
+      `whileElementsMounted` entirely. The watcher that calls `attach()` is `flush: 'sync'`, so
+      positioning starts the instant the tooltip opens and `autoUpdate` is torn down the instant it
+      closes. Gating on the first open alone was not enough: every tooltip ever hovered kept
+      re-measuring on each scroll and resize for the rest of the visit, so the cost grew the longer
+      someone browsed.
     */
-    const hasBeenShown = ref(false);
-    const floatingElementOnceShown = computed(
-      () => (hasBeenShown.value ? tooltipDisplayElement.value : undefined),
+    const floatingElementWhileVisible = computed(
+      () => (isTooltipVisible.value ? tooltipDisplayElement.value : undefined),
     );
 
     const {
       floatingStyles, middlewareData, placement, update,
     } = useFloating(
       triggeringElement,
-      floatingElementOnceShown,
+      floatingElementWhileVisible,
       {
         placement: DEFAULT_PLACEMENT,
         middleware: [
@@ -132,10 +139,16 @@ export default defineComponent({
       (often 60 updates per second and more depending on the refresh rate), which can be excessively
       performance-intensive. It's overkill for the application needs and a monkey solution due to
       its brute-force nature.
+
+      The listeners are attached only while the tooltip is visible. A closed tooltip has nothing to
+      reposition, and a page-wide listener per mounted tooltip meant that every transition anywhere
+      on the page ran one throttled handler for each tooltip in the document.
     */
     setupTransitionEndEvents(throttle(() => {
       update();
-    }, 400, { excludeLeadingCall: true }), eventListener);
+    }, 400, { excludeLeadingCall: true }), eventListener, computed(
+      () => (isTooltipVisible.value ? document.body : undefined),
+    ));
 
     const arrowStyles = computed<CSSProperties>(() => getArrowStyles({
       calculatedArrowCoords: middlewareData.value.arrow,
@@ -143,7 +156,8 @@ export default defineComponent({
       arrowSizeInPx: ARROW_SIZE_IN_PX,
     }));
 
-    const isTooltipVisible = ref(false);
+    dismissOnEscape(isTooltipVisible, () => hideTooltip());
+
     const tooltipIdentifier = Symbol('tooltip');
     let hideTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -214,13 +228,46 @@ export default defineComponent({
 function setupTransitionEndEvents(
   handler: () => void,
   listener: TargetEventListener,
+  target: Readonly<Ref<HTMLElement | undefined>>,
 ) {
   const transitionEndEvents: readonly (keyof HTMLElementEventMap)[] = [
     'transitionend',
     'transitioncancel',
   ];
   transitionEndEvents.forEach((eventName) => {
-    listener.startListening(document.body, eventName, handler);
+    listener.startListening(target, eventName, handler);
+  });
+}
+
+/*
+  Content that appears on hover or focus must be dismissible without moving the pointer or the
+  focus (WCAG 2.1, 1.4.13 Content on Hover or Focus), and Escape is the expected way to do it.
+
+  It listens for `keyup`, in the capture phase on `window`, and stops the event there, because
+  tooltips also open inside modals, and `ModalContainer` closes on an Escape `keyup` heard on the
+  document. Capturing on `window` runs before that listener, so one press closes the tooltip and
+  only the next one closes the modal, rather than one press dismissing both layers at once. It is
+  attached only while the tooltip is visible, so it never swallows an Escape meant for anything
+  else.
+*/
+function dismissOnEscape(
+  isVisible: Readonly<Ref<boolean>>,
+  dismiss: () => void,
+): void {
+  const onKeyUp = (event: KeyboardEvent) => {
+    if (event.key !== 'Escape') {
+      return;
+    }
+    event.stopPropagation();
+    dismiss();
+  };
+  const listenerOptions: AddEventListenerOptions = { capture: true };
+  watch(isVisible, (isNowVisible, _, onCleanup) => {
+    if (!isNowVisible) {
+      return;
+    }
+    window.addEventListener('keyup', onKeyUp, listenerOptions);
+    onCleanup(() => window.removeEventListener('keyup', onKeyUp, listenerOptions));
   });
 }
 </script>

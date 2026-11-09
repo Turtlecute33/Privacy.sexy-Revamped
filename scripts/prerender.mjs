@@ -40,11 +40,23 @@ const PRERENDERED_OPERATING_SYSTEM = 'Windows';
 const CODE_EDITOR_SELECTOR = '#codeEditor';
 
 /*
- * A sentence from the generated default script. The code pane is only ~320 px wide even at the
- * 1280 px prerender viewport, so the editor soft-wraps every long line into three or four rendered
- * rows, each its own element. That is why the phrase is matched against the tag-stripped text
- * rather than the raw HTML, and why it stops short of the trailing period, which the editor pushes
- * onto a row of its own.
+ * Must match the rule in TheCodeArea.vue, which is the only styling the plain copy of the script
+ * gets in the snapshot.
+ */
+const CODE_EDITOR_STATIC_TEXT_CLASS = 'code-area__static-text';
+
+/*
+ * Taller than anything the code pane lays out at any viewport, and far below the 1,000,000 px that
+ * Ace gives its layers to mean "unbounded".
+ */
+const MAX_CODE_EDITOR_INLINE_HEIGHT_IN_PX = 2000;
+
+/* The id of the notice index.html shows when the app fails to start. */
+const STARTUP_FAILURE_NOTICE_ID = 'startup-failure';
+
+/*
+ * A sentence from the generated default script. It is matched against the tag-stripped text
+ * rather than the raw HTML, so it does not depend on how the snapshot marks the script up.
  */
 const PRERENDERED_SCRIPT_PHRASE = 'Start by exploring different categories '
   + 'and choosing different tweaks';
@@ -142,6 +154,57 @@ async function renderCodeEditor(page) {
 }
 
 /*
+ * Ace lays the editor out as absolutely positioned layers sized by inline styles, and gives its
+ * gutter and text layers a height of 1,000,000 px to mean "unbounded". Its CSS is stripped from
+ * the snapshot (see stripRuntimeInjectedStyles()), so those layers fell back into normal flow: on
+ * the stacked phone layout the page was a million pixels tall from first paint until the app
+ * mounted, and stayed that way without JavaScript, with the footer at y ≈ 1,000,000.
+ *
+ * The snapshot only needs the script's text, so the editor's subtree is replaced with a plain
+ * `<pre>` that holds it, and the `ace_*` classes come off the container. That also drops the
+ * hidden font-measurement probes and the off-screen `<textarea>` Ace keeps in the same subtree,
+ * neither of which means anything without Ace running. The mounted app is not affected: Vue's
+ * mount clears `#app` and renders an empty `#codeEditor`, so Ace never sees this markup, either
+ * as stray DOM or as text to adopt as its initial value.
+ */
+async function replaceCodeEditorWithStaticText(page) {
+  const characterCount = await page.evaluate((selector, staticTextClass) => {
+    const container = document.querySelector(selector);
+    const editor = container?.env?.editor; // where `ace.edit()` keeps the editor it created
+    if (!editor) {
+      throw new Error(`No Ace editor is attached to ${selector}.`);
+    }
+    const text = editor.getValue();
+    // Stops its render loop and observers, so nothing writes into the subtree after this.
+    editor.destroy();
+    const staticText = document.createElement('pre');
+    staticText.className = staticTextClass;
+    staticText.textContent = text;
+    container.replaceChildren(staticText);
+    container.classList.remove(
+      ...[...container.classList].filter((className) => /^ace[_-]/.test(className)),
+    );
+    container.removeAttribute('style');
+    return text.length;
+  }, CODE_EDITOR_SELECTOR, CODE_EDITOR_STATIC_TEXT_CLASS);
+  console.log(`Replaced the code editor markup with its ${characterCount} characters of text.`);
+}
+
+/*
+ * The script list renders its rows over several frames after mount (UseGradualRendering.ts) and
+ * reports progress through `aria-busy`. A capture taken while it is still filling in would ship
+ * only the first rows of the category. Waiting for the attribute to read "false", rather than for
+ * it to be absent, makes a future change that drops it time out here instead of silently capturing
+ * a partial list.
+ */
+async function waitForScriptList(page) {
+  await page.waitForFunction(
+    () => document.querySelector('#app .panel__body')?.getAttribute('aria-busy') === 'false',
+    { timeout: READY_TIMEOUT_MS },
+  );
+}
+
+/*
  * Vite's dynamic-import helper appends a `<link rel="modulepreload">` to the live document
  * for every chunk it loads. Capturing the page after mount therefore bakes preloads for
  * lazily-loaded chunks (notably the ~470 KB Ace editor) into the static HTML, which makes
@@ -214,8 +277,9 @@ async function stripRuntimeInjectedScripts(page, builtHtml) {
  * (512 'ה' and 534 'X' at the time of writing) into a hidden, absolutely-positioned container.
  * They are invisible, they are rebuilt from scratch when the editor chunk loads at runtime, and in
  * the snapshot they do active harm: they are dead bytes on every cold load, and they land in the
- * middle of the text that crawlers and AI scrapers extract from the page. The rest of the editor
- * subtree stays, because the generated script it shows is real content.
+ * middle of the text that crawlers and AI scrapers extract from the page. The probes inside the
+ * editor go with the rest of its markup (see replaceCodeEditorWithStaticText()); this catches any
+ * that Ace places elsewhere in the document.
  */
 async function stripRuntimeInjectedFontProbes(page) {
   const removedCharacters = await page.evaluate(() => {
@@ -278,6 +342,52 @@ function assertPrerenderedScript(html) {
   }
 }
 
+/*
+ * Anything in the editor's subtree that still carries a runtime-computed height means editor
+ * markup reached the snapshot without the CSS that lays it out, which is how the page came to be a
+ * million pixels tall. That is invisible on the desktop viewport this script captures at and only
+ * shows on a phone, so it is checked here instead of left to be noticed.
+ */
+async function assertBoundedCodeEditorHeight(page) {
+  const oversizedElements = await page.evaluate((selector, maxHeightInPx) => {
+    const container = document.querySelector(selector);
+    if (!container) {
+      return [];
+    }
+    return [container, ...container.querySelectorAll('*')]
+      .filter((element) => Number.parseFloat(element.style.height) > maxHeightInPx)
+      .map((element) => `<${element.tagName.toLowerCase()} class="${element.className}" `
+        + `style="height: ${element.style.height}">`);
+  }, CODE_EDITOR_SELECTOR, MAX_CODE_EDITOR_INLINE_HEIGHT_IN_PX);
+  if (oversizedElements.length > 0) {
+    throw new Error(
+      `The snapshot's ${CODE_EDITOR_SELECTOR} holds elements with an inline height above `
+      + `${MAX_CODE_EDITOR_INLINE_HEIGHT_IN_PX} px: ${oversizedElements.join(', ')}. Without the `
+      + 'editor\'s own CSS they sit in normal flow and stretch the page, so check that '
+      + 'replaceCodeEditorWithStaticText() still replaces the editor markup.',
+    );
+  }
+}
+
+/*
+ * index.html shows a notice when the app fails to start. A failure late enough to happen after the
+ * app has rendered (an error thrown while mounting) passes every readiness check above, so make
+ * sure the notice is not about to be published as part of the page. Checked on the DOM rather than
+ * the HTML, which also holds the inline script that creates the notice, and so its id.
+ */
+async function assertNoStartupFailureNotice(page) {
+  const hasNotice = await page.evaluate(
+    (noticeId) => document.getElementById(noticeId) !== null,
+    STARTUP_FAILURE_NOTICE_ID,
+  );
+  if (hasNotice) {
+    throw new Error(
+      'The app reported a failed start while being prerendered, so the snapshot carries the '
+      + 'failure notice. Open the built site in a browser to see the error it logs.',
+    );
+  }
+}
+
 async function prerender() {
   if (!existsSync(INDEX_FILE)) {
     throw new Error(`Build output not found at ${INDEX_FILE}. Run the build first.`);
@@ -315,12 +425,16 @@ async function prerender() {
       APP_CONTENT_SELECTOR,
     );
     await assertPrerenderedOperatingSystem(page);
+    await waitForScriptList(page);
     await renderCodeEditor(page);
+    await replaceCodeEditorWithStaticText(page);
     const builtHtml = await readFile(INDEX_FILE, 'utf8');
     await stripRuntimeInjectedPreloads(page, builtHtml);
     await stripRuntimeInjectedStyles(page, builtHtml);
     await stripRuntimeInjectedScripts(page, builtHtml);
     await stripRuntimeInjectedFontProbes(page);
+    await assertBoundedCodeEditorHeight(page);
+    await assertNoStartupFailureNotice(page);
     const html = await page.content();
     if (!html.includes('app__wrapper')) {
       throw new Error('Prerendered HTML is missing app content; aborting to avoid deploying an empty page.');

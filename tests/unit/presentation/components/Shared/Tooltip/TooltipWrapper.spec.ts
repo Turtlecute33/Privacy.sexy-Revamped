@@ -6,6 +6,7 @@ import { shallowMount } from '@vue/test-utils';
 import { InjectionKeys } from '@/presentation/injectionSymbols';
 import TooltipWrapper from '@/presentation/components/Shared/Tooltip/TooltipWrapper.vue';
 import { UseEventListenerStub } from '@tests/unit/shared/Stubs/UseEventListenerStub';
+import { useAutoUnsubscribedEventListener, type UseEventListener } from '@/presentation/components/Shared/Hooks/UseAutoUnsubscribedEventListener';
 import type { Mock } from 'vitest';
 import type { Ref, VNode } from 'vue';
 
@@ -45,6 +46,7 @@ const DOM_SELECTOR_DISPLAY = '.tooltip__display';
 const DOM_CLASS_VISIBLE = 'tooltip__overlay--visible';
 const DOM_CLASS_SLOT_STATE = 'slot-state';
 const POINTER_HANDOFF_DELAY_IN_MS = 75;
+const TRANSITION_UPDATE_THROTTLE_IN_MS = 400;
 
 type TooltipSlot = string | ((props: { readonly hasBeenShown: boolean }) => VNode);
 
@@ -179,6 +181,196 @@ describe('TooltipWrapper.vue', () => {
     wrapper.unmount();
   });
 
+  it('stops positioning the tooltip once it closes', async () => {
+    // arrange
+    const wrapper = mountComponent('Trigger');
+    const tooltipDisplay = wrapper.find(DOM_SELECTOR_DISPLAY);
+    await tooltipDisplay.trigger('mouseenter');
+    const floatingElementWhileOpen = floatingElementArgument?.value;
+
+    // act
+    await tooltipDisplay.trigger('mouseleave');
+
+    // assert
+    expect(floatingElementWhileOpen).to.equal(tooltipDisplay.element);
+    expect(floatingElementArgument?.value).to.equal(undefined);
+
+    wrapper.unmount();
+  });
+
+  it('positions the tooltip again when it reopens', async () => {
+    // arrange
+    const wrapper = mountComponent('Trigger');
+    const tooltipDisplay = wrapper.find(DOM_SELECTOR_DISPLAY);
+    await tooltipDisplay.trigger('mouseenter');
+    await tooltipDisplay.trigger('mouseleave');
+
+    // act
+    await wrapper.find(DOM_SELECTOR_TRIGGER).trigger('mouseenter');
+
+    // assert
+    expect(floatingElementArgument?.value).to.equal(tooltipDisplay.element);
+
+    wrapper.unmount();
+  });
+
+  it('keeps the tooltip content rendered after it closes', async () => {
+    // arrange
+    const wrapper = mountComponent(
+      'Trigger',
+      ({ hasBeenShown }) => h('span', { class: DOM_CLASS_SLOT_STATE }, `${hasBeenShown}`),
+    );
+    const tooltipDisplay = wrapper.find(DOM_SELECTOR_DISPLAY);
+    await tooltipDisplay.trigger('mouseenter');
+
+    // act
+    await tooltipDisplay.trigger('mouseleave');
+
+    // assert
+    expect(isTooltipVisible(wrapper)).to.equal(false);
+    expect(wrapper.find(`.${DOM_CLASS_SLOT_STATE}`).text()).to.equal('true');
+
+    wrapper.unmount();
+  });
+
+  describe('repositioning after transitions on the page', () => {
+    it('repositions while visible', async () => {
+      // arrange
+      const wrapper = mountComponent('Trigger', undefined, useAutoUnsubscribedEventListener);
+      await wrapper.find(DOM_SELECTOR_TRIGGER).trigger('mouseenter');
+      positionUpdate?.mockClear();
+
+      // act
+      document.body.dispatchEvent(new Event('transitionend'));
+      vi.advanceTimersByTime(TRANSITION_UPDATE_THROTTLE_IN_MS);
+
+      // assert
+      expect(positionUpdate).toHaveBeenCalledOnce();
+
+      wrapper.unmount();
+    });
+
+    it('does not listen before the tooltip is first opened', () => {
+      // arrange
+      const wrapper = mountComponent('Trigger', undefined, useAutoUnsubscribedEventListener);
+
+      // act
+      document.body.dispatchEvent(new Event('transitionend'));
+      vi.advanceTimersByTime(TRANSITION_UPDATE_THROTTLE_IN_MS);
+
+      // assert
+      expect(positionUpdate).not.toHaveBeenCalled();
+
+      wrapper.unmount();
+    });
+
+    it('stops listening once the tooltip has closed', async () => {
+      // arrange
+      const wrapper = mountComponent('Trigger', undefined, useAutoUnsubscribedEventListener);
+      const tooltipDisplay = wrapper.find(DOM_SELECTOR_DISPLAY);
+      await tooltipDisplay.trigger('mouseenter');
+      await tooltipDisplay.trigger('mouseleave');
+      vi.runOnlyPendingTimers();
+      positionUpdate?.mockClear();
+
+      // act
+      document.body.dispatchEvent(new Event('transitionend'));
+      document.body.dispatchEvent(new Event('transitioncancel'));
+      vi.advanceTimersByTime(TRANSITION_UPDATE_THROTTLE_IN_MS);
+
+      // assert
+      expect(positionUpdate).not.toHaveBeenCalled();
+
+      wrapper.unmount();
+    });
+  });
+
+  describe('dismissing with Escape', () => {
+    it('closes the visible tooltip', async () => {
+      // arrange
+      const wrapper = mountComponent('Trigger');
+      await wrapper.find(DOM_SELECTOR_TRIGGER).trigger('focusin');
+
+      // act
+      pressKey('Escape');
+      await nextTick();
+
+      // assert
+      expect(isTooltipVisible(wrapper)).to.equal(false);
+
+      wrapper.unmount();
+    });
+
+    it('stays open when another key is pressed', async () => {
+      // arrange
+      const wrapper = mountComponent('Trigger');
+      await wrapper.find(DOM_SELECTOR_TRIGGER).trigger('focusin');
+
+      // act
+      pressKey('Enter');
+      await nextTick();
+
+      // assert
+      expect(isTooltipVisible(wrapper)).to.equal(true);
+
+      wrapper.unmount();
+    });
+
+    it('keeps the Escape that closed it from also closing an enclosing modal', async () => {
+      // arrange
+      const wrapper = mountComponent('Trigger');
+      await wrapper.find(DOM_SELECTOR_TRIGGER).trigger('mouseenter');
+      const modalEscapeListener = vi.fn();
+      document.addEventListener('keyup', modalEscapeListener);
+
+      // act
+      pressKey('Escape');
+      await nextTick();
+
+      // assert
+      expect(modalEscapeListener).not.toHaveBeenCalled();
+
+      document.removeEventListener('keyup', modalEscapeListener);
+      wrapper.unmount();
+    });
+
+    it('lets Escape through while the tooltip is closed', async () => {
+      // arrange
+      const wrapper = mountComponent('Trigger');
+      const tooltipDisplay = wrapper.find(DOM_SELECTOR_DISPLAY);
+      await tooltipDisplay.trigger('mouseenter');
+      await tooltipDisplay.trigger('mouseleave');
+      const modalEscapeListener = vi.fn();
+      document.addEventListener('keyup', modalEscapeListener);
+
+      // act
+      pressKey('Escape');
+
+      // assert
+      expect(modalEscapeListener).toHaveBeenCalledOnce();
+
+      document.removeEventListener('keyup', modalEscapeListener);
+      wrapper.unmount();
+    });
+
+    it('lets Escape through once the tooltip is unmounted', async () => {
+      // arrange
+      const wrapper = mountComponent('Trigger');
+      await wrapper.find(DOM_SELECTOR_TRIGGER).trigger('mouseenter');
+      const modalEscapeListener = vi.fn();
+      document.addEventListener('keyup', modalEscapeListener);
+
+      // act
+      wrapper.unmount();
+      pressKey('Escape');
+
+      // assert
+      expect(modalEscapeListener).toHaveBeenCalledOnce();
+
+      document.removeEventListener('keyup', modalEscapeListener);
+    });
+  });
+
   it('closes after the handoff window when the pointer leaves the trigger', async () => {
     // arrange
     const wrapper = mountComponent('Trigger');
@@ -200,6 +392,7 @@ describe('TooltipWrapper.vue', () => {
 function mountComponent(
   triggerText: string,
   tooltipSlot: TooltipSlot = '<a href="#details">Read details</a>',
+  useEventListener: UseEventListener = new UseEventListenerStub().get(),
 ) {
   return shallowMount(TooltipWrapper, {
     slots: {
@@ -208,11 +401,14 @@ function mountComponent(
     },
     global: {
       provide: {
-        [InjectionKeys.useAutoUnsubscribedEventListener.key]:
-          new UseEventListenerStub().get(),
+        [InjectionKeys.useAutoUnsubscribedEventListener.key]: useEventListener,
       },
     },
   });
+}
+
+function pressKey(key: string): void {
+  document.dispatchEvent(new KeyboardEvent('keyup', { key, bubbles: true }));
 }
 
 function isTooltipVisible(wrapper: ReturnType<typeof mountComponent>): boolean {

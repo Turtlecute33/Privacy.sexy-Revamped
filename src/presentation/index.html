@@ -52,7 +52,7 @@
       Exceptions:
         - [+] `style-src 'unsafe-inline'`   : Required for Vue.
         - [+] `img-src data:`               : Required for Ace (code editor) CSS.
-        - [+] `script-src: 'unsafe-inline'` : Required for Vite legacy (@vitejs/plugin-legacy) for production builds.
+        - [+] `script-src: 'unsafe-inline'` : Required for the inline analytics loader below and the inline splash screen script.
         - [-] `upgrade-insecure-requests`   : Required for development on macOS Safari or Safari will block requests on `http://localhost`.
     -->
   <meta http-equiv="Content-Security-Policy" content="
@@ -78,6 +78,82 @@
       s.dataset.websiteId = '9b0fe58d-35b1-4222-98f9-d7c0798eff18';
       document.head.appendChild(s);
     }, { once: true });
+  </script>
+  <!--
+      Recovers from a failed start (see bootstrapping/ApplicationStartup.ts). Inline, because the
+      case that matters most is the app's code not loading at all: a deploy replaces the hashed
+      files, and a cached copy of this page still points at the old ones, which are gone. That left
+      the prerendered snapshot on screen, looking like the app but doing nothing. One reload fetches
+      the current page; the session flag stops a failure a reload cannot fix from reloading forever,
+      and the visitor is told instead. The notice is only ever built on failure, so the prerender
+      never captures it.
+    -->
+  <script>
+    (() => {
+      const reloadFlag = 'privacy-sexy-startup-reload';
+      let isHandled = false;
+      const showNotice = () => {
+        const notice = document.createElement('div');
+        notice.id = 'startup-failure';
+        notice.setAttribute('role', 'alert');
+        notice.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10000;padding:12px 16px;'
+          + 'background:#0b1730;color:#dbe7ff;border-bottom:2px solid #20c9a1;text-align:center;'
+          + 'font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';
+        const reloadLink = document.createElement('a');
+        reloadLink.href = location.pathname + location.search;
+        reloadLink.textContent = 'Reload the page';
+        reloadLink.style.color = '#20c9a1';
+        reloadLink.addEventListener('click', (event) => {
+          event.preventDefault();
+          location.reload();
+        });
+        notice.append('privacy.sexy could not start. ', reloadLink, ' to try again.');
+        document.getElementById('splash-screen')?.remove();
+        document.body.prepend(notice);
+      };
+      const recover = (isRecoverableByReload) => {
+        if (isHandled) {
+          return;
+        }
+        isHandled = true;
+        try {
+          if (isRecoverableByReload && !sessionStorage.getItem(reloadFlag)) {
+            sessionStorage.setItem(reloadFlag, '1');
+            location.reload();
+            return;
+          }
+        } catch {
+          // Without storage a reload loop cannot be ruled out, so do not reload.
+        }
+        showNotice();
+      };
+      let hasStarted = false;
+      // Captured, because a script that fails to load fires `error` on its element, without bubbling.
+      addEventListener('error', (event) => {
+        if (event.target instanceof HTMLScriptElement && event.target.type === 'module') {
+          recover(true); // The app's code did not download.
+        } else if (!hasStarted && event.filename?.startsWith(location.origin)) {
+          recover(false); // It downloaded but threw before starting, e.g. in a too old browser.
+        }
+      }, true);
+      document.addEventListener('app-failed', (event) => {
+        recover(event.detail?.isRecoverableByReload === true);
+      });
+      /*
+        Starting after all means an error caught above was not fatal, so its notice goes. A good
+        start also re-arms the reload, so a later deploy in the same tab can use it again.
+      */
+      document.addEventListener('app-ready', () => {
+        hasStarted = true;
+        isHandled = false;
+        document.getElementById('startup-failure')?.remove();
+        try {
+          sessionStorage.removeItem(reloadFlag);
+        } catch {
+          // Nothing could have been stored either.
+        }
+      });
+    })();
   </script>
 
   <!-- Structured data for search engines and AI answer engines -->
@@ -141,7 +217,7 @@
             "name": "Is privacy.sexy safe to use?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Yes. It is open source, transparent, and runs entirely in your browser with no tracking. Every command is shown to you before anything runs, so you can review exactly what a script does before copying or downloading it."
+              "text": "Yes. It is open source and builds every script in your browser, so your selection never leaves your device. The site sets no cookies and loads no advertising or third-party trackers; the only request beyond the page itself is an anonymous page-view count to a self-hosted analytics server. Every command is shown to you before anything runs, so you can review exactly what a script does before copying or downloading it."
             }
           },
           {
@@ -193,8 +269,8 @@
       <p><strong>JavaScript is disabled</strong></p>
       <p>
         You can still read the catalog below, but building a script needs JavaScript enabled.
-        privacy.sexy Revamped runs entirely in your browser: it has no backend, sends nothing
-        anywhere, and every command is shown to you before you run it.
+        privacy.sexy Revamped builds scripts entirely in your browser: it has no backend, your
+        selection never leaves your device, and every command is shown to you before you run it.
       </p>
     </div>
   </noscript>

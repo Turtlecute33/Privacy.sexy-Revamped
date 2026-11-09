@@ -54,10 +54,16 @@ const selectors = new Map<RecommendationStatusType, RecommendationStatusTypeHand
   [RecommendationStatusType.Standard, getRecommendationLevelSelector(RecommendationLevel.Standard)],
   [RecommendationStatusType.Strict, getRecommendationLevelSelector(RecommendationLevel.Strict)],
   [RecommendationStatusType.All, {
-    select: ({ selection }) => selection.selectAll(),
+    select: ({ selection, collection }) => selectPreset(
+      collection.getAllScripts(),
+      selection,
+      () => selection.selectAll(),
+    ),
     isSelected: (
       { selection, collection },
-    ) => selection.selectedScripts.length === collection.totalScripts,
+    ) => selection.selectedScripts
+      .filter((selected) => !selected.revert)
+      .length === collection.totalScripts,
   }],
 ]);
 
@@ -86,7 +92,38 @@ function selectOnly(
 ): void {
   const { collection, selection } = context;
   const scripts = collection.getScriptsByLevel(level);
-  selection.selectOnly(scripts);
+  selectPreset(scripts, selection, () => selection.selectOnly(scripts));
+}
+
+/*
+  `selectOnly` and `selectAll` keep the revert state of scripts that are already selected, but
+  choosing a preset means applying its scripts. Without this, a preset that includes a reverted
+  script stays "Custom" however often it is chosen, because `isSelected` only counts scripts that
+  are applied. The reverted scripts are read before `select` runs, so the result does not depend
+  on whether the selection applies changes at once or debounced.
+*/
+function selectPreset(
+  scripts: readonly Script[],
+  selection: ScriptSelection,
+  select: () => void,
+): void {
+  const presetScriptIds = new Set(scripts.map((script) => script.executableId));
+  const revertedScriptIds = selection.selectedScripts
+    .filter((selected) => selected.revert && presetScriptIds.has(selected.id))
+    .map((selected) => selected.id);
+  select();
+  if (revertedScriptIds.length === 0) {
+    return;
+  }
+  selection.processChanges({
+    changes: revertedScriptIds.map((scriptId) => ({
+      scriptId,
+      newStatus: {
+        isSelected: true,
+        isReverted: false,
+      },
+    })),
+  });
 }
 
 function areAllSelected(

@@ -131,9 +131,7 @@ export default defineComponent({
         }
       }, { rootMargin: EDITOR_VISIBILITY_MARGIN });
       visibilityObserver.observe(shell);
-      EDITOR_INTENT_EVENTS.forEach((eventName) => {
-        document.addEventListener(eventName, loadEditor, EDITOR_INTENT_LISTENER_OPTIONS);
-      });
+      watchForIntent();
     });
 
     onUnmounted(() => {
@@ -152,13 +150,34 @@ export default defineComponent({
     }
 
     async function importEditor() {
-      const { initializeAceEditor } = await import('./Ace/AceCodeEditorFactory');
+      let editorModule: typeof import('./Ace/AceCodeEditorFactory');
+      try {
+        editorModule = await import('./Ace/AceCodeEditorFactory');
+      } catch {
+        /*
+          The chunk can fail to arrive: a flaky network, or a deploy that replaced the hashed file
+          after this page loaded. Without this the placeholder kept spinning with `aria-busy` set
+          and never retried. The next tap or key press tries again; the visibility observer is not
+          re-armed, so a pane already on screen does not retry in a tight loop.
+        */
+        if (isMounted) {
+          editorStatus.value = 'idle';
+          watchForIntent();
+        }
+        return;
+      }
       if (!isMounted) {
         return;
       }
-      createEditor = initializeAceEditor;
+      createEditor = editorModule.initializeAceEditor;
       buildEditor(currentState.value);
       editorStatus.value = 'ready';
+    }
+
+    function watchForIntent() {
+      EDITOR_INTENT_EVENTS.forEach((eventName) => {
+        document.addEventListener(eventName, loadEditor, EDITOR_INTENT_LISTENER_OPTIONS);
+      });
     }
 
     function stopWatchingForIntent() {
@@ -326,6 +345,26 @@ function getDefaultCode(language: ScriptLanguage, project: ProjectDetails): stri
       background-color: rgba($color-secondary, 0.24);
       position: absolute;
     }
+  }
+
+  /*
+    Only in the prerendered snapshot, never rendered by this component: `scripts/prerender.mjs`
+    replaces Ace's markup with this plain copy of the script, because Ace's markup is only laid out
+    correctly by Ace's own CSS, which the snapshot does not ship. Taken out of flow and stretched
+    over the editor's reserved box, so the text never changes the pane's size and nothing moves
+    when the app mounts and replaces it. Scrollable for visitors without JavaScript, who keep it.
+  */
+  .code-area__static-text {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 4px 12px;
+    overflow: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font: inherit;
+    line-height: 1.6;
+    color: rgba($color-on-primary, 0.72);
   }
 }
 

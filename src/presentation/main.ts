@@ -1,6 +1,7 @@
 import { createApp } from 'vue';
 import App from './components/App.vue';
 import { ApplicationBootstrapper } from './bootstrapping/ApplicationBootstrapper';
+import { mountReportingErrors, startApplication } from './bootstrapping/ApplicationStartup';
 
 const APP_SELECTOR = '#app';
 
@@ -29,11 +30,12 @@ function nextPaint(): Promise<void> {
 
 const app = createApp(App);
 
-await new ApplicationBootstrapper()
-  .bootstrap(app);
-
-if (hasPrerenderedContent()) {
-  await nextPaint();
-}
-
-app.mount(APP_SELECTOR);
+await startApplication({
+  bootstrap: () => new ApplicationBootstrapper().bootstrap(app),
+  mount: async () => {
+    if (hasPrerenderedContent()) {
+      await nextPaint();
+    }
+    mountReportingErrors(app, () => app.mount(APP_SELECTOR));
+  },
+});

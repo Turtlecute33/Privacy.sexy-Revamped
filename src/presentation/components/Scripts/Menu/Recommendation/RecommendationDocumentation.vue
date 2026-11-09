@@ -7,11 +7,11 @@
     <p>
       {{ description }}
     </p>
-    <p class="recommendation">
+    <div class="recommendation">
       <AppIcon icon="lightbulb" class="icon" />
       <span>{{ recommendation }}</span>
-    </p>
-    <p
+    </div>
+    <div
       v-if="includes?.length > 0"
       class="includes"
     >
@@ -27,8 +27,8 @@
           </li>
         </ul>
       </span>
-    </p>
-    <p
+    </div>
+    <div
       v-if="considerations?.length > 0"
       class="considerations"
     >
@@ -44,7 +44,7 @@
           </li>
         </ul>
       </span>
-    </p>
+    </div>
   </section>
 </template>
 
@@ -94,6 +94,16 @@ export default defineComponent({
 @mixin apply-icon-color($color) {
   .icon {
     color: $color;
+  }
+}
+
+/*
+  `div`, not `p`: these hold an icon `div` and lists, which a `p` cannot contain, so the HTML parser
+  split them apart in the prerendered snapshot. The margin keeps the spacing `p` elements get globally.
+*/
+.recommendation, .includes, .considerations {
+  &:not(:last-child) {
+    margin-bottom: $spacing-relative-medium;
   }
 }
 

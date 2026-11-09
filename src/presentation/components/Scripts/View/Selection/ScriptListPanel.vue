@@ -14,11 +14,19 @@
         <slot name="actions" />
       </div>
     </header>
-    <div class="panel__body">
+    <!--
+      `aria-busy` while rows are still being added, so assistive technologies can tell that the list
+      is not complete yet.
+    -->
+    <div
+      class="panel__body"
+      :aria-busy="!isFullyRendered"
+    >
       <ScriptGroupSection
-        v-for="group of groups"
+        v-for="{ group, renderedScriptCount } of renderedGroups"
         :key="group.categoryId"
         :group="group"
+        :rendered-script-count="renderedScriptCount"
         :selected-script-ids="selectedScriptIds"
         :reverted-status-by-script-id="revertedStatusByScriptId"
       />
@@ -27,10 +35,16 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, type PropType } from 'vue';
+import { computed, defineComponent, type PropType } from 'vue';
 import type { ExecutableId } from '@/domain/Executables/Identifiable';
 import ScriptGroupSection from './ScriptGroupSection.vue';
+import { useGradualRendering } from './UseGradualRendering';
 import type { ScriptGroup } from './Model/ScriptGroup';
+
+interface RenderedGroup {
+  readonly group: ScriptGroup;
+  readonly renderedScriptCount: number;
+}
 
 export default defineComponent({
   components: {
@@ -57,6 +71,43 @@ export default defineComponent({
       type: Object as PropType<ReadonlyMap<ExecutableId, boolean>>,
       required: true,
     },
+  },
+  setup(props) {
+    const totalScriptCount = computed<number>(() => props.groups.reduce(
+      (sum, group) => sum + group.scripts.length,
+      0,
+    ));
+
+    /*
+      Rows are the unit, not groups: a single category holds up to a few hundred scripts, and a
+      broad search puts most of the collection into a handful of groups.
+    */
+    const { renderedCount, isComplete } = useGradualRendering(
+      () => totalScriptCount.value,
+      () => props.groups,
+    );
+
+    /*
+      Groups are filled in order, and a group appears only once its first row is due. Each group
+      still receives the full `ScriptGroup`, so its header counts and its "select all" checkbox
+      cover every script in it, rendered yet or not.
+    */
+    const renderedGroups = computed<ReadonlyArray<RenderedGroup>>(() => {
+      const result = new Array<RenderedGroup>();
+      let remaining = renderedCount.value;
+      for (let i = 0; i < props.groups.length && remaining > 0; i++) {
+        const group = props.groups[i];
+        const renderedScriptCount = Math.min(remaining, group.scripts.length);
+        result.push({ group, renderedScriptCount });
+        remaining -= renderedScriptCount;
+      }
+      return result;
+    });
+
+    return {
+      renderedGroups,
+      isFullyRendered: isComplete,
+    };
   },
 });
 </script>

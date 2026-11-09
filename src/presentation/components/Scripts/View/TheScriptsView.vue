@@ -1,6 +1,9 @@
 <template>
   <div class="scripts-view">
-    <TheSelectionExplorer v-if="!currentFilter" />
+    <TheSelectionExplorer
+      v-if="!currentFilter"
+      v-model:active-category-id="activeCategoryId"
+    />
     <ScriptSearchResults
       v-else-if="searchHasMatches"
       :filter="currentFilter"
@@ -36,6 +39,7 @@ import ScriptSearchResults from '@/presentation/components/Scripts/View/Selectio
 import type { ReadonlyFilterContext } from '@/application/Context/State/Filter/FilterContext';
 import type { FilterResult } from '@/application/Context/State/Filter/Result/FilterResult';
 import FlatButton from '@/presentation/components/Shared/FlatButton.vue';
+import type { ExecutableId } from '@/domain/Executables/Identifiable';
 
 export default defineComponent({
   components: {
@@ -50,6 +54,12 @@ export default defineComponent({
 
     const repositoryUrl = computed<string>(() => projectDetails.repositoryWebUrl);
     const currentFilter = ref<FilterResult | undefined>();
+
+    /*
+      Held here rather than in the explorer, which is unmounted while search results are shown, so
+      closing a search returns to the category the visitor had open instead of the first one.
+    */
+    const activeCategoryId = ref<ExecutableId | undefined>();
     const searchHasMatches = computed(() => currentFilter.value?.hasAnyMatches() ?? false);
     const trimmedSearchQuery = computed(() => {
       const query = currentFilter.value?.query;
@@ -98,6 +108,7 @@ export default defineComponent({
       repositoryUrl,
       trimmedSearchQuery,
       currentFilter,
+      activeCategoryId,
       searchHasMatches,
       clearSearchQuery,
     };
