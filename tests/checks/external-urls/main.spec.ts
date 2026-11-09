@@ -41,6 +41,10 @@ function main() {
       // same commit and raw file pages respond `200` to plain HTTP clients. A failure here
       // reports on how the request looks, not on a dead page.
       /^https:\/\/invent\.kde\.org(?=[/?#]|$)/,
+      // GNOME's GitLab answers `406` to the same requests on some runs and `200` on others (the
+      // same commit page failed one run of a push and passed the next), while plain HTTP clients
+      // always get `200`. Like KDE's, a failure here reports on its bot filtering.
+      /^https:\/\/gitlab\.gnome\.org(?=[/?#]|$)/,
     ],
     application: app,
   });
