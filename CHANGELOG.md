@@ -12,8 +12,10 @@ kept there: <https://github.com/undergroundwires/privacy.sexy/blob/master/CHANGE
 
 ### New scripts
 
-141 new scripts: 41 for Windows, 48 for macOS and 52 for Linux. Each one was checked against vendor
-documentation, and none of them sets, reverts or deletes anything an existing script already touches.
+140 new scripts: 41 for Windows, 47 for macOS and 52 for Linux. Each one was checked against vendor
+documentation, and none of them sets or reverts anything an existing script already changes. The only
+overlap is that the new Chrome, Chromium and Brave cache cleanups on Linux delete part of what "Clear
+user-specific cache" already deletes.
 Recommendation levels are conservative: `standard` only where nothing a typical user relies on changes,
 `strict` where privacy costs some convenience, and no preset for anything that deletes data, can cut off
 access or changes how the system works day to day.
@@ -31,8 +33,9 @@ access or changes how the system works day to day.
   history, program usage history, the Delivery Optimization cache and superseded component versions.
 - macOS: Firefox privacy hardening (previously Linux only); password hints and the user list on the login
   window; Screen Sharing, SMB file sharing and Bluetooth file sharing; the full website address in Safari;
-  and cleanup of zsh session history, saved application state, the Quick Look thumbnail cache, recent
-  items and Finder's recent folders.
+  an opt-in script that stops Terminal from keeping a separate zsh history per window; and cleanup of zsh
+  session history, Python history, saved application state, the Quick Look thumbnail cache, recent items
+  and Finder's recent folders.
 - Linux: TTY line discipline autoloading, core dumps of privileged programs, runtime kernel loading
   (kexec), FireWire direct memory access and rarely used filesystems; GNOME automount, autorun and lock
   screen notifications; a ufw firewall that keeps SSH sessions reachable; KDE activity tracking; Ubuntu
@@ -43,6 +46,16 @@ access or changes how the system works day to day.
 
 Ideas that could not be verified or reverted safely are recorded under "Rejected by vetting" in
 [script-proposals.md](./docs/script-proposals.md).
+
+### Fixes
+
+- Firefox and Thunderbird: reverting a preference whose new value equals the application's default, such
+  as turning First-Party Isolation back on, no longer stops with "changed after privacy.sexy applied it".
+  The application leaves such a preference out of `prefs.js`, which the check treated as a change.
+- Linux: Firefox scripts also find profiles in `~/.config/mozilla/firefox`, where Firefox 147 and later
+  create them on a new installation.
+- Linux: "Enable Firefox network partitioning" is no longer recommended, because Firefox 141 removed its
+  preference and always partitions network state.
 
 ## 0.14.0 (2026-11-09)
 

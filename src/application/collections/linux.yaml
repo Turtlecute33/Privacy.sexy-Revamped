@@ -3727,7 +3727,7 @@ actions:
                         jsonValue: '5'
                   -
                     name: Enable Firefox network partitioning
-                    recommend: standard
+                    # No recommendation: Firefox 141 and later ignore the preference and always partition network state.
                     docs: |-
                       Network partitioning is a method used by Firefox to enhance user privacy [1]. When enabled, each website you visit has its own
                       isolated storage location, preventing it from accessing data from another website [1]. This limits the ability of websites to track
@@ -3740,10 +3740,14 @@ actions:
                       Firefox has enabled network partitioning by default since version 85 [1]. Once enabled, network partitioning becomes permanent,
                       meaning websites cannot bypass or weaken its restrictions [1].
 
-                      Network partitioning can be controlled with the `privacy.partition.network_state` preference [1].
+                      Network partitioning could be controlled with the `privacy.partition.network_state` preference [1].
+
+                      > **Note:** Firefox 141 removed this preference and always partitions network state [3]. The script only
+                      > matters for older Firefox versions; on current versions it writes a preference that Firefox ignores.
 
                       [1]: https://web.archive.org/web/20230918172155/https://developer.mozilla.org/en-US/docs/Web/Privacy/State_Partitioning "State Partitioning - Privacy on the web | MDN"
                       [2]: https://web.archive.org/web/20231003094417/https://bugzilla.mozilla.org/show_bug.cgi?id=1687569 "1687569 - cache partitioning causes web page saving extensions to waste more time and data | bugzilla.mozilla.org"
+                      [3]: https://bugzilla.mozilla.org/show_bug.cgi?id=1954293 "1954293 - Remove privacy.partition.network_state | bugzilla.mozilla.org"
                     call:
                       function: AddFirefoxPrefs
                       parameters:
@@ -4943,17 +4947,22 @@ actions:
           firewalld then manages the firewall.
 
           If an SSH server is running, the script first allows incoming SSH connections on the ports that the server
-          listens on, as reported by `sshd -T` [3]. This keeps remote sessions working, including one that runs this
-          script. On Ubuntu 22.10 and later, the SSH server can wait for connections through `ssh.socket`, which the
-          script also checks [4].
+          listens on, as reported by `sshd -T` (its `Port` and `ListenAddress` settings) [3]. This keeps remote sessions
+          working, including one that runs this script. On Ubuntu 22.10 and later, the SSH server can wait for
+          connections through `ssh.socket` [4], so the script also allows the ports that this socket listens on. If you
+          already have a ufw rule for an SSH port, such as `sudo ufw limit ssh`, the script keeps your rule.
 
           Reverting turns ufw off and removes the SSH rule, but only if this script turned it on or added the rule. The
           SSH rule stays while ufw is on, so that a remote session is not cut off. Rules that you added yourself are not
           touched.
 
-          > **Caution:** Services that wait for connections from other devices, such as file sharing, KDE Connect,
-          > game servers or development servers, can no longer be reached from other devices until you allow them with
-          > `sudo ufw allow` [1].
+          > **Caution:**
+          > - Services that wait for connections from other devices, such as file sharing, KDE Connect, game servers
+          >   or development servers, can no longer be reached from other devices until you allow them with
+          >   `sudo ufw allow` [1].
+          > - Local virtual machines and containers that use a network bridge, such as LXD, Multipass or Waydroid, can
+          >   lose network access, because ufw also blocks the address (DHCP), name (DNS) and forwarded traffic of their
+          >   bridge until you allow it.
 
           If you do not run this script, ufw stays off and every program that listens on the network can be reached by
           other devices on your network.
@@ -4978,22 +4987,36 @@ actions:
           else
             ssh_allow_failed='false'
             ssh_server_active='false'
+            ssh_socket_ports=''
             if command -v systemctl > /dev/null 2>&1; then
               for ssh_unit in ssh.service sshd.service ssh.socket sshd.socket; do
                 if systemctl is-active --quiet "$ssh_unit"; then
                   ssh_server_active='true'
+                  if [ "${ssh_unit##*.}" = 'socket' ]; then
+                    ssh_socket_ports="$ssh_socket_ports $(systemctl show --property=Listen --value "$ssh_unit" 2>/dev/null \
+                      | awk '{ sub(/.*:/, "", $1); if ($1 ~ /^[0-9]+$/) print $1 }')"
+                  fi
                 fi
               done
             fi
+            if [ "$ssh_server_active" = 'false' ] && command -v pgrep > /dev/null 2>&1 && pgrep -x sshd > /dev/null 2>&1; then
+              ssh_server_active='true'
+            fi
             if [ "$ssh_server_active" = 'true' ]; then
-              ssh_ports="$(sudo sshd -T 2>/dev/null | awk 'tolower($1) == "port" { print $2 }' | sort --unique)"
+              ssh_ports="$( { sudo sshd -T 2>/dev/null | awk '
+                  tolower($1) == "port" { print $2 }
+                  tolower($1) == "listenaddress" { sub(/.*:/, "", $2); print $2 }'
+                printf '%s\n' $ssh_socket_ports; } | grep --extended-regexp --line-regexp '[0-9]+' | sort --unique)"
               if [ -z "$ssh_ports" ]; then
                 ssh_ports='22'
               fi
               for ssh_port in $ssh_ports; do
                 ssh_rule="$ssh_port/tcp"
-                if LC_ALL=C sudo ufw show added | grep --quiet --line-regexp --fixed-strings "ufw allow $ssh_rule"; then
-                  echo "Incoming SSH connections on $ssh_rule are already allowed."
+                ssh_existing_rule="$(LC_ALL=C sudo ufw show added \
+                  | grep --extended-regexp --line-regexp "ufw (allow|limit|deny|reject)( in)? $ssh_rule( comment .*)?" \
+                  | head --lines=1)"
+                if [ -n "$ssh_existing_rule" ]; then
+                  echo "Keeping your existing rule for incoming SSH connections on $ssh_rule: \"$ssh_existing_rule\"."
                 elif sudo ufw allow "$ssh_rule"; then
                   printf '%s\n' "$ssh_rule" | sudo tee -a "$ufw_state_dir/added-rules" > /dev/null
                   echo "Allowed incoming SSH connections on $ssh_rule so that remote sessions keep working."
@@ -5533,6 +5556,10 @@ functions:
           function: DeleteFiles
           parameters:
             fileGlob: ~/.mozilla/firefox/*/{{ $pathGlob }}
+      - # Global installation, Firefox 147 and later on a new installation (XDG Base Directory location)
+          function: DeleteFiles
+          parameters:
+            fileGlob: ~/.config/mozilla/firefox/*/{{ $pathGlob }}
       - # Flatpak installation
           function: DeleteFiles
           parameters:
@@ -5750,6 +5777,7 @@ functions:
       The `user.js` file can be found in a Firefox profile folder [1] and its location depends on the type of installation:
 
       - Default: `~/.mozilla/firefox/<profile-name>/user.js`
+      - Firefox 147 and later, on a new installation: `~/.config/mozilla/firefox/<profile-name>/user.js` [4]
       - Flatpak: `~/.var/app/org.mozilla.firefox/.mozilla/firefox/<profile-name>/user.js`
       - Snap: `~/snap/firefox/common/.mozilla/firefox/<profile-name>/user.js`
 
@@ -5765,6 +5793,7 @@ functions:
       [1]: https://web.archive.org/web/20230811005205/https://kb.mozillazine.org/User.js_file "User.js file - MozillaZine Knowledge Base"
       [2]: https://web.archive.org/web/20221029211757/https://kb.mozillazine.org/Prefs.js_file "Prefs.js file - MozillaZine Knowledge Base"
       [3]: https://github.com/undergroundwires/privacy.sexy/issues/282 "[BUG]: Reverting Firefox settings do not work on Linux · Issue #282 · undergroundwires/privacy.sexy | github.com"
+      [4]: https://bugzilla.mozilla.org/show_bug.cgi?id=259356 "259356 - Support for the Freedesktop.org XDG Base Directory Specification | bugzilla.mozilla.org"
     call:
       function: AddMozillaProfilePrefs
       parameters:
@@ -5772,6 +5801,7 @@ functions:
         processPattern: '[f]irefox'
         profilePatterns: >-
           '~/.mozilla/firefox/*/',
+          '~/.config/mozilla/firefox/*/',
           '~/.var/app/org.mozilla.firefox/.mozilla/firefox/*/',
           '~/snap/firefox/common/.mozilla/firefox/*/',
         stateDirectoryName: firefox
@@ -5904,11 +5934,19 @@ functions:
                   continue
               state = json.loads(state_file.read_text())
               can_restore = True
+              user_js = profile / 'user.js'
+              user_js_text = user_js.read_text() if user_js.exists() else ''
+              user_js_applied = [line.rstrip('\r\n') for line in user_js_text.splitlines(keepends=True)
+                                 if line.startswith(pref_prefix)] == [pref_line]
               for filename, original in state['files'].items():
                   path = profile / filename
                   text = path.read_text() if path.exists() else ''
                   current = [line.rstrip('\r\n') for line in text.splitlines(keepends=True)
                              if line.startswith(pref_prefix)]
+                  # The application leaves a preference out of prefs.js when it equals the default value,
+                  # so a missing prefs.js line is expected while user.js still sets the value.
+                  if filename == 'prefs.js' and not current and user_js_applied:
+                      continue
                   if current not in (original['lines'], [pref_line]):
                       print(f'Skipping {path}: {pref_name} changed after privacy.sexy applied it.')
                       can_restore = False

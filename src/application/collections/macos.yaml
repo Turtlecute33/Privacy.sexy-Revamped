@@ -1742,25 +1742,9 @@ actions:
                                             parameters:
                                                 prefName: network.cookie.cookieBehavior
                                                 jsonValue: '5'
-                                    -
-                                        name: Enable Firefox network partitioning
-                                        recommend: standard
-                                        docs: |-
-                                            This script sets the Firefox preference `privacy.partition.network_state` to `true` [1].
-
-                                            Network partitioning keeps network-related data, such as caches and connection pools, separate
-                                            for each website you visit [1], so one website cannot use it to learn about your visits to another.
-                                            It was formerly called cache partitioning [2].
-
-                                            Firefox has enabled network partitioning by default since version 85 [1].
-
-                                            [1]: https://web.archive.org/web/20230918172155/https://developer.mozilla.org/en-US/docs/Web/Privacy/State_Partitioning "State Partitioning - Privacy on the web | MDN"
-                                            [2]: https://web.archive.org/web/20231003094417/https://bugzilla.mozilla.org/show_bug.cgi?id=1687569 "1687569 - cache partitioning causes web page saving extensions to waste more time and data | bugzilla.mozilla.org"
-                                        call:
-                                            function: AddFirefoxPrefs
-                                            parameters:
-                                                prefName: privacy.partition.network_state
-                                                jsonValue: 'true'
+                                    # The Linux "Enable Firefox network partitioning" script is not ported: Firefox 141 removed its
+                                    # `privacy.partition.network_state` preference and always partitions network state.
+                                    # https://bugzilla.mozilla.org/show_bug.cgi?id=1954293
                                     -
                                         name: Disable outdated Firefox First-Party Isolation (FPI)
                                         recommend: strict
@@ -2215,8 +2199,9 @@ actions:
 
                     If you do not run these scripts, these tools keep saving what you type to your home folder.
 
-                    > **Caution:** You can no longer recall commands from earlier sessions with the arrow keys or history search in
-                    > these tools.
+                    > **Caution:** In `less`, the Node.js REPL and the MySQL client, you can no longer recall what you typed in
+                    > earlier sessions with the arrow keys or history search. *Disable zsh session history* only stops the separate
+                    > history of each Terminal window; zsh keeps your shared history.
                 children:
                     -
                         name: Disable zsh session history
@@ -3774,7 +3759,8 @@ actions:
                         revertCode: sudo launchctl enable system/com.apple.telnetd
                     -
                         name: Disable Screen Sharing
-                        recommend: strict
+                        # No recommendation: it ends a running Screen Sharing session, and together with
+                        # "Disable incoming SSH and SFTP remote logins" (standard) it can leave a headless Mac unreachable.
                         docs: |-
                             This script turns off Screen Sharing, which lets other computers see and control the screen of this Mac [1].
 
@@ -3802,7 +3788,8 @@ actions:
                                 label: com.apple.screensharing
                     -
                         name: Disable file sharing over SMB
-                        recommend: strict
+                        # No recommendation: File Sharing is off by default, so a Mac that has it on shares folders or
+                        # receives Time Machine backups on purpose, and other computers would lose access.
                         docs: |-
                             This script turns off File Sharing, which shares folders of this Mac with other computers on the network over
                             the SMB protocol [1].
@@ -5158,6 +5145,8 @@ functions:
         #   the Command Line Tools on Macs that do not have them.
         # ❗ Lines are matched with `index()`, a literal prefix comparison, because preference names contain `.`, which a
         #   regular expression would treat as "any character".
+        # ❗ Revert accepts a `prefs.js` without the preference while `user.js` still sets it: Firefox leaves a preference
+        #   out of `prefs.js` when its value equals the default, as `network.cookie.cookieBehavior` = `5` does.
         # References:
         #   - https://web.archive.org/web/20250103184029/https://support.mozilla.org/en-US/kb/profiles-where-firefox-stores-user-data
         #   - https://web.archive.org/web/20230811005205/https://kb.mozillazine.org/User.js_file
@@ -5259,9 +5248,17 @@ functions:
                             continue
                         fi
                         firefox_can_restore='true'
+                        firefox_user_js_applied='false'
+                        if [ "$(read_firefox_pref_lines "$firefox_profile/user.js")" = "$firefox_pref_line" ]; then
+                            firefox_user_js_applied='true'
+                        fi
                         for firefox_file_name in user.js prefs.js; do
                             firefox_current_lines="$(read_firefox_pref_lines "$firefox_profile/$firefox_file_name")"
                             firefox_original_lines="$(run_as_target_user cat "$firefox_state_dir/$firefox_file_name.lines" 2>/dev/null)"
+                            if [ "$firefox_file_name" = 'prefs.js' ] && [ -z "$firefox_current_lines" ] \
+                                && [ "$firefox_user_js_applied" = 'true' ]; then
+                                continue
+                            fi
                             if [ "$firefox_current_lines" != "$firefox_original_lines" ] \
                                 && [ "$firefox_current_lines" != "$firefox_pref_line" ]; then
                                 >&2 echo "Skipping \"$firefox_profile\": \"$firefox_pref_name\" changed in $firefox_file_name after privacy.sexy set it."

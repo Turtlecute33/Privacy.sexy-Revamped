@@ -746,16 +746,33 @@ actions:
                             This script deletes all values under this key. Microsoft documents deleting these values as
                             the way to remove entries from the list [1].
 
-                            > **Caution:** You need to type the computer name or address again the next time you connect.
+                            Remote Desktop Connection also keeps one subkey for every computer you connected to under
+                            `HKCU\Software\Microsoft\Terminal Server Client\Servers`, with the user name you signed in with
+                            (`UsernameHint`) and the certificate you accepted (`CertHash`). The script deletes this key too.
+
+                            The script does not delete the hidden `Default.rdp` file in your **Documents** folder, which
+                            keeps the settings of your last connection, including the computer address. Delete it yourself
+                            if you want to remove that address as well.
+
+                            > **Caution:**
+                            > - You need to type the computer name or address, and your user name, again the next time you
+                            >   connect.
+                            > - Remote Desktop Connection asks you again to accept the certificate of computers whose
+                            >   identity it cannot verify.
 
                             If you do not run this script, every computer you connected to stays listed in Remote Desktop
                             Connection.
 
                             [1]: https://web.archive.org/web/20260610223938/https://learn.microsoft.com/en-us/troubleshoot/windows-server/remote/remove-entries-from-remote-desktop-connection-computer "Remove entries from the Remote Desktop Connection Computer box | Microsoft Learn"
                         call:
-                            function: ClearRegistryValues
-                            parameters:
-                                keyPath: HKCU\Software\Microsoft\Terminal Server Client\Default
+                            -
+                                function: ClearRegistryValues
+                                parameters:
+                                    keyPath: HKCU\Software\Microsoft\Terminal Server Client\Default
+                            -
+                                function: DeleteRegistryKey
+                                parameters:
+                                    keyPath: HKCU\Software\Microsoft\Terminal Server Client\Servers
                     -
                         name: Clear File Explorer folder view history
                         docs: |-
@@ -783,6 +800,8 @@ actions:
                             > **Caution:**
                             > - All folders go back to their default view, so custom layouts, sort orders and column
                             >   choices are lost.
+                            > - The arrangement and size of your desktop icons can be reset too, because Windows keeps
+                            >   them in the same `Bags` subkeys.
                             > - Restart File Explorer (`explorer.exe`) or sign out after running this script.
 
                             If you do not run this script, Windows keeps a record of the folders you opened.
@@ -15269,7 +15288,8 @@ actions:
                                             defaultStartupMode: Manual # Manual by default on Windows
                             -
                                 name: Disable IPv6 transition technologies
-                                recommend: strict # Breaks Xbox party chat and some multiplayer games on Windows, and IP-HTTPS remote access
+                                # No recommendation: breaks Xbox party chat and some multiplayer games on Windows, and IP-HTTPS
+                                # remote access, like "Disable Xbox Live Networking Service", which has no recommendation either.
                                 docs: |-
                                     This script turns off the IPv6 transition technologies Teredo, 6to4, ISATAP and IP-HTTPS.
 
@@ -15916,8 +15936,12 @@ actions:
                     `0` shows the user name and is the default, and `1` hides it [2]. The change takes effect without a
                     restart [1].
 
-                    > **Caution:** The sign-in tiles of users are no longer shown, so you must type your user name as
-                    > well as your password every time you sign in [1].
+                    > **Caution:**
+                    > - The sign-in tiles of users are no longer shown, so you must type your user name as well as your
+                    >   password every time you sign in [1].
+                    > - If you sign in with Windows Hello (PIN, face or fingerprint) or your account has no password,
+                    >   the sign-in screen may ask for a password first. Choose **Sign-in options** to use Windows Hello.
+                    >   Microsoft advises against this setting when you use the Windows passwordless experience.
 
                     If you do not run this script, the sign-in screen keeps showing the name of the last user who
                     signed in.
@@ -15981,17 +16005,22 @@ actions:
                     block mode of the **Configure detection for potentially unwanted applications** policy [1]. `0`
                     turns the protection off, and `2` is audit mode, which only records detections [1].
 
-                    On devices that are not managed with Microsoft Defender for Endpoint, Defender uses audit mode by
-                    default with current security intelligence updates, so PUA are detected but not blocked [1].
+                    Microsoft's documentation for business devices describes audit mode as the default when they are
+                    not managed with Microsoft Defender for Endpoint [1]. On home computers, Microsoft turned the
+                    **Potentially unwanted app blocking** setting of Windows Security on by default in August 2021 [2].
+                    Where it is already on, this script makes it mandatory, so it cannot be turned off in Windows
+                    Security, which then shows that some settings are managed by your organization.
 
                     > **Caution:** Software that you install on purpose, such as free programs that bundle offers for
                     > other software, may be blocked. Blocked files are listed in quarantine in the Windows Security
                     > app [1].
 
-                    If you do not run this script, Defender only records PUA without blocking them, unless PUA
-                    blocking was turned on in another way.
+                    If you do not run this script, PUA blocking depends on the Windows Security setting, which you or
+                    other software can turn off, and on business devices Defender may only record PUA without blocking
+                    them.
 
                     [1]: https://web.archive.org/web/20261004215801/https://learn.microsoft.com/en-us/defender-endpoint/detect-block-potentially-unwanted-apps-microsoft-defender-antivirus "Detect and block potentially unwanted applications with Microsoft Defender Antivirus | Microsoft Learn"
+                    [2]: https://support.microsoft.com/en-us/security/potentially-unwanted-apps-are-blocked-by-default "Potentially unwanted apps are blocked by default | Microsoft Support"
                 call:
                     function: SetRegistryValue
                     parameters:
