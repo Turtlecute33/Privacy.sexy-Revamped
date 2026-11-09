@@ -86,22 +86,16 @@ export default defineComponent({
 $font-size                    : 11px;
 
 /*
-  The switch appears once per reversible script, so its resting state stays a quiet
-  neutral. Only the active "revert" state takes the accent colour, since that is the
-  state worth noticing in a long list.
+  The switch appears once per reversible script, so its resting state is a quiet recessed capsule
+  with a glass knob. Only the active "revert" state takes colour (amber, not the accent), since it
+  is the one state worth noticing in a long list: it undoes a change rather than making one.
 */
-$color-toggle-unchecked       : rgba($color-on-primary, 0.5);
-$color-toggle-checked         : $color-on-secondary;
-$color-text-unchecked         : rgba($color-on-primary, 0.68);
-$color-text-checked           : $color-on-secondary;
-$color-bg-unchecked           : rgba($color-on-primary, 0.07);
-$color-bg-checked             : $color-secondary;
-$padding-horizontal           : 5px;
-$size-width                   : 76px;
-$size-height                  : 22px;
-$size-circle                  : 10px;
+$padding-horizontal           : 3px;
+$size-width                   : 74px;
+$size-height                  : 24px;
+$size-circle                  : 18px;
 
-$gap-between-circle-and-text  : $spacing-relative-x-small;
+$gap-between-circle-and-text  : 2px;
 
 @mixin locateNearCircle($direction: 'left') {
   $circle-width: calc(#{$size-circle} + #{$padding-horizontal});
@@ -122,16 +116,15 @@ $gap-between-circle-and-text  : $spacing-relative-x-small;
   width: auto;
 
   font-size: $font-size;
-  min-height: 26px;
+  min-height: 28px;
   border-radius: $size-height;
 
   /*
     Keyboard focus still gets a ring, but clicking does not paint one. `:focus-within`
-    fired for pointer clicks too, which left a green halo around every switch the user
-    touched.
+    fired for pointer clicks too, which left a halo around every switch the user touched.
   */
   &:has(input.toggle-input:focus-visible) {
-    outline: 3px solid rgba($color-secondary, 0.55);
+    outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
   }
 
@@ -151,10 +144,12 @@ $gap-between-circle-and-text  : $spacing-relative-x-small;
     gap: $gap-between-circle-and-text;
     width: $size-width;
     height: $size-height;
-    background-color: $color-bg-unchecked;
-    border: 1px solid rgba($color-on-primary, 0.22);
     border-radius: $size-height;
-    transition: background-color $motion-duration-standard $motion-ease-standard;
+    background-color: var(--fill-track);
+    box-shadow: inset 0 1px 2px var(--hairline);
+    transition:
+      background-color $motion-duration-standard $motion-ease-standard,
+      box-shadow $motion-duration-standard $motion-ease-standard;
 
     .circle {
       display: block;
@@ -167,42 +162,45 @@ $gap-between-circle-and-text  : $spacing-relative-x-small;
       width: $size-circle;
       height: $size-circle;
       border-radius: 50%;
-      background-color: $color-toggle-unchecked;
+      background-color: var(--lens);
+      box-shadow: var(--lens-shadow);
       transition:
         background-color $motion-duration-fast $motion-ease-standard,
-        transform $motion-duration-emphasized $motion-ease-out;
+        transform $motion-duration-emphasized cubic-bezier(0.34, 1.36, 0.5, 1);
     }
   }
 
   input.toggle-input:checked + .toggle-animation {
-    background-color: $color-bg-checked;
+    background-color: var(--warn-fill);
+    box-shadow: inset 0 0 0 1px var(--warn-edge);
     flex-direction: row-reverse;
 
     .circle {
-      background-color: $color-toggle-checked;
+      background-color: var(--warn);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 1px 3px rgba(0, 0, 0, 0.2);
       transform: translateX($size-width - $size-circle - (2 * $padding-horizontal));
     }
   }
 
   .label {
     // Sized to the longest label ("Revert") so neither state clips.
-    width: 42px;
-    min-width: 42px;
-    font-weight: bold;
+    width: 46px;
+    min-width: 46px;
+    font-weight: 600;
     line-height: 1;
     text-align: center;
     white-space: nowrap;
     transition: color $motion-duration-fast $motion-ease-standard;
 
     &.label-off {
-      color: $color-text-unchecked;
+      color: var(--text-tertiary);
 
       @include locateNearCircle('left');
       padding-right: $padding-horizontal;
     }
 
     &.label-on {
-      color: $color-text-checked;
+      color: var(--warn);
 
       @include locateNearCircle('right');
       padding-left: $padding-horizontal;

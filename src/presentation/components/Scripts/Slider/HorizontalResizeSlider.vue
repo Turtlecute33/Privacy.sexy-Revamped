@@ -65,7 +65,6 @@ export default defineComponent({
 .slider {
   display: flex;
   flex-direction: row;
-  background: rgba($color-on-primary, 0.08);
 
   .first {
     min-width: v-bind(firstMinWidth);

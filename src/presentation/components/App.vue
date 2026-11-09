@@ -6,6 +6,11 @@
   -->
   <div class="app">
     <a class="skip-link" href="#main-content">Skip to privacy controls</a>
+    <!--
+      The coloured light the glass surfaces refract. Painted by one fixed element of plain radial
+      gradients, so it costs nothing per frame and stays put while the panels scroll.
+    -->
+    <div class="app__backdrop" aria-hidden="true" />
     <div class="app__wrapper">
       <TheHeader />
       <main id="main-content" class="app__main">
@@ -67,24 +72,66 @@ function getOptionalDevToolkitComponent(): Component | undefined {
  * reach the bundle.
  */
 @use "@/presentation/assets/styles/fonts";
+@use "@/presentation/assets/styles/theme";
 @use "@/presentation/assets/styles/base";
 
 .app {
+  position: relative;
   width: 100%;
   min-height: 100dvh;
+}
 
-  .app__wrapper {
-    display: flex;
-    flex-direction: column;
-    background-color: $color-surface;
-    color: $color-on-surface;
-    min-height: 100dvh;
-  }
+.app__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(52vw 58vh at 6% -4%, var(--canvas-blob-1), transparent 70%),
+    radial-gradient(44vw 52vh at 104% 12%, var(--canvas-blob-2), transparent 70%),
+    radial-gradient(56vw 60vh at 72% 108%, var(--canvas-blob-3), transparent 70%),
+    radial-gradient(40vw 46vh at 12% 104%, var(--canvas-blob-4), transparent 70%),
+    var(--canvas);
+}
 
-  .app__main {
-    width: min(1440px, calc(100% - 32px));
-    margin: 0 auto;
-    padding: 8px 0 32px;
+/*
+  Desktop is an app shell: the bar, the workbench and the footer fill the viewport exactly, and
+  only the panels inside scroll. The page itself never does, so the categories, the list and the
+  generated script are always on screen together. Below the vertical-view breakpoint it falls back
+  to a normal scrolling page with the panels stacked.
+*/
+.app__wrapper {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  /*
+    Bounded to the viewport, so no single row can widen the page: the footer's one-line text and
+    the pickers in the bar ellipsize or compact inside it instead of pushing the layout sideways.
+  */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  width: min(1760px, 100%);
+  height: 100dvh;
+  min-height: 620px;
+  margin: 0 auto;
+  padding: 14px 18px 0;
+  color: var(--text);
+}
+
+.app__main {
+  min-width: 0;
+  min-height: 0;
+}
+
+/*
+  The shell never scrolls the page on desktop, so the scrollbar gutter `base` reserves would only
+  leave an empty strip down the right edge and make the side margins uneven.
+*/
+@media screen and (min-width: $media-vertical-view-breakpoint + 1) and (min-height: 620px) {
+  html {
+    scrollbar-gutter: auto;
+    overflow: hidden;
   }
 }
 
@@ -93,11 +140,11 @@ function getOptionalDevToolkitComponent(): Component | undefined {
   top: 12px;
   left: 12px;
   z-index: 1000;
-  padding: 12px 16px;
-  border-radius: 10px;
-  background: $color-primary-darkest;
-  color: $color-on-primary;
-  transform: translateY(-150%);
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  transform: translateY(-160%);
   transition: transform $motion-duration-standard $motion-ease-out;
 
   &:focus {
@@ -105,21 +152,12 @@ function getOptionalDevToolkitComponent(): Component | undefined {
   }
 }
 
-@media screen and (max-width: $media-screen-medium-width) {
-  .app {
-    .app__main {
-      width: min(100% - 32px, 1440px);
-      padding-top: 4px;
-    }
-
-  }
-}
-
-@media screen and (max-width: $media-screen-small-width) {
-  .app {
-    .app__main {
-      width: min(100% - 20px, 1440px);
-    }
+@media screen and (max-width: $media-vertical-view-breakpoint) {
+  .app__wrapper {
+    height: auto;
+    min-height: 100dvh;
+    padding: 10px 12px 0;
+    gap: 12px;
   }
 }
 </style>

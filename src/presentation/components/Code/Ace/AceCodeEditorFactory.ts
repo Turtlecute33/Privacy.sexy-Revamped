@@ -1,13 +1,20 @@
 import ace, { AceRange } from './ace-importer';
 import type { CodeEditorFactory, SupportedSyntaxLanguage } from '../CodeEditorFactory';
 
-const CodeEditorTheme = 'tomorrow_night';
+/*
+  The editor is drawn on the code panel's glass, which is light or dark with the visitor's system
+  appearance, so the syntax colours follow it: Tomorrow by day, Tomorrow Night by night.
+*/
+const CodeEditorThemes = {
+  light: 'tomorrow',
+  dark: 'tomorrow_night',
+} as const;
 
 export const initializeAceEditor: CodeEditorFactory = (options) => {
   const editor = ace.edit(options.editorContainerElementId);
   const mode = getAceModeName(options.language);
   editor.getSession().setMode(`ace/mode/${mode}`);
-  editor.setTheme(`ace/theme/${CodeEditorTheme}`);
+  const stopFollowingColorScheme = followColorScheme(editor);
   editor.setReadOnly(true);
   editor.setAutoScrollEditorIntoView(true);
   editor.setShowPrintMargin(false); // Hide the vertical line
@@ -15,7 +22,10 @@ export const initializeAceEditor: CodeEditorFactory = (options) => {
   hideActiveLineAndCursorUntilInteraction(editor);
   return {
     setContent: (content) => editor.setValue(content, 1),
-    destroy: () => editor.destroy(),
+    destroy: () => {
+      stopFollowingColorScheme();
+      editor.destroy();
+    },
     scrollToLine: (lineNumber) => {
       const column = editor.session.getLine(lineNumber).length;
       if (column === undefined) {
@@ -38,6 +48,19 @@ export const initializeAceEditor: CodeEditorFactory = (options) => {
     },
   };
 };
+
+function followColorScheme(editor: ace.Ace.Editor): () => void {
+  const darkSchemeQuery = typeof window.matchMedia === 'function'
+    ? window.matchMedia('(prefers-color-scheme: dark)')
+    : undefined;
+  const applyTheme = () => {
+    const theme = darkSchemeQuery?.matches ? CodeEditorThemes.dark : CodeEditorThemes.light;
+    editor.setTheme(`ace/theme/${theme}`);
+  };
+  applyTheme();
+  darkSchemeQuery?.addEventListener?.('change', applyTheme);
+  return () => darkSchemeQuery?.removeEventListener?.('change', applyTheme);
+}
 
 function getAceModeName(language: SupportedSyntaxLanguage): string {
   switch (language) {

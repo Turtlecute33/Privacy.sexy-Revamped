@@ -124,33 +124,51 @@ export default defineComponent({
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+  height: 100%;
   flex: 1;
-  background: $color-scripts-bg;
 }
 
 .search-no-matches {
+  @include glass-surface($radius: 22px);
   display: flex;
+  flex: 1;
   flex-direction: column;
-  gap: $spacing-relative-small;
-  padding: 18px 16px 36px;
-  color: $color-on-primary;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px 24px;
+  color: var(--text-secondary);
   font-size: $font-size-absolute-normal;
+  text-align: center;
   word-break: break-word;
 
+  /* Unwrapped so the title, the hint and the button can stack in reading order. */
   &__header {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
+    display: contents;
+
+    :deep(.flat-button) {
+      order: 3;
+      margin-top: 6px;
+      background: var(--fill-track);
+    }
   }
 
   &__title {
-    font-size: $font-size-absolute-large;
-    font-weight: 700;
+    order: 1;
+    color: var(--text);
+    font-family: $font-family-display;
+    font-size: $font-size-absolute-x-large;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+  }
+
+  > div:last-child {
+    order: 2;
+    max-width: 44ch;
   }
 
   a {
-    color: $color-secondary;
+    color: var(--accent-text);
   }
 }
 </style>

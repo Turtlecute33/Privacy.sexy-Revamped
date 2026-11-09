@@ -330,21 +330,49 @@ function getDefaultCode(language: ScriptLanguage, project: ProjectDetails): stri
     position: relative;
     width: 100%;
     height: 100%;
-    min-height: 540px;
-    background: $color-primary-darkest;
+    min-height: 0;
   }
 
   .code-area {
-    min-height: 540px;
+    min-height: 0;
     width: 100%;
     height: 100%;
     // `overflow: auto` creates duplicate scrollbars with the editor's built-in scrolling mechanism on some edge case screen sizes
     font-size: $font-size-absolute-small;
     font-family: $font-family-monospace;
+    line-height: 1.65;
     &__highlight {
-      background-color: rgba($color-secondary, 0.24);
+      background-color: var(--highlight-code);
       position: absolute;
     }
+  }
+
+  /*
+    The editor is drawn straight onto the code panel's glass: Ace's themes paint an opaque page and
+    gutter, which would turn the pane back into a solid slab. The syntax colours stay the theme's.
+    Selectors are qualified with the shell because Ace injects its theme CSS after this sheet.
+  */
+  .code-area-shell .code-area.ace_editor {
+    background: transparent;
+    color: var(--text-secondary);
+  }
+
+  .code-area-shell .ace_gutter {
+    background: transparent;
+    color: var(--text-tertiary);
+  }
+
+  .code-area-shell .ace_gutter-active-line,
+  .code-area-shell .ace_marker-layer .ace_active-line {
+    background: var(--fill-hover);
+  }
+
+  .code-area-shell .ace_marker-layer .ace_selection {
+    background: var(--accent-soft);
+  }
+
+  .code-area-shell .ace_scrollbar {
+    @include glass-scrollbar;
   }
 
   /*
@@ -358,13 +386,13 @@ function getDefaultCode(language: ScriptLanguage, project: ProjectDetails): stri
     position: absolute;
     inset: 0;
     margin: 0;
-    padding: 4px 12px;
+    padding: 4px 16px;
     overflow: auto;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
     font: inherit;
-    line-height: 1.6;
-    color: rgba($color-on-primary, 0.72);
+    line-height: 1.65;
+    color: var(--text-secondary);
   }
 }
 
@@ -375,17 +403,16 @@ function getDefaultCode(language: ScriptLanguage, project: ProjectDetails): stri
   align-content: center;
   justify-items: center;
   gap: 12px;
-  color: rgba($color-on-primary, 0.64);
-  font-family: $font-family-monospace;
+  color: var(--text-tertiary);
   font-size: $font-size-absolute-x-small;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
 }
 
 .code-area-loading__indicator {
-  width: 24px;
-  height: 24px;
-  border: 2px solid rgba($color-on-primary, 0.14);
-  border-top-color: $color-secondary;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--fill-track);
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: code-area-loading-spin 800ms linear infinite;
 }

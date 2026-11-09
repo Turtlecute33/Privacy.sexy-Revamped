@@ -275,8 +275,6 @@ function dismissOnEscape(
 <style scoped lang="scss">
 @use "@/presentation/assets/styles/main" as *;
 
-$color-tooltip-background: $color-primary-dark;
-
 .tooltip {
   display: inline-flex;
 }
@@ -328,26 +326,55 @@ $color-tooltip-background: $color-primary-dark;
   white-space: normal;
 
   visibility: hidden;
-  opacity: 0;
 
   @include fixed-fullscreen;
 
   &--visible {
     visibility: visible;
+  }
+}
+
+/*
+  The glass sits on the floating element and the fade runs on its layers, never on an ancestor of
+  them. `opacity` below 1 on an ancestor cuts off what `backdrop-filter` can see, so fading the
+  overlay (or the glass host) showed an unblurred pane for the whole transition and then snapped
+  to frosted glass at the end. The frosted layers and the text fade side by side instead.
+*/
+.tooltip__display {
+  @include glass-surface($radius: 16px, $tint: var(--glass-tint-strong));
+  transition: box-shadow 160ms $motion-ease-standard;
+
+  &::before,
+  &::after {
+    opacity: 0;
+    transition: opacity 160ms $motion-ease-standard;
+  }
+
+  .tooltip__overlay:not(.tooltip__overlay--visible) & {
+    box-shadow: none;
+  }
+
+  .tooltip__overlay--visible &::before,
+  .tooltip__overlay--visible &::after {
     opacity: 1;
-    transition: opacity 150ms ease-out;
   }
 }
 
 .tooltip__content {
-  background: $color-tooltip-background;
-  color: $color-on-primary;
-  border: 1px solid rgba($color-primary-light, 0.35);
-  border-radius: 16px;
-  padding: $spacing-absolute-large $spacing-absolute-medium;
-  box-shadow: 0 16px 38px rgba($color-primary-darkest, 0.28);
+  color: var(--text);
+  padding: 12px 16px;
   overflow: auto;
   overscroll-behavior: contain;
+  opacity: 0;
+  transform: translateY(3px);
+  transition:
+    opacity 160ms $motion-ease-standard,
+    transform 240ms $motion-ease-out;
+
+  .tooltip__overlay--visible & {
+    opacity: 1;
+    transform: none;
+  }
 
   // Explicitly set font styling for tooltips to prevent inconsistent appearances due to style inheritance from trigger elements.
   @include base-font-style;
@@ -355,35 +382,31 @@ $color-tooltip-background: $color-primary-dark;
   line-height: 1.55;
 
   /*
-    This margin creates a visual buffer between the tooltip and the edges of the document.
-    It prevents the tooltip from appearing too close to the edges, ensuring a visually pleasing
-    and balanced layout.
-    Avoiding setting vertical margin as it disrupts the arrow rendering.
-  */
-  margin-left: $spacing-absolute-xx-small;
-  margin-right: $spacing-absolute-xx-small;
-
-  /*
     Keep long documentation readable without allowing it to cover the page.
     Content remains complete and scrollable, including links and code blocks.
   */
-  max-width: min(50ch, calc(100vw - #{$spacing-absolute-xx-large}));
+  max-width: min(52ch, calc(100vw - #{$spacing-absolute-xx-large}));
   max-height: min(65vh, 32rem);
 
   :deep(a[href]) {
-    color: $color-secondary-light;
+    color: var(--accent-text);
     text-decoration: underline;
     text-underline-offset: 2px;
   }
+
+  :deep(.markdown-text) {
+    font-size: $font-size-absolute-small;
+  }
 }
 
+/* A floating glass card needs no pointer; the gap to its trigger already says where it came from. */
 .tooltip__arrow {
-  background: $color-tooltip-background;
+  visibility: hidden;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tooltip__overlay--visible {
-    transition: none;
+  .tooltip__content {
+    transform: none;
   }
 }
 </style>

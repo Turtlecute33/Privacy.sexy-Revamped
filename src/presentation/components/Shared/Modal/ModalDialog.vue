@@ -69,6 +69,7 @@ export default defineComponent({
 
   &__content {
     margin: $spacing-absolute-xx-large;
+    margin-right: 52px; // Clears the close button, which floats over the top-right corner.
     @media screen and (max-width: $media-screen-big-width) {
       margin: $spacing-absolute-x-large;
     }
@@ -78,10 +79,10 @@ export default defineComponent({
   }
 
   .dialog__close-button {
-    color: $color-primary-dark;
+    color: var(--text-secondary);
     width: auto;
     font-size: $font-size-absolute-large;
-    margin-right: $spacing-absolute-small;
+    margin: $spacing-absolute-medium $spacing-absolute-medium 0 0;
 
     @mixin keep-visible-above-scrollbar { // Prevents close button from being obscured by scrollbar on small screens.
       position: absolute;

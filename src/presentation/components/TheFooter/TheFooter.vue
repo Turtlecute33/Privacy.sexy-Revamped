@@ -1,23 +1,27 @@
 <template>
   <footer class="footer">
-    <div class="footer__inner">
-      <div class="footer__brand">
-        <span class="footer__mark" aria-hidden="true" />
-        <div>
-          <strong>Privacy should stay in your hands.</strong>
-          <span>Open source, transparent, and free.</span>
-        </div>
-      </div>
-      <div class="footer__section">
-        <a :href="feedbackUrl" target="_blank" rel="noopener noreferrer">
-          <AppIcon class="icon" icon="face-smile" />
-          <span>Feedback</span>
-        </a>
-        <a :href="repositoryUrl" target="_blank" rel="noopener noreferrer">
-          <AppIcon class="icon" icon="github" />
-          <span>Source code</span>
-        </a>
-      </div>
+    <!--
+      The fork relationship belongs in the rendered body, not only in <title> and meta. Before
+      this line the deployed HTML contained the words "Revamped" and "fork" zero times, so the
+      only brand the page asserted on-page was the upstream one, and the terms the site is
+      meant to be found for appeared nowhere a crawler or an AI scraper reads. It moved here from
+      the old hero when the header became a slim tool bar; it is still visible body text.
+    -->
+    <p class="footer__lede">
+      <strong>{{ slogan }}.</strong>
+      Independently maintained fork of privacy.sexy, not affiliated with the original.
+      Debloat Windows 11, disable telemetry, and harden macOS and Linux. Every command is
+      shown before you run it.
+    </p>
+    <div class="footer__links">
+      <a :href="feedbackUrl" target="_blank" rel="noopener noreferrer">
+        <AppIcon class="icon" icon="face-smile" />
+        <span>Feedback</span>
+      </a>
+      <a :href="repositoryUrl" target="_blank" rel="noopener noreferrer">
+        <AppIcon class="icon" icon="github" />
+        <span>Source code</span>
+      </a>
     </div>
   </footer>
 </template>
@@ -38,9 +42,12 @@ export default defineComponent({
 
     const feedbackUrl = computed<string>(() => projectDetails.feedbackUrl);
 
+    const slogan = computed<string>(() => projectDetails.slogan);
+
     return {
       repositoryUrl,
       feedbackUrl,
+      slogan,
     };
   },
 });
@@ -50,91 +57,68 @@ export default defineComponent({
 @use "@/presentation/assets/styles/main" as *;
 
 .icon {
-  margin-right: 8px;
+  font-size: 12px;
 }
 
 /*
-  The footer shares the page surface instead of sitting on a band of its own: no
-  background fill and no full-bleed rule, so it reads as the tail of the page rather
-  than a separate section. Whitespace and muted type carry the separation.
+  A single quiet line under the workbench, on the page itself rather than on glass: it is
+  reference material, not part of the tool.
 */
 .footer {
-  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 24px;
+  min-height: 40px;
+  padding: 0 6px 12px;
+  color: var(--text-tertiary);
+  font-size: $font-size-absolute-x-small;
+  line-height: 1.45;
 
-  &__inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px 24px;
-    /* Matches `.app__main` so the footer lines up with the workbench edges above it. */
-    width: min(1440px, calc(100% - 32px));
-    margin: 0 auto;
-    padding: 18px 0 28px;
-  }
-
-  &__brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-
-    > div {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
+  &__lede {
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 
     strong {
-      color: $color-on-surface;
-      font-size: $font-size-absolute-small;
+      color: var(--text-secondary);
       font-weight: 600;
     }
-
-    span {
-      color: $color-on-surface-muted;
-      font-size: $font-size-absolute-x-small;
-    }
   }
 
-  &__mark {
-    display: block;
-    width: 22px;
-    height: 25px;
-    flex: 0 0 auto;
-    background: rgba($color-primary, 0.8);
-    clip-path: polygon(50% 0, 100% 20%, 92% 72%, 50% 100%, 8% 72%, 0 20%);
-  }
-
-  /*
-    Pulled flush with the container edge: the links keep a comfortable hit area, but the
-    padding hangs outside the content width so the labels stay optically aligned.
-  */
-  &__section {
+  &__links {
     display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-right: -10px;
+    flex: 0 0 auto;
+    gap: 2px;
+    margin-right: -8px;
 
     a {
       display: inline-flex;
       align-items: center;
-      padding: 8px 10px;
-      border-radius: 8px;
-      color: $color-on-surface-muted;
-      font-size: $font-size-absolute-small;
+      gap: 6px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      color: var(--text-tertiary);
       text-decoration: none;
       transition:
         color $motion-duration-fast $motion-ease-standard,
         background-color $motion-duration-fast $motion-ease-standard;
 
+      // The leading icon already marks these as outbound; the global external-link glyph doubles it.
+      &::after {
+        display: none;
+      }
+
       &:hover {
-        background: rgba($color-primary, 0.07);
-        color: $color-primary-dark;
+        background: var(--fill-hover);
+        color: var(--text);
         text-decoration: none;
       }
 
       &:focus-visible {
-        outline: 2px solid $color-primary;
+        outline: 2px solid var(--focus-ring);
         outline-offset: 1px;
       }
     }
@@ -143,32 +127,25 @@ export default defineComponent({
 
 // Touch targets stay comfortable where the pointer is imprecise.
 @media (pointer: coarse) {
-  .footer__section a {
+  .footer__links a {
     min-height: 44px;
   }
 }
 
-@media screen and (max-width: $media-screen-medium-width) {
+@media screen and (max-width: $media-vertical-view-breakpoint) {
   .footer {
-    &__inner {
-      align-items: flex-start;
-      flex-direction: column;
-      gap: 8px;
-      width: min(100% - 32px, 1440px);
-      padding: 14px 0 24px;
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 4px 6px 20px;
+
+    &__lede {
+      white-space: normal;
     }
 
-    // Stacked below the brand, the links align to the left edge instead of the right.
-    &__section {
+    &__links {
       margin-right: 0;
-      margin-left: -10px;
+      margin-left: -9px;
     }
-  }
-}
-
-@media screen and (max-width: $media-screen-small-width) {
-  .footer__inner {
-    width: min(100% - 20px, 1440px);
   }
 }
 </style>

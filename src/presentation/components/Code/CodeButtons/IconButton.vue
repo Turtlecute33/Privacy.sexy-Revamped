@@ -2,6 +2,7 @@
   <div class="button-wrapper">
     <button
       class="button"
+      :class="{ 'button--primary': primary }"
       type="button"
       @click="onClicked"
     >
@@ -34,6 +35,11 @@ export default defineComponent({
       type: String as PropType<IconName>,
       required: true,
     },
+    /** Filled with the accent colour, for the one action a view leads to. */
+    primary: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: [
     'click',
@@ -54,53 +60,77 @@ export default defineComponent({
 @use "@/presentation/assets/styles/main" as *;
 
 .button-wrapper {
-  position: relative;
-  height: 44px;
-  .button {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-  }
+  display: inline-flex;
 }
 
+/*
+  Capsules: a neutral glass chip for secondary actions, and a filled accent capsule with a lit top
+  edge for the primary one.
+*/
 .button {
   @include reset-button;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background-color: $color-secondary;
-  color: $color-on-secondary;
-
-  border: 1px solid $color-secondary;
-  transition:
-    background-color $motion-duration-fast $motion-ease-standard,
-    color $motion-duration-fast $motion-ease-standard,
-    border-color $motion-duration-fast $motion-ease-standard,
-    transform $motion-duration-standard $motion-ease-out;
-  overflow: hidden;
-  box-shadow: none;
-  border-radius: 12px;
-
   @include clickable;
 
-  .button__icon {
-    margin-right: 9px;
-    font-size: $font-size-absolute-normal;
-  }
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 15px;
+  border-radius: 999px;
+  background: var(--fill-track);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  color: var(--text);
+  white-space: nowrap;
+  transition:
+    background-color $motion-duration-fast $motion-ease-standard,
+    box-shadow $motion-duration-fast $motion-ease-standard,
+    transform $motion-duration-standard $motion-ease-out;
 
-  @include hover-or-touch {
-    background: rgba($color-on-primary, 0.06);
-    color: $color-on-primary;
-    border-color: rgba($color-secondary, 0.7);
-    transform: translateY(-1px);
+  .button__icon {
+    font-size: 13px;
   }
 
   .button__text {
     display: block;
     font-size: $font-size-absolute-small;
-    font-weight: 700;
+    font-weight: 600;
+  }
+
+  @include hover-or-touch {
+    background: var(--fill-hover);
+    box-shadow: inset 0 0 0 1px var(--control-edge);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  @include focus-ring;
+
+  &--primary {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 60%),
+      var(--accent);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      0 6px 16px -6px var(--accent);
+    color: var(--on-accent);
+
+    @include hover-or-touch {
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 60%),
+        var(--accent-hover);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        0 8px 20px -6px var(--accent);
+    }
+  }
+}
+
+@media (pointer: coarse) {
+  .button {
+    height: 44px;
   }
 }
 </style>

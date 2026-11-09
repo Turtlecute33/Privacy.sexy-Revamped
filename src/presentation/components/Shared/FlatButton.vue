@@ -71,52 +71,54 @@ export default defineComponent({
 <style lang="scss" scoped>
 @use "@/presentation/assets/styles/main" as *;
 
+/* A quiet capsule: text on glass at rest, a soft neutral fill under the pointer. */
 .flat-button {
   @include reset-button;
   @include clickable;
   align-items: center;
   justify-content: center;
-  min-height: 36px;
-  padding: 6px 10px;
+  min-height: 32px;
+  padding: 6px 12px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 999px;
   display: inline-flex;
   gap: 7px;
   font-size: $font-size-absolute-small;
+  font-weight: 500;
   line-height: 1.2;
+  white-space: nowrap;
   transition:
     color $motion-duration-fast $motion-ease-standard,
     background-color $motion-duration-fast $motion-ease-standard,
     border-color $motion-duration-fast $motion-ease-standard,
-    transform $motion-duration-standard $motion-ease-out;
+    box-shadow $motion-duration-fast $motion-ease-standard;
 
   // Selected/active toggle option (e.g. current OS or preset).
   &.is-pressed {
-    border-color: rgba($color-secondary, 0.45);
-    background: rgba($color-secondary, 0.16);
-    color: $color-secondary-light;
+    background: var(--lens);
+    box-shadow: var(--lens-shadow);
+    color: var(--text);
     opacity: 1;
   }
 
   // Genuinely unavailable option: dimmed and non-interactive.
   &.disabled {
-    color: rgba($color-on-primary, 0.4);
+    color: var(--text-tertiary);
     cursor: not-allowed;
+    opacity: 0.6;
   }
 
   &:not(.disabled):not(.is-pressed) {
     color: inherit;
 
     @include hover-or-touch {
-      border-color: rgba($color-on-primary, 0.12);
-      background: rgba($color-on-primary, 0.07);
-      color: $color-on-primary;
-      transform: translateY(-1px);
+      background: var(--fill-hover);
+      color: var(--text);
     }
   }
 
   &:focus-visible {
-    outline: 3px solid $color-secondary;
+    outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
   }
 }

@@ -1,7 +1,7 @@
 <template>
   <div v-if="hasCode" class="container">
-    <CodeSaveButton class="code-button" />
     <CodeCopyButton class="code-button" />
+    <CodeSaveButton class="code-button" />
   </div>
 </template>
 
@@ -36,12 +36,7 @@ export default defineComponent({
 .container {
   display: flex;
   flex-direction: row;
-  justify-content: center;
-  gap: 12px;
-}
-
-.code-button {
-  width: 140px;
-  max-width: calc(50% - 6px);
+  align-items: center;
+  gap: 8px;
 }
 </style>

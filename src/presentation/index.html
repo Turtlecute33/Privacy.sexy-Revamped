@@ -17,7 +17,9 @@
     signal. Keywords belong in the visible copy the prerender bakes in.
   -->
   <meta name="author" content="Turtlecute" />
-  <meta name="theme-color" content="#0b1730" />
+  <meta name="theme-color" content="#eef1f7" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#070a12" media="(prefers-color-scheme: dark)" />
+  <meta name="color-scheme" content="light dark" />
   <meta name="robots" content="index,follow,max-image-preview:large" />
   <link rel="canonical" href="https://privacy.turtlecute.org/" />
   <link rel="icon" href="%BASE_URL%favicon.ico" type="image/x-icon">
@@ -96,13 +98,14 @@
         const notice = document.createElement('div');
         notice.id = 'startup-failure';
         notice.setAttribute('role', 'alert');
-        notice.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10000;padding:12px 16px;'
-          + 'background:#0b1730;color:#dbe7ff;border-bottom:2px solid #20c9a1;text-align:center;'
-          + 'font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';
+        notice.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:10000;'
+          + 'max-width:calc(100% - 24px);padding:10px 18px;border-radius:999px;'
+          + 'background:#0b1220;color:#eef2fa;box-shadow:0 10px 30px rgba(0,0,0,.25);text-align:center;'
+          + 'font:14px/1.5 -apple-system,"Segoe UI Variable Text","Segoe UI",system-ui,Roboto,sans-serif';
         const reloadLink = document.createElement('a');
         reloadLink.href = location.pathname + location.search;
         reloadLink.textContent = 'Reload the page';
-        reloadLink.style.color = '#20c9a1';
+        reloadLink.style.color = '#93b2ff';
         reloadLink.addEventListener('click', (event) => {
           event.preventDefault();
           location.reload();
@@ -283,23 +286,33 @@
     aria-description="Initial loading screen while privacy.sexy prepares its options. This typically takes a few seconds.">
     <!-- This content will be removed once the application loads -->
     <style>
+      /* Matches the app canvas (`_theme.scss`) in both appearances, so the hand-off is seamless. */
       :root {
-        --splash-color-text: #dbe7ff;
-        --splash-color-background: #0b1730;
-        --splash-color-spinner-filled: #20c9a1;
-        --splash-color-spinner-empty: rgba(219, 231, 255, 0.18);
+        --splash-color-text: #3d475a;
+        --splash-color-background: #eef1f7;
+        --splash-color-spinner-filled: #2f62e0;
+        --splash-color-spinner-empty: rgba(15, 23, 42, 0.08);
         --splash-size-logo: min(80px, calc(100vw/5));
         --splash-size-spinner: calc(var(--splash-size-logo) * 1.75);
-        --splash-font-size-large: 21px;
-        --splash-font-size-normal: 17px;
+        --splash-font-size-large: 16px;
+        --splash-font-size-normal: 14px;
         --splash-spacing-absolute-large: 15px;
         --splash-font-family:
           /* System font stack */
-          system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", Arial, Helvetica, sans-serif;
+          -apple-system, BlinkMacSystemFont, 'Segoe UI Variable Text', 'Segoe UI', system-ui, Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", Arial, Helvetica, sans-serif;
         --splash-animation-duration-spin: 2s;
         --splash-animation-duration-all-fadeout: 220ms;
         --splash-animation-duration-text-fadeout: 140ms;
         --splash-animation-delay-long-load-message: 15s;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --splash-color-text: rgba(226, 232, 245, 0.74);
+          --splash-color-background: #070a12;
+          --splash-color-spinner-filled: #5682ff;
+          --splash-color-spinner-empty: rgba(255, 255, 255, 0.1);
+        }
       }
 
       .splash-screen,
@@ -360,9 +373,9 @@
 
       .splash-screen__spinner {
         position: absolute;
-        border: 3px solid var(--splash-color-spinner-empty);
+        border: 2px solid var(--splash-color-spinner-empty);
         border-radius: 50%;
-        border-top: 3px solid var(--splash-color-spinner-filled);
+        border-top: 2px solid var(--splash-color-spinner-filled);
         animation: splash-animation-spin var(--splash-animation-duration-spin) linear infinite;
         width: 100%;
         height: 100%;

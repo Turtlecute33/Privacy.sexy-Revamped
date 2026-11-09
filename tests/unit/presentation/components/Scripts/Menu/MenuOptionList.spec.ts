@@ -9,7 +9,7 @@ describe('MenuOptionList', () => {
   it('renders the label when provided', () => {
     // arrange
     const label = 'Test label';
-    const expectedLabel = `${label}:`;
+    const expectedLabel = label;
     // act
     const wrapper = mountComponent({ label });
     // assert

@@ -88,8 +88,12 @@ export default defineComponent({
 <style scoped lang="scss">
 @use "@/presentation/assets/styles/main" as *;
 
-$size: 18px;
+$size: 20px;
 
+/*
+  A round selection mark, as native lists use for picking items: an empty ring at rest, a filled
+  accent disc with a check once chosen, a tinted disc with a dash when a group is partly chosen.
+*/
 .checkbox {
   position: relative;
   display: inline-grid;
@@ -119,12 +123,13 @@ $size: 18px;
     box-sizing: border-box;
     width: 100%;
     height: 100%;
-    border: 1px solid rgba($color-on-primary, 0.35);
-    border-radius: 5px;
-    background: rgba($color-on-primary, 0.05);
+    border-radius: 50%;
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px var(--control-edge);
     transition:
       background-color $motion-duration-fast $motion-ease-standard,
-      border-color $motion-duration-fast $motion-ease-standard;
+      box-shadow $motion-duration-fast $motion-ease-standard,
+      transform $motion-duration-standard $motion-ease-out;
   }
 
   &__mark {
@@ -132,33 +137,39 @@ $size: 18px;
     height: 12px;
     overflow: visible;
     fill: none;
-    stroke: $color-on-secondary;
+    stroke: var(--on-accent);
     stroke-linecap: round;
     stroke-linejoin: round;
-    stroke-width: 2.25;
+    stroke-width: 2.4;
   }
 
   &.is-checked &__box {
-    border-color: $color-secondary;
-    background: $color-secondary;
+    background: var(--accent);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.28),
+      0 2px 6px -1px var(--focus-ring);
   }
 
   &.is-indeterminate &__box {
-    border-color: rgba($color-secondary, 0.7);
-    background: rgba($color-secondary, 0.2);
+    background: var(--accent-soft);
+    box-shadow: inset 0 0 0 1.5px var(--accent);
   }
 
   &.is-indeterminate &__mark {
-    stroke: $color-secondary-light;
+    stroke: var(--accent-text);
   }
 
   .checkbox__input:focus-visible + &__box {
-    outline: 3px solid $color-secondary;
+    outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
   }
 
+  .checkbox__input:active + &__box {
+    transform: scale(0.9);
+  }
+
   @include hover-or-touch($selector-suffix: '+ .checkbox__box', $selector-prefix: '.checkbox__input') {
-    border-color: rgba($color-secondary, 0.8);
+    box-shadow: inset 0 0 0 1.5px var(--accent);
   }
 }
 </style>

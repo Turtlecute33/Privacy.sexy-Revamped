@@ -166,9 +166,13 @@ export default defineComponent({
 <style scoped lang="scss">
 @use "@/presentation/assets/styles/main" as *;
 
+/*
+  Inset grouped list: each group is a small caption over a rounded card of rows, the layout native
+  settings screens use for long lists of independent switches.
+*/
 .group {
   & + & {
-    margin-top: 20px;
+    margin-top: 22px;
   }
 
   /* Scrolls away with its rows; nothing in the list stays pinned. */
@@ -176,7 +180,8 @@ export default defineComponent({
     display: flex;
     align-items: center;
     gap: 4px;
-    padding: 8px 12px;
+    min-height: 40px;
+    padding: 4px 14px 6px;
   }
 
   &__heading {
@@ -186,16 +191,16 @@ export default defineComponent({
     align-items: center;
     gap: 12px;
     min-width: 0;
-    min-height: 32px;
+    min-height: 30px;
     @include clickable;
   }
 
   &__name {
     min-width: 0;
+    color: var(--text);
     font-size: $font-size-absolute-small;
-    font-weight: 650;
+    font-weight: 600;
     line-height: 1.3;
-    color: $color-on-primary;
     overflow-wrap: anywhere;
   }
 
@@ -207,27 +212,27 @@ export default defineComponent({
     flex: 0 0 auto;
     margin-left: auto;
     padding-left: 8px;
-    font-size: 12px;
+    color: var(--text-tertiary);
+    font-size: $font-size-absolute-x-small;
     font-variant-numeric: tabular-nums;
-    color: rgba($color-on-primary, 0.5);
 
     &__separator {
       padding: 0 1px;
-      opacity: 0.5;
+      opacity: 0.6;
     }
   }
 
   &__revert {
     flex: 0 0 auto;
-    padding-left: 4px;
+    padding-left: 6px;
   }
 
   &__scripts {
     @include reset-ul;
-    border: 1px solid rgba($color-on-primary, 0.07);
-    border-radius: 12px;
-    background: rgba($color-on-primary, 0.03);
-    padding: 4px;
+    overflow: hidden;
+    border-radius: 16px;
+    background: var(--fill-grouped);
+    box-shadow: inset 0 0 0 1px var(--hairline);
   }
 }
 </style>

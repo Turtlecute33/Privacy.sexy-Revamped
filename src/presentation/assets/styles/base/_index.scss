@@ -27,15 +27,17 @@ html {
 body {
   margin: 0;
   padding: 0;
-  background: $color-surface;
+  background: var(--canvas);
   @include base-font-style;
   @include apply-uniform-spacing;
-  color: $color-on-surface;
-  line-height: 1.55;
+  color: var(--text);
+  line-height: 1.5;
   min-width: 320px;
   min-height: 100vh;
   min-height: 100dvh; // Dynamic viewport unit avoids the mobile URL-bar jump; falls back to 100vh above.
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 input {
@@ -51,13 +53,13 @@ button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 [tabindex]:focus-visible {
-  outline: 3px solid $color-secondary;
-  outline-offset: 3px;
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 ::selection {
-  background: $color-secondary-light;
-  color: $color-primary-darkest;
+  background: var(--accent-soft);
+  color: inherit;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -77,16 +79,17 @@ input:focus-visible,
 
 blockquote {
   padding: 0 $spacing-relative-medium;
-  border-left: $spacing-absolute-x-small solid $color-primary;
+  border-left: 3px solid var(--accent-soft);
 }
 
 @include style-code-elements(
   $code-block-padding: $spacing-relative-medium,
-  $color-background: $color-primary-darker,
+  $color-background: var(--code-inline),
 );
 
 hr {
-  opacity: 0.6;
+  border: 0;
+  border-top: 1px solid var(--hairline);
 }
 
 sup {
@@ -97,14 +100,14 @@ sup {
 }
 
 kbd {
-  font-family: unset; // Reset the default browser styles
-  background-color: $color-primary-dark;
-  border: 1px solid $color-primary-darker;
-  border-radius: 0.2em;
-  box-shadow: inset 0 1px 0 0 $color-primary-dark, inset 0 -2px 0 0 $color-primary-darker;
-  font-family: $font-family-monospace;
+  background: var(--fill-track);
+  border: 1px solid var(--hairline);
+  border-radius: 5px;
+  box-shadow: inset 0 -1px 0 var(--hairline);
+  color: var(--text-secondary);
+  font-family: $font-family-main;
   font-size: $font-size-relative-smallest;
-  padding: $spacing-relative-x-small $spacing-relative-x-small;
+  padding: 1px 6px;
   text-align: center;
   user-select: none;
   white-space: nowrap;

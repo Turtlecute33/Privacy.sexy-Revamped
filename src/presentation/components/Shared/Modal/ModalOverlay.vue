@@ -47,8 +47,7 @@ export default defineComponent({
 <style scoped lang="scss">
 @use "@/presentation/assets/styles/main" as *;
 
-$modal-overlay-transition-duration: 50ms;
-$modal-overlay-color-background: $color-on-surface;
+$modal-overlay-transition-duration: 200ms;
 
 .modal-overlay-background {
   position: fixed;
@@ -57,7 +56,9 @@ $modal-overlay-color-background: $color-on-surface;
   top: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba($modal-overlay-color-background, 0.3);
+  background: var(--overlay);
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
+  backdrop-filter: blur(6px) saturate(120%);
   opacity: 1;
 }
 

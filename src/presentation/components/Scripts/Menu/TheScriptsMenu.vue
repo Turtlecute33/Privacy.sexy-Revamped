@@ -3,6 +3,7 @@
     <div class="control-group">
       <TheOsChanger />
     </div>
+    <span class="scripts-menu__divider" aria-hidden="true" />
     <div class="control-group">
       <TheRecommendationSelector />
     </div>
@@ -24,50 +25,52 @@ export default defineComponent({
 
 <style scoped lang="scss">
 @use "@/presentation/assets/styles/main" as *;
+
 .scripts-menu {
-  display: grid;
-  grid-template-columns: minmax(200px, 1fr) minmax(300px, 1.6fr);
-  color: rgba($color-on-primary, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  min-width: 0;
 
   .control-group {
     display: flex;
     align-items: center;
     min-width: 0;
-    min-height: 64px;
-    padding: 10px 16px;
-    border-left: 1px solid rgba($color-on-primary, 0.08);
+  }
+}
 
-    &:first-child {
-      border-left: 0;
+.scripts-menu__divider {
+  width: 1px;
+  height: 22px;
+  background: var(--hairline);
+}
+
+/* The pickers explain themselves once space is short; their labels stay for screen readers. */
+@media screen and (max-width: 1360px) {
+  .scripts-menu {
+    gap: 12px;
+
+    :deep(.list > :first-child:not(.items)) {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
     }
   }
 }
 
-@media screen and (max-width: 1100px) {
+@media screen and (max-width: $media-vertical-view-breakpoint) {
   .scripts-menu {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
-
-    .control-group {
-      min-height: 60px;
-      padding: 10px 14px;
-    }
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    overflow-x: auto;
   }
-}
 
-// Stack the two control groups vertically, swapping the vertical divider for a horizontal one.
-@media screen and (max-width: $media-screen-medium-width) {
-  .scripts-menu {
-    grid-template-columns: 1fr;
-
-    .control-group {
-      min-height: 0;
-      padding: 10px 14px;
-      border-left: 0;
-
-      &:not(:first-child) {
-        border-top: 1px solid rgba($color-on-primary, 0.08);
-      }
-    }
+  .scripts-menu__divider {
+    display: none;
   }
 }
 </style>

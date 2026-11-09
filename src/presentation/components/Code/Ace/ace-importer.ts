@@ -5,6 +5,7 @@ import ace, { Range } from 'ace-builds';
   when built with Vite (`npm run build`).
 */
 
+import 'ace-builds/src-noconflict/theme-tomorrow';
 import 'ace-builds/src-noconflict/theme-tomorrow_night';
 import 'ace-builds/src-noconflict/mode-batchfile';
 import 'ace-builds/src-noconflict/mode-sh';

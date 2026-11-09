@@ -26,16 +26,17 @@
   $code-block-padding,
 ) {
   $font-size-code-in-percentage: $font-size-relative-smaller; // Keep relative size to scale right with different text sizes around.
-  $border-radius: 2px; // Subtle rounding still maintaining sharp design.
+  $border-radius: 10px; // Matches the soft corners of the glass surfaces around it.
 
   @include base-code {
     font-family: $font-family-monospace;
     font-size: $font-size-code-in-percentage;
-    color: $color-on-primary;
+    color: var(--text);
   }
 
   @include inline-code {
     background: $color-background;
+    border-radius: 6px;
     word-break: break-all; // Enables inline code to wrap with the text, even for long single words (like registry paths), thus preventing overflow.
 
     $padding-x-max      : 8px;

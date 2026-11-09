@@ -1,0 +1,78 @@
+/*
+  Liquid glass surfaces.
+
+  The blur lives on a pseudo-element, never on the surface itself. `backdrop-filter` makes its
+  element the containing block of every `position: fixed` descendant, and the panels hold fixed
+  layers: the tooltip overlay in each script row and the download modal in the code panel. On the
+  surface itself, those would be trapped and clipped inside the panel instead of covering the
+  viewport. A pseudo-element has no descendants, so it blurs the page behind the panel without
+  changing how anything inside it is positioned.
+
+  The surface deliberately does not isolate a stacking context of its own. Tooltips and the modal
+  inside a panel are fixed layers with a z-index, and inside an isolated panel that z-index would
+  only rank them among the panel's own children: a preset tooltip dropping out of the top bar would
+  slide underneath the panels painted after it. Without isolation, `z-index: -1` places both layers
+  just above the workbench's (transparent) stacking context, behind every panel's content, so an
+  ancestor between a surface and that context must not paint a background of its own.
+
+  Two layers, both behind the content:
+    ::before  the frosted body: tint, backdrop blur and a hairline edge.
+    ::after   the specular rim: a 1px ring lit at the top-left and, faintly, the bottom-right,
+              which is what reads as a thick, curved pane rather than a flat translucent box.
+*/
+@mixin glass-surface($radius: 22px, $tint: var(--glass-tint)) {
+  position: relative;
+  border-radius: $radius;
+  box-shadow: var(--glass-shadow);
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  &::before {
+    background: $tint;
+    -webkit-backdrop-filter: var(--glass-filter);
+    backdrop-filter: var(--glass-filter);
+    box-shadow:
+      inset 0 0 0 1px var(--glass-edge),
+      0 0 0 0.5px var(--glass-edge-outer);
+  }
+
+  &::after {
+    padding: 1px;
+    background: linear-gradient(
+      150deg,
+      var(--glass-specular) 0%,
+      transparent 26%,
+      transparent 74%,
+      var(--glass-specular-low) 100%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+  }
+}
+
+/* Thin, translucent scrollbars that sit on glass without a gutter-coloured track. */
+@mixin glass-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar) transparent;
+}
+
+/* Keyboard focus ring shared by every control. */
+@mixin focus-ring($offset: 2px) {
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: $offset;
+  }
+}

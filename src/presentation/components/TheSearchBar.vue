@@ -8,19 +8,28 @@
       </div>
       <input
         id="script-search"
+        ref="inputElement"
         v-model="searchQuery"
         type="search"
         class="search-term"
         :placeholder="searchPlaceholder"
         autocomplete="off"
+        spellcheck="false"
+        aria-keyshortcuts="/ Control+K Meta+K"
+        @keydown.esc="clearAndLeave"
       >
+      <kbd
+        v-if="!searchQuery"
+        class="search__shortcut"
+        aria-hidden="true"
+      >/</kbd>
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import {
-  defineComponent, ref, watch, computed,
+  defineComponent, ref, watch, computed, shallowRef, onMounted, onUnmounted,
 } from 'vue';
 import { injectKey } from '@/presentation/injectionSymbols';
 import AppIcon from '@/presentation/components/Shared/Icon/AppIcon.vue';
@@ -49,9 +58,11 @@ export default defineComponent({
     } = injectKey((keys) => keys.useCollectionState);
     const { events } = injectKey((keys) => keys.useAutoUnsubscribedEvents);
 
+    const inputElement = shallowRef<HTMLInputElement>();
+
     const searchPlaceholder = computed<string>(() => {
       const { totalScripts } = currentState.value.collection;
-      return `Search in ${totalScripts} scripts`;
+      return `Search ${totalScripts} scripts`;
     });
 
     const searchQuery = ref<string | undefined>();
@@ -73,6 +84,30 @@ export default defineComponent({
         }
       });
     }
+
+    function clearAndLeave() {
+      searchQuery.value = '';
+      inputElement.value?.blur();
+    }
+
+    /*
+      Search is the fastest way through a thousand settings, so it is one key away from anywhere
+      on the page: `/` as on most documentation sites, and Ctrl/Cmd+K as in most desktop apps.
+      `/` is left alone while the visitor is typing somewhere else.
+    */
+    function onGlobalKeydown(event: KeyboardEvent) {
+      const isCommandK = event.key.toLowerCase() === 'k' && (event.ctrlKey || event.metaKey);
+      const isSlash = event.key === '/' && !event.ctrlKey && !event.metaKey && !event.altKey;
+      if (!isCommandK && !(isSlash && !isTypingTarget(event.target))) {
+        return;
+      }
+      event.preventDefault();
+      inputElement.value?.focus();
+      inputElement.value?.select();
+    }
+
+    onMounted(() => document.addEventListener('keydown', onGlobalKeydown));
+    onUnmounted(() => document.removeEventListener('keydown', onGlobalKeydown));
 
     onStateChange((newState) => {
       updateFromInitialFilter(newState.filter.currentFilter);
@@ -101,11 +136,23 @@ export default defineComponent({
     }
 
     return {
+      inputElement,
       searchPlaceholder,
       searchQuery,
+      clearAndLeave,
     };
   },
 });
+
+function isTypingTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+  return target.isContentEditable
+    || target instanceof HTMLInputElement
+    || target instanceof HTMLTextAreaElement
+    || target instanceof HTMLSelectElement;
+}
 
 </script>
 
@@ -124,57 +171,94 @@ export default defineComponent({
   white-space: nowrap;
 }
 
+/*
+  A recessed well in the bar rather than another pane of glass: a neutral fill and an inner
+  shadow at rest, lifting into a bright lens with an accent halo once focused.
+*/
 .search {
   position: relative;
   display: flex;
   align-items: center;
   width: 100%;
-  min-height: 44px;
-  border: 1px solid $color-border;
-  border-radius: 12px;
-  background: $color-surface-elevated;
-  box-shadow: 0 8px 24px rgba($color-primary-darkest, 0.055);
+  height: 40px;
+  border-radius: 999px;
+  background: var(--fill-track);
+  box-shadow: inset 0 1px 2px var(--hairline);
   transition:
-    border-color $motion-duration-fast $motion-ease-standard,
+    background-color $motion-duration-standard $motion-ease-standard,
     box-shadow $motion-duration-standard $motion-ease-standard;
 
+  &:hover {
+    background: var(--fill-hover);
+  }
+
   &:focus-within {
-    border-color: rgba($color-primary, 0.65);
-    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+    background: var(--lens);
+    box-shadow: var(--lens-shadow), 0 0 0 3px var(--accent-soft);
   }
 }
 
 .search-term {
   width: 100%;
   min-width: 60px;
-  min-height: 42px;
-  padding: 0 18px 0 54px;
+  height: 100%;
+  padding: 0 40px 0 38px;
   border: 0;
   outline: 0;
   background: transparent;
-  color: $color-primary-darkest;
+  color: var(--text);
   font-size: $font-size-absolute-normal;
 
   &::placeholder {
-    color: $color-on-surface-muted;
+    color: var(--text-tertiary);
     opacity: 1;
   }
 
   &::-webkit-search-cancel-button {
     cursor: pointer;
   }
+
+  /* Keyboard focus is carried by the halo on `.search`; a second ring inside the pill is noise. */
+  &:focus-visible {
+    outline: 0;
+  }
 }
 
 .icon-wrapper {
   position: absolute;
-  left: 18px;
+  left: 14px;
   z-index: 1;
   display: grid;
-  width: 22px;
-  height: 22px;
+  width: 16px;
+  height: 16px;
   place-items: center;
-  color: $color-primary;
-  font-size: $font-size-absolute-normal;
+  color: var(--text-tertiary);
+  font-size: 14px;
   pointer-events: none;
+  transition: color $motion-duration-fast $motion-ease-standard;
+
+  .search:focus-within & {
+    color: var(--accent-text);
+  }
+}
+
+.search__shortcut {
+  position: absolute;
+  right: 12px;
+  min-width: 22px;
+  font-size: 11px;
+  line-height: 16px;
+  pointer-events: none;
+}
+
+/* Below 16px, iOS zooms the page into a focused field. */
+@media (pointer: coarse) {
+  .search-term {
+    font-size: 16px;
+  }
+
+  .search__shortcut {
+    display: none;
+  }
 }
 </style>

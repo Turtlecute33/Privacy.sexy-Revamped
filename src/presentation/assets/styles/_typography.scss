@@ -1,24 +1,27 @@
-// A single system sans-serif family keeps rendering fast and the hierarchy calm.
+// The platform's own UI face keeps the interface native and costs no download: SF Pro on Apple
+// devices, Segoe UI Variable on Windows 11, Segoe UI on Windows 10, the distribution's sans on Linux.
 // Source Code Pro remains the only downloaded font because code readability benefits from it.
-$font-family-main       : ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-$font-family-logo       : 'Slabo 27px', serif;
-$font-family-monospace  : 'Source Code Pro', monospace;
-$font-family-cursive    : 'Yesteryear', cursive;
+$font-family-main       : -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI Variable Text', 'Segoe UI', system-ui, Roboto, 'Helvetica Neue', Arial, sans-serif;
+$font-family-display    : -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI Variable Display', 'Segoe UI', system-ui, Roboto, 'Helvetica Neue', Arial, sans-serif;
+$font-family-monospace  : 'Source Code Pro', ui-monospace, 'SF Mono', 'Cascadia Code', Consolas, monospace;
 
 /*
   This naming convention for font sizes adheres to CSS standards, distinguishing between absolute and relative sizes.
 
   We prefix each variable with its type (absolute or relative) for clear identification and context.
+
+  The scale is tuned for a desktop workbench: 14px body text, as native macOS and Windows apps use,
+  keeps a long list of settings scannable without feeling cramped.
 */
 // Absolute sizes use the <absolute-size> CSS data type, representing specific, fixed sizes unaffected by the parent element's size.
 // See: https://archive.ph/2024.02.02-005228/https://developer.mozilla.org/en-US/docs/Web/CSS/absolute-size.
-$font-size-absolute-x-small   : 13px;
-$font-size-absolute-small     : 15px;
-$font-size-absolute-normal    : 17px;
-$font-size-absolute-large     : 21px;
-$font-size-absolute-x-large   : 27px;
-$font-size-absolute-xx-large  : 40px;
+$font-size-absolute-x-small   : 12px;
+$font-size-absolute-small     : 13px;
+$font-size-absolute-normal    : 14px;
+$font-size-absolute-large     : 16px;
+$font-size-absolute-x-large   : 20px;
+$font-size-absolute-xx-large  : 28px;
 // Relative sizes employ the <relative-size> CSS data type, allowing font size adjustments based on the parent element's size.
 // See: https://archive.ph/2024.02.02-010054/https://developer.mozilla.org/en-US/docs/Web/CSS/relative-size.
 $font-size-relative-smallest  : 80%;
-$font-size-relative-smaller   : 85%;
+$font-size-relative-smaller   : 88%;

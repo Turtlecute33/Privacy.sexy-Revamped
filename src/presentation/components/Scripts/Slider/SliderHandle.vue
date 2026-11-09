@@ -70,10 +70,13 @@ export default defineComponent({
 <style lang="scss" scoped>
 @use "@/presentation/assets/styles/main" as *;
 
-$color          : rgba($color-on-primary, 0.3);
-$color-hover    : $color-secondary;
 $cursor         : v-bind(cursorCssValue);
 
+/*
+  The handle is the gap between two panes of glass. At rest it is invisible; a slim grip pill
+  appears under the pointer or keyboard focus, so the seam is discoverable without drawing a line
+  through the layout.
+*/
 .handle {
   position: relative;
   cursor: $cursor;
@@ -81,41 +84,62 @@ $cursor         : v-bind(cursorCssValue);
   @include reset-button;
 
   display: flex;
+  flex: 0 0 auto;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
 
-  width: 20px;
+  width: 14px;
   margin: 0;
-  padding: 0 7px;
-  background: $color-primary-darkest;
+  padding: 0;
+  background: transparent;
 
   @include clickable($cursor: $cursor);
 
   &::before {
     position: absolute;
-    inset: 0 -12px;
+    inset: 0 -4px;
     content: "";
   }
 
+  &::after {
+    width: 4px;
+    height: 44px;
+    border-radius: 999px;
+    background: var(--text-tertiary);
+    content: "";
+    opacity: 0;
+    transition:
+      opacity $motion-duration-standard $motion-ease-standard,
+      height $motion-duration-emphasized $motion-ease-out,
+      background-color $motion-duration-fast $motion-ease-standard;
+  }
+
   @include hover-or-touch {
-    .line {
-      background: $color-hover;
-    }
-    .icon {
-      color: $color-hover;
+    &::after {
+      height: 64px;
+      opacity: 0.45;
     }
   }
 
-  .line {
-    position: relative;
-    flex: 1;
-    background: $color;
-    width: 1px;
+  &:active::after {
+    background: var(--accent);
+    opacity: 0.9;
   }
+
+  &:focus-visible {
+    outline: 0;
+
+    &::after {
+      height: 64px;
+      background: var(--accent);
+      opacity: 0.9;
+    }
+  }
+
+  .line,
   .icon {
-    position: relative;
-    color: $color;
-    font-size: $font-size-absolute-x-small;
+    display: none;
   }
 }
 </style>

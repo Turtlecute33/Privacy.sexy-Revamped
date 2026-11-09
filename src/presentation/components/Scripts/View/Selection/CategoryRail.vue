@@ -11,26 +11,18 @@
         <button
           type="button"
           class="rail__item"
-          :class="{ 'is-active': item.categoryId === activeCategoryId }"
+          :class="{
+            'is-active': item.categoryId === activeCategoryId,
+            'has-selection': (selectedCounts.get(item.categoryId) ?? 0) > 0,
+          }"
           :aria-current="item.categoryId === activeCategoryId ? 'true' : undefined"
           @click="$emit('categoryActivated', item.categoryId)"
         >
           <span class="rail__item__name">{{ item.name }}</span>
-          <span class="rail__item__meta">
-            <span class="rail__item__count">
-              {{ selectedCounts.get(item.categoryId) ?? 0 }}<span
-                class="rail__item__count__separator"
-              >/</span>{{ item.scriptIds.length }}
-            </span>
-            <span
-              class="rail__item__gauge"
-              aria-hidden="true"
-            >
-              <span
-                class="rail__item__gauge__fill"
-                :style="{ width: `${getSelectedRatioInPercent(item)}%` }"
-              />
-            </span>
+          <span class="rail__item__count">
+            <span class="rail__item__count__selected">{{ selectedCounts.get(item.categoryId) ?? 0 }}</span><span
+              class="rail__item__count__separator"
+            >/</span>{{ item.scriptIds.length }}
           </span>
         </button>
       </li>
@@ -71,17 +63,8 @@ export default defineComponent({
       ]),
     ));
 
-    function getSelectedRatioInPercent(item: CategoryOutlineItem): number {
-      if (item.scriptIds.length === 0) {
-        return 0;
-      }
-      const selected = selectedCounts.value.get(item.categoryId) ?? 0;
-      return (selected / item.scriptIds.length) * 100;
-    }
-
     return {
       selectedCounts,
-      getSelectedRatioInPercent,
     };
   },
 });
@@ -91,27 +74,21 @@ export default defineComponent({
 @use "@/presentation/assets/styles/main" as *;
 
 .rail {
+  @include glass-surface($radius: 22px);
+  @include glass-scrollbar;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 12px 10px 16px;
+  padding: 16px 10px;
   overflow-y: auto;
-  border-right: 1px solid rgba($color-on-primary, 0.08);
 }
 
 .rail__caption {
   margin: 0 0 8px;
-  padding: 0 8px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  /*
-   * 11px bold counts as normal-sized text for WCAG, so this needs 4.5:1 against the rail's
-   * $color-primary-darkest panel. 0.38 measured 3.45:1 and failed the audit; 0.55 gives 5.7:1
-   * while staying dimmer than the item labels above it, which sit at 0.72.
-   */
-  color: rgba($color-on-primary, 0.55);
+  padding: 0 12px;
+  color: var(--text-tertiary);
+  font-size: $font-size-absolute-x-small;
+  font-weight: 600;
 }
 
 .rail__list {
@@ -125,105 +102,81 @@ export default defineComponent({
   @include reset-button;
   @include clickable;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  gap: 10px;
   width: 100%;
-  padding: 9px 10px;
-  border-radius: 10px;
+  min-height: 38px;
+  padding: 8px 12px;
+  border-radius: 12px;
   text-align: left;
-  color: rgba($color-on-primary, 0.72);
+  color: var(--text-secondary);
   transition:
     color $motion-duration-fast $motion-ease-standard,
-    background-color $motion-duration-fast $motion-ease-standard;
+    background-color $motion-duration-fast $motion-ease-standard,
+    box-shadow $motion-duration-fast $motion-ease-standard;
 
   @include hover-or-touch {
-    background: rgba($color-on-primary, 0.06);
-    color: $color-on-primary;
+    background: var(--fill-hover);
+    color: var(--text);
   }
 
-  &:focus-visible {
-    outline: 3px solid $color-secondary;
-    outline-offset: -1px;
-  }
+  @include focus-ring($offset: -2px);
 
-  /*
-    The open category is marked by the accent-tinted surface itself rather than a
-    separate marker, so the rail stays flat. The hairline ring keeps it distinguishable
-    from the neutral hover surface even when the pointer rests on another item.
-  */
+  /* The open category is lifted onto the same bright lens as the pressed segment in the top bar. */
   &.is-active {
-    background: rgba($color-secondary, 0.13);
-    color: $color-on-primary;
-    box-shadow: inset 0 0 0 1px rgba($color-secondary, 0.26);
-
-    .rail__item__count {
-      color: rgba($color-on-primary, 0.75);
-    }
+    background: var(--lens);
+    box-shadow: var(--lens-shadow);
+    color: var(--text);
 
     @include hover-or-touch {
-      background: rgba($color-secondary, 0.19);
+      background: var(--lens);
     }
   }
 
   &__name {
-    font-size: 14px;
-    font-weight: 600;
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: $font-size-absolute-small;
+    font-weight: 500;
     line-height: 1.3;
     overflow-wrap: anywhere;
   }
 
-  &__meta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  &.is-active &__name {
+    font-weight: 600;
   }
 
   &__count {
     flex: 0 0 auto;
+    color: var(--text-tertiary);
     font-size: 11px;
     font-variant-numeric: tabular-nums;
-    color: rgba($color-on-primary, 0.5);
 
     &__separator {
       padding: 0 1px;
-      opacity: 0.55;
+      opacity: 0.6;
     }
   }
 
-  &__gauge {
-    flex: 1;
-    height: 3px;
-    min-width: 24px;
-    border-radius: 3px;
-    background: rgba($color-on-primary, 0.12);
-    overflow: hidden;
-
-    &__fill {
-      display: block;
-      height: 100%;
-      border-radius: 3px;
-      background: $color-secondary;
-      transition: width $motion-duration-standard $motion-ease-out;
-    }
+  &.has-selection &__count__selected {
+    color: var(--accent-text);
+    font-weight: 700;
   }
 }
 
 @media (pointer: coarse) {
   .rail__item {
-    padding-top: 11px;
-    padding-bottom: 11px;
+    min-height: 44px;
   }
 }
 
 /*
-  Below the breakpoint the rail turns into a horizontally scrollable strip above the
+  Below the breakpoint the rail turns into a horizontally scrollable strip of chips above the
   script list, so the list keeps the full width on phones.
 */
 @media screen and (max-width: $media-screen-medium-width) {
   .rail {
-    padding: 10px 12px;
-    border-right: 0;
-    border-bottom: 1px solid rgba($color-on-primary, 0.08);
+    padding: 8px;
     overflow-x: auto;
     overflow-y: hidden;
   }
@@ -234,20 +187,13 @@ export default defineComponent({
 
   .rail__list {
     flex-direction: row;
-    gap: 6px;
+    gap: 4px;
   }
 
   .rail__item {
     width: auto;
-    min-width: 132px;
-    padding: 8px 12px;
-    border: 1px solid rgba($color-on-primary, 0.1);
-
-    // The chip already has a real border here, so the ring would only double it up.
-    &.is-active {
-      box-shadow: none;
-      border-color: rgba($color-secondary, 0.5);
-    }
+    max-width: 220px;
+    border-radius: 999px;
 
     &__name {
       white-space: nowrap;

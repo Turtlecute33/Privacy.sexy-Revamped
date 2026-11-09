@@ -64,36 +64,37 @@ export default defineComponent({
 @use "@/presentation/assets/styles/main" as *;
 
 .documentation-tooltip {
-  color: $color-primary;
+  color: var(--text-tertiary);
 
   &__trigger {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    min-width: 30px;
-    min-height: 30px;
+    min-width: 28px;
+    min-height: 28px;
     padding: 4px;
-    border: 1px solid transparent;
-    border-radius: 8px;
-    font-size: 14px;
+    border-radius: 999px;
+    font-size: 13px;
     line-height: 1;
     cursor: help;
+    opacity: 0.8;
     transition:
-      color 180ms ease-out,
-      background-color 180ms ease-out,
-      border-color 180ms ease-out;
+      color $motion-duration-fast $motion-ease-standard,
+      background-color $motion-duration-fast $motion-ease-standard,
+      opacity $motion-duration-fast $motion-ease-standard;
 
     @include hover-or-touch {
-      border-color: rgba($color-on-primary, 0.12);
-      background: rgba($color-on-primary, 0.07);
-      color: $color-secondary;
+      background: var(--fill-hover);
+      color: var(--accent-text);
+      opacity: 1;
     }
 
     &:focus-visible {
-      color: $color-secondary;
-      outline: 3px solid $color-secondary;
-      outline-offset: 2px;
+      color: var(--accent-text);
+      opacity: 1;
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 1px;
     }
   }
 }

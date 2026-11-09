@@ -3,6 +3,7 @@
     <IconButton
       text="Download"
       icon-name="file-arrow-down"
+      primary
       @click="saveCode"
     />
     <ModalDialog v-model="areInstructionsVisible">

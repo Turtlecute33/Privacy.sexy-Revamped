@@ -104,13 +104,13 @@
   $font-size: $font-size-absolute-normal;
 
   @if $disabled {
-    color: $color-primary-light;
+    color: var(--text-tertiary);
   } @else {
     color: inherit;
     @include clickable;
     @include hover-or-touch {
       text-decoration: underline;
-      color: $color-highlight;
+      color: var(--accent-text);
       /*
         Using color change and underlining and as hover cues instead of bold text,
         due to inconsistent bold rendering in macOS browsers:

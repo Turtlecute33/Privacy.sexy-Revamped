@@ -107,19 +107,35 @@ export default defineComponent({
 @use "@/presentation/assets/styles/main" as *;
 
 .row {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 12px;
-  border-radius: 8px;
+  min-height: 46px;
+  padding: 4px 12px 4px 14px;
   transition: background-color $motion-duration-fast $motion-ease-standard;
 
-  @include hover-or-touch {
-    background: rgba($color-on-primary, 0.05);
+  /* Hairline separators inset past the checkbox, so they divide titles rather than the whole card. */
+  & + &::before {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 46px;
+    height: 1px;
+    background: var(--hairline);
+    content: '';
   }
 
-  &.is-selected .row__title {
-    color: $color-on-primary;
+  @include hover-or-touch {
+    background: var(--fill-hover);
+  }
+
+  &.is-selected {
+    background: var(--fill-selected);
+
+    .row__title {
+      color: var(--text);
+    }
   }
 
   &__label {
@@ -127,17 +143,17 @@ export default defineComponent({
     /* Shrinks but never grows, so the documentation icon stays beside the title. */
     flex: 0 1 auto;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     min-width: 0;
-    min-height: 34px;
+    min-height: 38px;
     @include clickable;
   }
 
   &__title {
     min-width: 0;
-    font-size: $font-size-absolute-small;
+    color: var(--text-secondary);
+    font-size: $font-size-absolute-normal;
     line-height: 1.4;
-    color: rgba($color-on-primary, 0.82);
     overflow-wrap: anywhere;
     transition: color $motion-duration-fast $motion-ease-standard;
   }
@@ -146,10 +162,28 @@ export default defineComponent({
     flex: 0 0 auto;
   }
 
+  /*
+    Every reversible script shows its apply/revert switch, but quietly until the row is in play
+    (hovered, focused or selected), so a long list reads as titles first and controls second.
+  */
   &__revert {
     flex: 0 0 auto;
     margin-left: auto;
     padding-left: 8px;
+    opacity: 0.55;
+    transition: opacity $motion-duration-fast $motion-ease-standard;
+  }
+
+  &:hover &__revert,
+  &:focus-within &__revert,
+  &.is-selected &__revert {
+    opacity: 1;
+  }
+}
+
+@media (hover: none) {
+  .row__revert {
+    opacity: 1;
   }
 }
 </style>

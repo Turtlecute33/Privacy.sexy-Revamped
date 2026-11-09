@@ -35,10 +35,8 @@ function convertMarkdownToHtml(markdownText: string): string {
 <style lang="scss"> /* Not scoped due to element styling such as "a". */
 @use "@/presentation/assets/styles/main" as *;
 
-$text-color: $color-on-primary;
-
 .markdown-text {
-  color: $text-color;
+  color: var(--text);
   font-size: $font-size-absolute-normal;
   ul {
     /*

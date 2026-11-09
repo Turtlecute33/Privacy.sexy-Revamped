@@ -11,6 +11,7 @@ export const IconNames = [
   'lightbulb',
   'square-check',
   'triangle-exclamation',
+  'logo',
 ] as const;
 
 export type IconName = typeof IconNames[number];

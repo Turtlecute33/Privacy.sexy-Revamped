@@ -14,7 +14,14 @@
         aria-expanded="true"
         aria-modal="true"
       >
-        <slot />
+        <!--
+          Scrolls inside the sheet rather than the sheet itself scrolling: the sheet's glass is
+          drawn by pseudo-elements stretched over its box, and in a scrolling box they would
+          scroll away with the content and leave the lower part of the sheet unpainted.
+        -->
+        <div class="modal-content-scroller">
+          <slot />
+        </div>
       </div>
     </div>
   </transition>
@@ -52,10 +59,8 @@ export default defineComponent({
 <style scoped lang="scss">
 @use "@/presentation/assets/styles/main" as *;
 
-$modal-content-transition-duration: 400ms;
-$modal-content-color-shadow: $color-on-surface;
-$modal-content-color-background: $color-surface;
-$modal-content-offset-upward: $spacing-absolute-x-large;
+$modal-content-transition-duration: 320ms;
+$modal-content-offset-upward: $spacing-absolute-large;
 
 @mixin scrollable() {
   overflow-y: auto;
@@ -87,8 +92,13 @@ $modal-content-offset-upward: $spacing-absolute-x-large;
   }
 }
 
+/*
+  A sheet of thick glass. The tint is nearly opaque on purpose: the sheet fades in through an
+  ancestor's opacity, which suspends its backdrop blur until the fade ends, and a dense tint keeps
+  that moment from reading as a flash of clear glass.
+*/
 .modal-content-content {
-  position: relative;
+  @include glass-surface($radius: 26px, $tint: var(--glass-tint-strong));
   overflow: hidden;
   box-sizing: border-box;
 
@@ -97,13 +107,19 @@ $modal-content-offset-upward: $spacing-absolute-x-large;
   width: auto;
   height: auto;
 
-  max-width: 600px;
+  max-width: 640px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
 
-  background-color: $color-surface;
-  border-radius: 3px;
-  box-shadow: 0 20px 60px -2px $color-on-surface;
+  color: var(--text);
+}
+
+.modal-content-scroller {
+  min-height: 0;
 
   @include scrollable;
+  @include glass-scrollbar;
 }
 
 @include fade-slide-transition('modal-content-transition', $modal-content-transition-duration, $modal-content-offset-upward);

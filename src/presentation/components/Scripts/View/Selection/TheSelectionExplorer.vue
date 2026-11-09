@@ -15,10 +15,17 @@
       v-if="activeItem"
       :key="activeItem.categoryId"
       class="explorer__panel"
+      :heading="activeItem.name"
       :groups="groups"
       :selected-script-ids="selectedScriptIds"
       :reverted-status-by-script-id="revertedStatusByScriptId"
-    />
+    >
+      <template #actions>
+        <span class="explorer__count">
+          <strong>{{ activeSelectedCount }}</strong> of {{ activeItem.scriptIds.length }} selected
+        </span>
+      </template>
+    </ScriptListPanel>
   </div>
 </template>
 
@@ -88,10 +95,15 @@ export default defineComponent({
       });
     });
 
+    const activeSelectedCount = computed<number>(() => activeItem.value?.scriptIds
+      .filter((scriptId) => selectedScriptIds.value.has(scriptId))
+      .length ?? 0);
+
     return {
       outlineItems,
       openCategoryId,
       activeItem,
+      activeSelectedCount,
       groups,
       selectedScriptIds,
       revertedStatusByScriptId,
@@ -103,12 +115,13 @@ export default defineComponent({
 <style scoped lang="scss">
 @use "@/presentation/assets/styles/main" as *;
 
+/* Two panes of glass side by side: the categories, then the open category's settings. */
 .explorer {
   display: grid;
-  grid-template-columns: minmax(190px, 240px) minmax(0, 1fr);
+  grid-template-columns: minmax(200px, 248px) minmax(0, 1fr);
+  gap: 14px;
   min-height: 0;
   height: 100%;
-  background: $color-scripts-bg;
 }
 
 .explorer__rail,
@@ -117,10 +130,22 @@ export default defineComponent({
   min-height: 0;
 }
 
+.explorer__count {
+  color: var(--text-tertiary);
+  font-size: $font-size-absolute-x-small;
+  font-variant-numeric: tabular-nums;
+
+  strong {
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+}
+
 @media screen and (max-width: $media-screen-medium-width) {
   .explorer {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr);
+    gap: 12px;
   }
 }
 </style>
