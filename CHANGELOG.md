@@ -8,6 +8,48 @@ milestones; `git log` remains the complete history of changes.
 Release history up to and including `0.13.8`, the point this project forked, belongs to upstream and is
 kept there: <https://github.com/undergroundwires/privacy.sexy/blob/master/CHANGELOG.md>.
 
+## 0.16.0 (2026-11-09)
+
+A redesigned interface that uses less CPU, plus pages and files that make the catalog easier for search
+engines and AI answer engines to read. No script changes.
+
+### Interface
+
+- The page is now a desktop-style workbench: one bar for the system, preset and search, then the
+  categories, the script list and the generated script side by side, with only the panels scrolling.
+  On narrow screens it stacks into a scrolling page.
+- Light and dark appearances follow the system setting, including the code editor's colours. The
+  interface uses the platform's own font instead of downloading two display fonts.
+- The backdrop behind the glass panels is softer, so small text stays readable. The light-mode footer
+  text now meets WCAG AA contrast. If your system asks for reduced transparency, the panels are nearly
+  opaque.
+- The top bar shows the running version, linked to its release notes.
+
+### Performance
+
+- Only tooltips and the download dialog blur what is behind them. The large panels blurred a backdrop
+  that never moves, which looked the same but redid the blur on every scrolled frame and hover. CPU per
+  scrolled frame: 16.2 ms to 1.85 ms with software rendering, 1.30 ms to 0.95 ms with GPU rendering.
+- Selecting or deselecting a script updates only the changed lines of the generated script instead of
+  rebuilding all of it, cutting the script work per click with a large selection from 11.5 ms to 4.5 ms.
+- The code editor no longer keeps an undo history of every update. It grew by about 1 MB per click with
+  a large selection for as long as the tab stayed open.
+
+### Search engines and AI answer engines
+
+- The home page links to the Windows, macOS and Linux catalogs and the alternatives page, which were
+  previously reachable only through the sitemap.
+- New `/llms.txt` summarizes the tool, how it handles data and its catalogs, and `/llms-full.txt` lists
+  every tweak with its recommendation tier. `robots.txt` points to both.
+- The structured data now carries the current version (it said 0.13.8) and links the repository and the
+  upstream project.
+
+### Fixes
+
+- Deploys would have failed at the prerender step after the redesign, which changed a label the
+  prerender check looked for.
+- The web manifest still used the old navy theme colour.
+
 ## 0.15.0 (2026-11-09)
 
 140 new scripts across Windows, macOS and Linux, reviewed after they were written: the generated code of
