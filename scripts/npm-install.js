@@ -65,7 +65,7 @@ async function main() {
   console.log('Starting dependency installation...');
   const exitCode = await executeWithRetry(
     command,
-    options.workingDirectory,
+    options.rootDirectory,
     MAX_RETRIES,
     RETRY_DELAY_IN_MS,
   );

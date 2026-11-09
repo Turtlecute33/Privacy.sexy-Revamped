@@ -31,16 +31,17 @@ async function checkServer(currentRetryCount = 1) {
     if (response.status === 200) {
       console.log('🎊 Success: The server is up and returned HTTP 200.');
       process.exit(0);
-    } else {
-      exitWithError(`Server returned unexpected HTTP status code ${response.statusCode}.`);
     }
+    // A server that is still starting can answer with an error status first, so retry like a
+    // connection failure instead of giving up on the first response.
+    console.error(`Server returned unexpected HTTP status code ${response.status}.`);
   } catch (error) {
     console.error('Error making the request:', error);
-    scheduleNextRetry(maxRetries, currentRetryCount);
   }
+  scheduleNextRetry(serverUrl, maxRetries, currentRetryCount);
 }
 
-function scheduleNextRetry(maxRetries, currentRetryCount) {
+function scheduleNextRetry(serverUrl, maxRetries, currentRetryCount) {
   console.log(`Attempt ${currentRetryCount}/${maxRetries}:`);
   console.log(`Retrying in ${RETRY_DELAY_IN_SECONDS} seconds.`);
 
@@ -50,7 +51,7 @@ function scheduleNextRetry(maxRetries, currentRetryCount) {
   if (currentRetryCount < maxRetries) {
     setTimeout(() => checkServer(currentRetryCount + 1), RETRY_DELAY_IN_SECONDS * 1000);
   } else {
-    exitWithError('The server at did not return HTTP 200 within the allocated time.');
+    exitWithError(`The server at ${serverUrl} did not return HTTP 200 within the allocated time.`);
   }
 }
 
