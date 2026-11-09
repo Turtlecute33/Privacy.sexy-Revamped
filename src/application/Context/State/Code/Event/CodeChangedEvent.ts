@@ -16,6 +16,8 @@ export class CodeChangedEvent implements ICodeChangedEvent {
 
   private readonly scripts: Map<Script, ICodePosition>;
 
+  private positionsById: Map<ExecutableId, ICodePosition> | undefined;
+
   constructor(
     code: string,
     oldScripts: ReadonlyArray<SelectedScript>,
@@ -42,10 +44,14 @@ export class CodeChangedEvent implements ICodeChangedEvent {
   }
 
   private getPositionById(scriptId: ExecutableId): ICodePosition {
-    const position = [...this.scripts.entries()]
-      .filter(([s]) => s.executableId === scriptId)
-      .map(([, pos]) => pos)
-      .at(0);
+    /*
+      Built on first use: highlighting asks for one position per added script, so scanning
+      `scripts` on each call made selecting all 893 Windows scripts quadratic.
+    */
+    this.positionsById ??= new Map(
+      [...this.scripts.entries()].map(([script, position]) => [script.executableId, position]),
+    );
+    const position = this.positionsById.get(scriptId);
     if (!position) {
       throw new Error('Unknown script: Position could not be found for the script');
     }

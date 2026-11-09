@@ -2,7 +2,7 @@
 import type { IExpressionParser } from '@/application/Application/Loader/Collections/Compiler/Executable/Script/Compiler/Expressions/Parser/IExpressionParser';
 import { FunctionParameterCollection } from '@/application/Application/Loader/Collections/Compiler/Executable/Script/Compiler/Function/Parameter/FunctionParameterCollection';
 import { ExpressionPosition } from '../Expression/ExpressionPosition';
-import { ExpressionRegexBuilder } from '../Parser/Regex/ExpressionRegexBuilder';
+import { ExpressionRegexBuilder, ExpressionStartToken } from '../Parser/Regex/ExpressionRegexBuilder';
 import { createPositionFromRegexFullMatch } from '../Expression/ExpressionPositionFactory';
 import type { IExpression } from '../Expression/IExpression';
 
@@ -10,6 +10,9 @@ export class WithParser implements IExpressionParser {
   public findExpressions(code: string): IExpression[] {
     if (!code) {
       throw new Error('missing code');
+    }
+    if (!code.includes(ExpressionStartToken)) {
+      return []; // See `ExpressionStartToken`
     }
     return parseWithExpressions(code);
   }

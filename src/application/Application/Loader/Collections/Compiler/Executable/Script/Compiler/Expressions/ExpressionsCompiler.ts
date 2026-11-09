@@ -12,14 +12,21 @@ export class ExpressionsCompiler implements IExpressionsCompiler {
     code they were parsed from (evaluation takes its context as an argument), so the parse
     result is reusable, which turns a per-call-site scan of the whole collection into one
     scan per distinct code snippet.
+
+    Only snippets that contain expressions are kept. Every compilation ends by scanning its fully
+    rendered output, which has none, is unique to its call site and is never looked up again, so
+    caching those results held tens of megabytes of finished code for the lifetime of the page.
   */
   private readonly expressionsByCode = new Map<string, readonly IExpression[]>();
 
   private readonly cachingExtractor: IExpressionParser = {
     findExpressions: (code) => {
-      let expressions = this.expressionsByCode.get(code);
-      if (expressions === undefined) {
-        expressions = this.extractor.findExpressions(code);
+      const cachedExpressions = this.expressionsByCode.get(code);
+      if (cachedExpressions !== undefined) {
+        return [...cachedExpressions];
+      }
+      const expressions = this.extractor.findExpressions(code);
+      if (expressions.length > 0) {
         this.expressionsByCode.set(code, expressions);
       }
       return [...expressions];
