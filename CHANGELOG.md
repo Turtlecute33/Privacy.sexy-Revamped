@@ -8,6 +8,19 @@ milestones; `git log` remains the complete history of changes.
 Release history up to and including `0.13.8`, the point this project forked, belongs to upstream and is
 kept there: <https://github.com/undergroundwires/privacy.sexy/blob/master/CHANGELOG.md>.
 
+## 0.16.3 (2026-11-09)
+
+The site now goes by its own address, privacy.turtlecute.org. "privacy.sexy" is the upstream project's
+domain, so a name that led with it taught visitors to type the original's address.
+
+- The top bar, link previews (site name and image), the catalog and comparison pages, the web app
+  manifest, `llms.txt` and the structured data now name the site privacy.turtlecute.org.
+- Page titles and descriptions still say "privacy.sexy fork", and "privacy.sexy Revamped" remains a
+  listed alternate name, so searches for either keep finding the site.
+- The link preview image is a minimal card: the address, one headline and "The actively maintained fork
+  of privacy.sexy". Its URL revision changed again so cached previews refresh.
+- Desktop, 993 to 1035px wide: the preset picker no longer runs under the search field.
+
 ## 0.16.2 (2026-11-09)
 
 - The link preview image shown when the site is shared (Open Graph and Twitter card) now matches the
