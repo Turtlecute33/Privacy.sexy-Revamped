@@ -8,6 +8,14 @@ milestones; `git log` remains the complete history of changes.
 Release history up to and including `0.13.8`, the point this project forked, belongs to upstream and is
 kept there: <https://github.com/undergroundwires/privacy.sexy/blob/master/CHANGELOG.md>.
 
+## 0.16.2 (2026-11-09)
+
+- The link preview image shown when the site is shared (Open Graph and Twitter card) now matches the
+  redesign: the light glass look, the new logo and a small picture of the workbench. Its URL carries a
+  revision so previews cached by Telegram, X, LinkedIn and Facebook pick up the new image.
+- Three Windows citations (BleepingComputer, Windows Latest and The Hacker News) now point to archived
+  copies. These sites block GitHub's servers, which made the external link check fail on several pushes.
+
 ## 0.16.1 (2026-11-09)
 
 ### Fixes
