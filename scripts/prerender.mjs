@@ -113,11 +113,14 @@ async function startServer() {
  */
 async function assertPrerenderedOperatingSystem(page) {
   const selectedOperatingSystem = await page.evaluate(() => {
+    /*
+      The label read "System:" before the toolbar redesign and "System" after it; matching both
+      keeps a punctuation change in the UI from failing the deploy.
+    */
     const group = [...document.querySelectorAll('[role="group"][aria-labelledby]')].find(
-      (element) => document
-        .getElementById(element.getAttribute('aria-labelledby'))
-        ?.textContent
-        ?.trim() === 'System:',
+      (element) => /^System:?$/.test(
+        document.getElementById(element.getAttribute('aria-labelledby'))?.textContent?.trim() ?? '',
+      ),
     );
     return group?.querySelector('[aria-pressed="true"]')?.textContent?.trim();
   });
