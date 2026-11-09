@@ -12,6 +12,18 @@
       <h1 class="brand">
         {{ title }} <span class="brand__suffix">Revamped</span>
       </h1>
+      <!--
+        The release this page is running, so a visitor (or a bug report) can tell whether a cached
+        tab is behind the latest deploy. Outside the <h1>, which stays the site's name, and linked
+        to that release's notes.
+      -->
+      <a
+        class="topbar__version"
+        :href="releaseNotesUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        :aria-label="`Version ${version}, release notes`"
+      >v{{ version }}</a>
     </div>
     <TheScriptsMenu class="topbar__menu" />
     <TheSearchBar class="topbar__search" />
@@ -36,8 +48,14 @@ export default defineComponent({
 
     const title = computed(() => projectDetails.name);
 
+    const version = computed(() => projectDetails.version.toString());
+
+    const releaseNotesUrl = computed(() => `${projectDetails.repositoryWebUrl}/releases/tag/v${version.value}`);
+
     return {
       title,
+      version,
+      releaseNotesUrl,
     };
   },
 });
@@ -107,6 +125,36 @@ export default defineComponent({
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.01em;
+}
+
+/* Quieter than the "Revamped" pill: reference information, not branding. */
+.topbar__version {
+  flex: 0 0 auto;
+  margin-left: -5px;
+  padding: 3px 6px;
+  border-radius: 999px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-decoration: none;
+
+  // The global external-link glyph would be wider than the label itself.
+  &::after {
+    display: none;
+  }
+
+  &:hover {
+    background: var(--fill-hover);
+    color: var(--text-secondary);
+    text-decoration: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 1px;
+  }
 }
 
 .topbar__menu {
