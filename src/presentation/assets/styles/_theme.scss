@@ -7,7 +7,9 @@
   without a second compiled copy of its rules.
 
   Naming:
-    --canvas-*   the page behind everything, which the glass refracts.
+    --canvas-*   the page behind everything, which shows through the glass. Kept soft: small
+                 text sits on it (the footer directly, the panels through a light tint), so the
+                 colour stays at the edges and never drops body text below WCAG AA contrast.
     --glass-*    translucent surfaces (panels, bars, popovers) and their rims.
     --text-*     foreground, from primary to tertiary emphasis.
     --fill-*     neutral tints for hover, tracks and grouped rows, drawn on top of glass.
@@ -19,16 +21,16 @@
   color-scheme: light;
 
   --canvas: #e8ecf5;
-  --canvas-blob-1: rgba(78, 128, 255, 0.58);
-  --canvas-blob-2: rgba(30, 205, 185, 0.44);
-  --canvas-blob-3: rgba(155, 115, 255, 0.48);
-  --canvas-blob-4: rgba(255, 160, 115, 0.4);
+  --canvas-blob-1: rgba(78, 128, 255, 0.4);
+  --canvas-blob-2: rgba(30, 205, 185, 0.3);
+  --canvas-blob-3: rgba(155, 115, 255, 0.32);
+  --canvas-blob-4: rgba(255, 160, 115, 0.26);
 
   --text: #0b1220;
   --text-secondary: #3d475a;
-  --text-tertiary: #5d687c;
+  --text-tertiary: #566174;
 
-  --glass-tint: rgba(255, 255, 255, 0.4);
+  --glass-tint: rgba(255, 255, 255, 0.5);
   --glass-tint-strong: rgba(250, 251, 254, 0.84);
   --glass-tint-subtle: rgba(255, 255, 255, 0.36);
   --glass-filter: blur(36px) saturate(200%);
@@ -75,16 +77,16 @@
   color-scheme: dark;
 
   --canvas: #060911;
-  --canvas-blob-1: rgba(59, 108, 255, 0.52);
-  --canvas-blob-2: rgba(20, 184, 166, 0.3);
-  --canvas-blob-3: rgba(139, 92, 246, 0.44);
-  --canvas-blob-4: rgba(236, 72, 153, 0.2);
+  --canvas-blob-1: rgba(59, 108, 255, 0.4);
+  --canvas-blob-2: rgba(20, 184, 166, 0.22);
+  --canvas-blob-3: rgba(139, 92, 246, 0.32);
+  --canvas-blob-4: rgba(236, 72, 153, 0.14);
 
   --text: #eef2fa;
   --text-secondary: rgba(226, 232, 245, 0.74);
   --text-tertiary: rgba(226, 232, 245, 0.56);
 
-  --glass-tint: rgba(20, 26, 44, 0.46);
+  --glass-tint: rgba(20, 26, 44, 0.56);
   --glass-tint-strong: rgba(24, 30, 48, 0.86);
   --glass-tint-subtle: rgba(24, 30, 48, 0.34);
   --glass-filter: blur(32px) saturate(170%);
@@ -136,3 +138,13 @@
   }
 }
 
+/*
+  Visitors who ask their system for less transparency get panels that are nearly opaque, so
+  their text never sits on the coloured backdrop. Declared after both appearances, and in terms
+  of the strong tint, so it follows light and dark alike.
+*/
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-tint: var(--glass-tint-strong);
+  }
+}
