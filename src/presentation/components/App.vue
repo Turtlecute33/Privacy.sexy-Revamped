@@ -126,12 +126,29 @@ function getOptionalDevToolkitComponent(): Component | undefined {
 
 /*
   The shell never scrolls the page on desktop, so the scrollbar gutter `base` reserves would only
-  leave an empty strip down the right edge and make the side margins uneven.
+  leave an empty strip down the right edge and make the side margins uneven. (Chrome paints only
+  the root background colour in a gutter, never the backdrop's gradients.)
 */
 @media screen and (min-width: $media-vertical-view-breakpoint + 1) and (min-height: 620px) {
   html {
     scrollbar-gutter: auto;
     overflow: hidden;
+  }
+}
+
+/*
+  Below 620px of height the page does scroll, and its scrollbar narrows the space the workbench is
+  centred in, which moved it sideways by half a scrollbar on screens wider than the workbench
+  (tests/e2e/no-unintended-layout-shifts.cy.ts). The left offset is therefore taken from the full
+  viewport width, which a scrollbar does not change, and the width gives way on the right instead.
+  Without a scrollbar this is exactly `margin: 0 auto`.
+*/
+@media screen and (min-width: $media-vertical-view-breakpoint + 1) {
+  .app__wrapper {
+    --shell-inset: max(0px, (100vw - 1760px) / 2);
+    width: min(1760px, 100% - var(--shell-inset));
+    margin-left: var(--shell-inset);
+    margin-right: 0;
   }
 }
 
