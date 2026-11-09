@@ -1,4 +1,5 @@
 import ace, { AceRange } from './ace-importer';
+import { replaceChangedLines } from './ReplaceChangedLines';
 import type { CodeEditorFactory, SupportedSyntaxLanguage } from '../CodeEditorFactory';
 
 /*
@@ -21,7 +22,15 @@ export const initializeAceEditor: CodeEditorFactory = (options) => {
   editor.getSession().setUseWrapMode(true); // Make code readable on mobile
   hideActiveLineAndCursorUntilInteraction(editor);
   return {
-    setContent: (content) => editor.setValue(content, 1),
+    setContent: (content) => {
+      replaceChangedLines(editor.session.getDocument(), content);
+      /*
+        The editor is read-only, so nothing can ever be undone, yet Ace's default undo manager
+        kept every edit: the old and new text of each update, about 1 MB per toggle with a large
+        selection, growing for as long as the tab stayed open.
+      */
+      editor.session.getUndoManager().reset();
+    },
     destroy: () => {
       stopFollowingColorScheme();
       editor.destroy();
