@@ -8,6 +8,42 @@ milestones; `git log` remains the complete history of changes.
 Release history up to and including `0.13.8`, the point this project forked, belongs to upstream and is
 kept there: <https://github.com/undergroundwires/privacy.sexy/blob/master/CHANGELOG.md>.
 
+## Unreleased
+
+### New scripts
+
+141 new scripts: 41 for Windows, 48 for macOS and 52 for Linux. Each one was checked against vendor
+documentation, and none of them sets, reverts or deletes anything an existing script already touches.
+Recommendation levels are conservative: `standard` only where nothing a typical user relies on changes,
+`strict` where privacy costs some convenience, and no preset for anything that deletes data, can cut off
+access or changes how the system works day to day.
+
+- All platforms: telemetry opt-outs for development tools (Next.js, Nuxt, Astro, Angular CLI, Storybook,
+  Turborepo, HashiCorp tools, Azure CLI, Google Cloud CLI, Hugging Face Hub and vcpkg), and a new
+  "Configure Brave" category (product analytics, usage ping, Web Discovery Project, Rewards, Wallet, the
+  Leo AI assistant, and VPN on Windows and macOS, where Brave offers it).
+- Windows: automatic proxy discovery (WPAD), IPv6 transition technologies, network device discovery,
+  IP source routing and ICMP redirects; the highest User Account Control level; account details, the last
+  user name and the password reveal button on the sign-in screen; potentially unwanted app blocking in
+  Defender; page file clearing at shutdown; blocking macros in Office files from the internet and
+  unsigned macros; Find My Device; personalized website recommendations in Start; Edge and Chrome
+  running in the background; and cleanup of PowerShell history, Remote Desktop history, folder view
+  history, program usage history, the Delivery Optimization cache and superseded component versions.
+- macOS: Firefox privacy hardening (previously Linux only); password hints and the user list on the login
+  window; Screen Sharing, SMB file sharing and Bluetooth file sharing; the full website address in Safari;
+  and cleanup of zsh session history, saved application state, the Quick Look thumbnail cache, recent
+  items and Finder's recent folders.
+- Linux: TTY line discipline autoloading, core dumps of privileged programs, runtime kernel loading
+  (kexec), FireWire direct memory access and rarely used filesystems; GNOME automount, autorun and lock
+  screen notifications; a ufw firewall that keeps SSH sessions reachable; KDE activity tracking; Ubuntu
+  Insights; Chrome policies and Thunderbird telemetry; and cleanup of Chrome, Chromium and Brave data and
+  of KDE activity history.
+- macOS and Linux: cleanup of command-line tool history (Vim, less, Node.js, MySQL, PostgreSQL, SQLite,
+  irb and the wget HSTS list), and opt-in scripts that stop less, Node.js and MySQL from keeping history.
+
+Ideas that could not be verified or reverted safely are recorded under "Rejected by vetting" in
+[script-proposals.md](./docs/script-proposals.md).
+
 ## 0.14.0 (2026-11-09)
 
 The first release of this fork. It follows a full review of the scripts, the application and the build:

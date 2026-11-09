@@ -173,6 +173,174 @@ actions:
                 parameters:
                   file: .crosh_history
       -
+        category: Clear command-line tool history
+        docs: |-
+          Many command-line programs, such as text editors, database clients and interactive interpreters, keep a
+          history of what you typed in them so that you can recall it later. This history can reveal the files,
+          servers and databases you worked with, the queries you ran, and sometimes passwords that were typed as
+          part of a command.
+
+          These scripts delete these history files from your home folder and from the home folder of the `root`
+          account, where they are created when you run these programs as an administrator. Your own files are
+          deleted as your user, and only the named files are touched. Each program starts a new, empty history the
+          next time you use it.
+
+          > **Caution:** Deleted history cannot be recovered.
+        children:
+          -
+            name: Clear Vim history
+            docs: |-
+              Vim is a text editor. It saves your command-line history, your search history, the contents of its
+              registers (the text you copied or deleted) and the positions of marks in the files you edited to a
+              viminfo file, which is `~/.viminfo` on Linux [1].
+
+              Newer Vim versions include an optional example script, `xdg.vim`, that stores this file in
+              `~/.local/state/vim/viminfo` instead if you choose to load it [2]. This script deletes both.
+
+              If you do not run this script, the viminfo file keeps a record of what you searched for and edited in Vim.
+
+              [1]: https://web.archive.org/web/20250613021519/https://github.com/vim/vim/blob/master/runtime/doc/starting.txt "vim/runtime/doc/starting.txt at master · vim/vim · GitHub | github.com"
+              [2]: https://github.com/vim/vim/blob/master/runtime/xdg.vim "vim/runtime/xdg.vim at master · vim/vim · GitHub | github.com"
+            call:
+              -
+                function: DeleteFileFromUserAndRootHomeAsOwner
+                parameters:
+                  file: .viminfo
+              -
+                function: DeleteFileFromUserAndRootHomeAsOwner
+                parameters:
+                  file: .local/state/vim/viminfo
+          -
+            name: Clear less history
+            docs: |-
+              `less` is the program that most Linux systems use to page through long text, such as manual pages and
+              command output. It saves the search terms and shell commands that you type in it to a history file, so
+              that you can recall them the next time [1].
+
+              Depending on its version and on which folders exist, `less` uses `~/.local/state/lesshst`,
+              `~/.local/share/lesshst` or `~/.lesshst` [1] [2]. This script deletes all of them.
+
+              If you do not run this script, the history file keeps a record of what you searched for in manual pages
+              and other text you read with `less`.
+
+              [1]: https://web.archive.org/web/20261014130006/https://man7.org/linux/man-pages/man1/less.1.html "less(1) - Linux manual page | man7.org"
+              [2]: https://web.archive.org/web/20260706091126/https://github.com/gwsw/less/blob/master/NEWS "less/NEWS at master · gwsw/less · GitHub | github.com"
+            call:
+              -
+                function: DeleteFileFromUserAndRootHomeAsOwner
+                parameters:
+                  file: .lesshst
+              -
+                function: DeleteFileFromUserAndRootHomeAsOwner
+                parameters:
+                  file: .local/state/lesshst
+              -
+                function: DeleteFileFromUserAndRootHomeAsOwner
+                parameters:
+                  file: .local/share/lesshst
+          -
+            name: Clear Node.js REPL history
+            docs: |-
+              Node.js is a JavaScript runtime. When you start `node` without a script, it opens an interactive prompt
+              (REPL) and saves what you type there to `~/.node_repl_history` [1] [2]. This can include code and any
+              values you pasted into it, such as access keys.
+
+              If you do not run this script, the history file keeps everything you typed in the Node.js prompt.
+
+              [1]: https://web.archive.org/web/20261029130002/https://nodejs.org/api/repl.html "REPL | Node.js Documentation | nodejs.org"
+              [2]: https://web.archive.org/web/20261024073738/https://nodejs.org/api/cli.html "Command-line API | Node.js Documentation | nodejs.org"
+            call:
+              function: DeleteFileFromUserAndRootHomeAsOwner
+              parameters:
+                file: .node_repl_history
+          -
+            name: Clear MySQL client history
+            docs: |-
+              The `mysql` command-line client saves the statements you run in it to `~/.mysql_history` [1]. The
+              `mariadb` client of MariaDB uses the same file [2]. These statements reveal your databases, their
+              structure and the data you looked up or changed.
+
+              If you do not run this script, the history file keeps the statements you ran in these clients.
+
+              [1]: https://web.archive.org/web/20260520200608/https://dev.mysql.com/doc/refman/8.4/en/mysql-logging.html "MySQL :: MySQL 8.4 Reference Manual :: 6.5.1.3 mysql Client Logging | dev.mysql.com"
+              [2]: https://web.archive.org/web/20260809080625/https://mariadb.com/docs/server/clients-and-utilities/mariadb-client/mariadb-command-line-client "mariadb Command-Line Client | Server | MariaDB Documentation | mariadb.com"
+            call:
+              function: DeleteFileFromUserAndRootHomeAsOwner
+              parameters:
+                file: .mysql_history
+          -
+            name: Clear PostgreSQL client history
+            docs: |-
+              `psql`, the command-line client of PostgreSQL, saves the commands you run in it to `~/.psql_history`
+              unless you chose a different file [1]. These commands reveal your databases and the data you looked up
+              or changed.
+
+              If you do not run this script, the history file keeps the commands you ran in `psql`.
+
+              [1]: https://web.archive.org/web/20261022115431/https://www.postgresql.org/docs/current/app-psql.html "PostgreSQL: Documentation: psql | postgresql.org"
+            call:
+              function: DeleteFileFromUserAndRootHomeAsOwner
+              parameters:
+                file: .psql_history
+          -
+            name: Clear SQLite shell history
+            docs: |-
+              The `sqlite3` command-line shell saves the commands you run in it to `~/.sqlite_history` [1]. Newer
+              versions use `~/.local/state/sqlite_history` instead when that file already exists [2]. This script
+              deletes both.
+
+              If you do not run this script, the history file keeps the commands you ran in the SQLite shell.
+
+              [1]: https://web.archive.org/web/20251202133348/https://github.com/sqlite/sqlite/blob/master/src/shell.c.in "sqlite/src/shell.c.in at master · sqlite/sqlite · GitHub | github.com"
+              [2]: https://github.com/sqlite/sqlite/blob/master/src/shell.c.in "sqlite/src/shell.c.in at master · sqlite/sqlite · GitHub | github.com"
+            call:
+              -
+                function: DeleteFileFromUserAndRootHomeAsOwner
+                parameters:
+                  file: .sqlite_history
+              -
+                function: DeleteFileFromUserAndRootHomeAsOwner
+                parameters:
+                  file: .local/state/sqlite_history
+          -
+            name: Clear Ruby interactive shell (irb) history
+            docs: |-
+              irb is the interactive shell of the Ruby programming language. It saves the commands you type in it to a
+              file named `.irb_history` [1]. The file is in your home folder, unless your irb configuration file is in
+              another folder [1] [2]. This script deletes `~/.irb_history` and `~/.config/irb/irb_history`, which irb
+              uses when its configuration file is `~/.config/irb/irbrc` [2].
+
+              If you do not run this script, the history file keeps the commands you typed in irb.
+
+              [1]: https://web.archive.org/web/20260609052920/https://ruby.github.io/irb/ "IRB Documentation | ruby.github.io"
+              [2]: https://github.com/ruby/irb/blob/master/lib/irb/init.rb "irb/lib/irb/init.rb at master · ruby/irb · GitHub | github.com"
+            call:
+              -
+                function: DeleteFileFromUserAndRootHomeAsOwner
+                parameters:
+                  file: .irb_history
+              -
+                function: DeleteFileFromUserAndRootHomeAsOwner
+                parameters:
+                  file: .config/irb/irb_history
+          -
+            name: Clear wget HSTS host list
+            docs: |-
+              GNU Wget is a command-line program that downloads files from the web. It supports HTTP Strict Transport
+              Security (HSTS), which lets a website tell clients to connect to it only over HTTPS [1]. Wget remembers
+              every site that sent it this instruction in `~/.wget-hsts` [1], so the file lists websites you
+              downloaded from.
+
+              > **Caution:** This list is also a security feature. Until a website sends its HSTS instruction again,
+              > Wget no longer insists on HTTPS for it, which makes a downgrade to an unencrypted connection possible
+              > for an attacker on your network [1].
+
+              [1]: https://web.archive.org/web/20261030184801/https://www.gnu.org/software/wget/manual/wget.html "GNU Wget Manual | gnu.org"
+            call:
+              function: DeleteFileFromUserAndRootHomeAsOwner
+              parameters:
+                file: .wget-hsts
+      -
         category: Clear third-party application data
         docs: |-
           Scripts in this category clear data for third-party applications installed on the operating system.
@@ -807,6 +975,296 @@ actions:
                     function: DeleteFilesFromFirefoxProfiles
                     parameters:
                       pathGlob: sessionstore.jsonlz4
+          -
+            category: Clear Chrome history
+            docs: |-
+              Google Chrome is Google's web browser.
+
+              Chrome keeps your data in a user data folder that has one subfolder per profile: `Default`, `Profile 1`,
+              `Profile 2` and so on [1] [2]. These scripts clean every profile of Chrome Stable, Beta and Dev, which use
+              `~/.config/google-chrome`, `~/.config/google-chrome-beta` and `~/.config/google-chrome-unstable` [1], and
+              of the Flathub package, which uses `~/.var/app/com.google.Chrome/config/google-chrome` [3] [4].
+              Files are deleted as your user.
+
+              > **Caution:** Close Chrome before you run these scripts. A running browser keeps these files open and can
+              > write their contents back.
+
+              [1]: https://web.archive.org/web/20260922150720/https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md "Chromium Docs - User Data Directory | chromium.googlesource.com"
+              [2]: https://web.archive.org/web/20261109170443/https://chromium.googlesource.com/chromium/src/+/main/chrome/common/chrome_constants.h "chrome/common/chrome_constants.h - chromium/src - Git at Google | chromium.googlesource.com"
+              [3]: https://web.archive.org/web/20261024162023/https://docs.flatpak.org/en/latest/conventions.html "Requirements & Conventions - Flatpak documentation | docs.flatpak.org"
+              [4]: https://web.archive.org/web/20251021212235/https://github.com/flathub/com.google.Chrome/blob/master/chrome.sh "com.google.Chrome/chrome.sh at master · flathub/com.google.Chrome · GitHub | github.com"
+            children:
+              -
+                name: Clear Chrome cache
+                docs: |-
+                  Chrome keeps copies of the pages, images and scripts it downloaded in a cache, so that websites load
+                  faster the next time. On Linux, the cache is outside the user data folder: Chrome uses
+                  `~/.cache/google-chrome`, and `~/.cache/google-chrome-beta` and `~/.cache/google-chrome-unstable` for
+                  the other channels [1]. The Flathub package uses `~/.var/app/com.google.Chrome/cache/google-chrome`,
+                  because Flatpak moves the cache folder into the application's own folder [2].
+
+                  This script deletes everything inside these folders. Websites load more slowly the first time you visit
+                  them again.
+
+                  [1]: https://web.archive.org/web/20260922150720/https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md "Chromium Docs - User Data Directory | chromium.googlesource.com"
+                  [2]: https://web.archive.org/web/20261024162023/https://docs.flatpak.org/en/latest/conventions.html "Requirements & Conventions - Flatpak documentation | docs.flatpak.org"
+                call:
+                  function: ClearUserDirectoryContents
+                  parameters:
+                    directories: >-
+                      "$HOME/.cache/google-chrome"
+                      "$HOME/.cache/google-chrome-beta"
+                      "$HOME/.cache/google-chrome-unstable"
+                      "$HOME/.var/app/com.google.Chrome/cache/google-chrome"
+              -
+                name: Clear Chrome browsing history
+                docs: |-
+                  This script deletes the databases in which Chrome stores the pages you visited and data derived from
+                  them, in every profile [1] [2]:
+
+                  - `History`: the pages you visited and when [1].
+                  - `Top Sites`: the most visited sites that the new tab page shows [1] [3].
+                  - `Shortcuts`: the address bar suggestions you picked before, used to rank them [4].
+                  - `Favicons`: the icons of the sites you visited [1].
+                  - `Visited Links`: the list that older versions used to show links you already visited in a different
+                    color. Current versions keep this in the `History` database instead [5].
+
+                  It also deletes the `-journal` file that belongs to each of these databases [6].
+
+                  If you do not run this script, Chrome keeps your browsing history until you clear it in the browser.
+
+                  [1]: https://web.archive.org/web/20261109164754/https://chromium.googlesource.com/chromium/src/+/main/components/history/core/browser/history_constants.cc "components/history/core/browser/history_constants.cc - chromium/src - Git at Google | chromium.googlesource.com"
+                  [2]: https://web.archive.org/web/20260922150720/https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md "Chromium Docs - User Data Directory | chromium.googlesource.com"
+                  [3]: https://web.archive.org/web/20261109170916/https://chromium.googlesource.com/chromium/src/+/main/chrome/browser/history/top_sites_factory.cc "chrome/browser/history/top_sites_factory.cc - chromium/src - Git at Google | chromium.googlesource.com"
+                  [4]: https://chromium.googlesource.com/chromium/src/+/main/components/omnibox/browser/shortcuts_constants.cc "components/omnibox/browser/shortcuts_constants.cc - chromium/src - Git at Google | chromium.googlesource.com"
+                  [5]: https://web.archive.org/web/20261109170706/https://chromium.googlesource.com/chromium/src/+/main/components/visitedlink/README.md "Welcome to components/visitedlink | chromium.googlesource.com"
+                  [6]: https://web.archive.org/web/20261109171239/https://chromium.googlesource.com/chromium/src/+/main/sql/database.cc "sql/database.cc - chromium/src - Git at Google | chromium.googlesource.com"
+                call:
+                  function: DeleteFromChromeProfiles
+                  parameters:
+                    profilePaths: >-
+                      'History' 'History-journal' 'Visited Links' 'Top Sites' 'Top Sites-journal' 'Shortcuts' 'Shortcuts-journal'
+                      'Favicons' 'Favicons-journal'
+              -
+                name: Clear Chrome cookies
+                docs: |-
+                  Websites use cookies to keep you signed in and to recognize you, and advertising networks use them to
+                  follow you across websites.
+
+                  Chrome stores cookies in a database named `Cookies` [1]. On Linux, it stays in the profile folder by
+                  default. Chrome moves network data such as cookies into a `Network` subfolder only where that migration
+                  is turned on, which is the default on Windows [1] [2]. This script deletes both locations in every
+                  profile, together with their `-journal` files.
+
+                  > **Caution:** You are signed out of every website.
+
+                  [1]: https://web.archive.org/web/20261109170443/https://chromium.googlesource.com/chromium/src/+/main/chrome/common/chrome_constants.h "chrome/common/chrome_constants.h - chromium/src - Git at Google | chromium.googlesource.com"
+                  [2]: https://web.archive.org/web/20261109171036/https://chromium.googlesource.com/chromium/src/+/main/content/public/common/content_features.cc "content/public/common/content_features.cc - chromium/src - Git at Google | chromium.googlesource.com"
+                call:
+                  function: DeleteFromChromeProfiles
+                  parameters:
+                    profilePaths: "'Cookies' 'Cookies-journal' 'Network/Cookies' 'Network/Cookies-journal'"
+          -
+            category: Clear Chromium history
+            docs: |-
+              Chromium is the open-source web browser project that Google Chrome, Brave and other browsers are built on.
+
+              Chromium keeps your data in a user data folder that has one subfolder per profile: `Default`, `Profile 1`,
+              `Profile 2` and so on [1] [2]. These scripts clean every profile of:
+
+              - The package of your distribution, which uses `~/.config/chromium` [1].
+              - The Flathub package, which uses `~/.var/app/org.chromium.Chromium/config/chromium` [3] [4].
+              - The Snap package, which uses `~/snap/chromium/common/chromium` [5].
+
+              Files are deleted as your user.
+
+              > **Caution:** Close Chromium before you run these scripts. A running browser keeps these files open and
+              > can write their contents back.
+
+              [1]: https://web.archive.org/web/20260922150720/https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md "Chromium Docs - User Data Directory | chromium.googlesource.com"
+              [2]: https://web.archive.org/web/20261109170443/https://chromium.googlesource.com/chromium/src/+/main/chrome/common/chrome_constants.h "chrome/common/chrome_constants.h - chromium/src - Git at Google | chromium.googlesource.com"
+              [3]: https://web.archive.org/web/20261024162023/https://docs.flatpak.org/en/latest/conventions.html "Requirements & Conventions - Flatpak documentation | docs.flatpak.org"
+              [4]: https://web.archive.org/web/20241127235314/https://github.com/flathub/org.chromium.Chromium/blob/master/chromium.sh "org.chromium.Chromium/chromium.sh at master · flathub/org.chromium.Chromium · GitHub | github.com"
+              [5]: https://web.archive.org/web/20250626130945/https://git.launchpad.net/~chromium-team/chromium-browser/+git/snap-from-source/tree/snapcraft.yaml?h=stable "snapcraft.yaml - ~chromium-team/chromium-browser/+git/snap-from-source | git.launchpad.net"
+            children:
+              -
+                name: Clear Chromium cache
+                docs: |-
+                  Chromium keeps copies of the pages, images and scripts it downloaded in a cache, so that websites load
+                  faster the next time.
+
+                  Chromium puts the cache in `~/.cache/chromium` when its user data folder is in `~/.config`, and in the
+                  profile folder otherwise [1]. That gives these locations:
+
+                  - `~/.cache/chromium` for the package of your distribution [1].
+                  - `~/.var/app/org.chromium.Chromium/cache/chromium` for the Flathub package, because Flatpak moves the
+                    cache folder into the application's own folder [2].
+                  - The `Cache` and `Code Cache` folders inside each profile in `~/snap/chromium/common/chromium` for the
+                    Snap package, whose user data folder is not in `~/.config` [1] [3]. The script also clears
+                    `~/snap/chromium/common/.cache/chromium`, the cache folder that the Snap package sets for its
+                    environment [4].
+
+                  This script deletes everything inside these cache folders. Websites load more slowly the first time you
+                  visit them again.
+
+                  [1]: https://web.archive.org/web/20260922150720/https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md "Chromium Docs - User Data Directory | chromium.googlesource.com"
+                  [2]: https://web.archive.org/web/20261024162023/https://docs.flatpak.org/en/latest/conventions.html "Requirements & Conventions - Flatpak documentation | docs.flatpak.org"
+                  [3]: https://web.archive.org/web/20250626130945/https://git.launchpad.net/~chromium-team/chromium-browser/+git/snap-from-source/tree/snapcraft.yaml?h=stable "snapcraft.yaml - ~chromium-team/chromium-browser/+git/snap-from-source | git.launchpad.net"
+                  [4]: https://web.archive.org/web/20251121205746/https://github.com/canonical/snapcraft-desktop-integration/blob/main/common/desktop-exports "snapcraft-desktop-integration/common/desktop-exports at main · canonical/snapcraft-desktop-integration · GitHub | github.com"
+                call:
+                  -
+                    function: ClearUserDirectoryContents
+                    parameters:
+                      directories: >-
+                        "$HOME/.cache/chromium"
+                        "$HOME/.var/app/org.chromium.Chromium/cache/chromium"
+                        "$HOME/snap/chromium/common/.cache/chromium"
+                  -
+                    function: DeleteFromChromiumBasedBrowserProfiles
+                    parameters:
+                      userDataDirectories: '"$HOME/snap/chromium/common/chromium"'
+                      profilePaths: "'Cache' 'Code Cache'"
+              -
+                name: Clear Chromium browsing history
+                docs: |-
+                  This script deletes the databases in which Chromium stores the pages you visited and data derived from
+                  them, in every profile [1] [2]:
+
+                  - `History`: the pages you visited and when [1].
+                  - `Top Sites`: the most visited sites that the new tab page shows [1] [3].
+                  - `Shortcuts`: the address bar suggestions you picked before, used to rank them [4].
+                  - `Favicons`: the icons of the sites you visited [1].
+                  - `Visited Links`: the list that older versions used to show links you already visited in a different
+                    color. Current versions keep this in the `History` database instead [5].
+
+                  It also deletes the `-journal` file that belongs to each of these databases [6].
+
+                  If you do not run this script, Chromium keeps your browsing history until you clear it in the browser.
+
+                  [1]: https://web.archive.org/web/20261109164754/https://chromium.googlesource.com/chromium/src/+/main/components/history/core/browser/history_constants.cc "components/history/core/browser/history_constants.cc - chromium/src - Git at Google | chromium.googlesource.com"
+                  [2]: https://web.archive.org/web/20260922150720/https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md "Chromium Docs - User Data Directory | chromium.googlesource.com"
+                  [3]: https://web.archive.org/web/20261109170916/https://chromium.googlesource.com/chromium/src/+/main/chrome/browser/history/top_sites_factory.cc "chrome/browser/history/top_sites_factory.cc - chromium/src - Git at Google | chromium.googlesource.com"
+                  [4]: https://chromium.googlesource.com/chromium/src/+/main/components/omnibox/browser/shortcuts_constants.cc "components/omnibox/browser/shortcuts_constants.cc - chromium/src - Git at Google | chromium.googlesource.com"
+                  [5]: https://web.archive.org/web/20261109170706/https://chromium.googlesource.com/chromium/src/+/main/components/visitedlink/README.md "Welcome to components/visitedlink | chromium.googlesource.com"
+                  [6]: https://web.archive.org/web/20261109171239/https://chromium.googlesource.com/chromium/src/+/main/sql/database.cc "sql/database.cc - chromium/src - Git at Google | chromium.googlesource.com"
+                call:
+                  function: DeleteFromChromiumProfiles
+                  parameters:
+                    profilePaths: >-
+                      'History' 'History-journal' 'Visited Links' 'Top Sites' 'Top Sites-journal' 'Shortcuts' 'Shortcuts-journal'
+                      'Favicons' 'Favicons-journal'
+              -
+                name: Clear Chromium cookies
+                docs: |-
+                  Websites use cookies to keep you signed in and to recognize you, and advertising networks use them to
+                  follow you across websites.
+
+                  Chromium stores cookies in a database named `Cookies` [1]. On Linux, it stays in the profile folder by
+                  default. Chromium moves network data such as cookies into a `Network` subfolder only where that migration
+                  is turned on, which is the default on Windows [1] [2]. This script deletes both locations in every
+                  profile, together with their `-journal` files.
+
+                  > **Caution:** You are signed out of every website.
+
+                  [1]: https://web.archive.org/web/20261109170443/https://chromium.googlesource.com/chromium/src/+/main/chrome/common/chrome_constants.h "chrome/common/chrome_constants.h - chromium/src - Git at Google | chromium.googlesource.com"
+                  [2]: https://web.archive.org/web/20261109171036/https://chromium.googlesource.com/chromium/src/+/main/content/public/common/content_features.cc "content/public/common/content_features.cc - chromium/src - Git at Google | chromium.googlesource.com"
+                call:
+                  function: DeleteFromChromiumProfiles
+                  parameters:
+                    profilePaths: "'Cookies' 'Cookies-journal' 'Network/Cookies' 'Network/Cookies-journal'"
+          -
+            category: Clear Brave history
+            docs: |-
+              Brave is a web browser by Brave Software that is built on Chromium.
+
+              Brave keeps your data in `~/.config/BraveSoftware/Brave-Browser`, or in `Brave-Browser-Beta` and
+              `Brave-Browser-Nightly` next to it for the other channels [1] [2]. Inside it, it uses one subfolder per
+              profile, as Chromium does: `Default`, `Profile 1`, `Profile 2` and so on [3]. The Flathub package uses
+              `~/.var/app/com.brave.Browser/config/BraveSoftware/Brave-Browser` [4] [5]. These scripts clean every
+              profile in these folders. Files are deleted as your user.
+
+              > **Caution:** Close Brave before you run these scripts. A running browser keeps these files open and can
+              > write their contents back.
+
+              [1]: https://github.com/brave/brave-core/blob/master/chromium_src/chrome/common/chrome_paths_linux.cc "brave-core/chromium_src/chrome/common/chrome_paths_linux.cc at master · brave/brave-core · GitHub | github.com"
+              [2]: https://web.archive.org/web/20260521025033/https://github.com/brave/brave-core/blob/master/common/brave_channel_info_posix.cc "brave-core/common/brave_channel_info_posix.cc at master · brave/brave-core · GitHub | github.com"
+              [3]: https://web.archive.org/web/20261109170443/https://chromium.googlesource.com/chromium/src/+/main/chrome/common/chrome_constants.h "chrome/common/chrome_constants.h - chromium/src - Git at Google | chromium.googlesource.com"
+              [4]: https://web.archive.org/web/20261024162023/https://docs.flatpak.org/en/latest/conventions.html "Requirements & Conventions - Flatpak documentation | docs.flatpak.org"
+              [5]: https://github.com/flathub/com.brave.Browser/blob/master/cobalt.ini "com.brave.Browser/cobalt.ini at master · flathub/com.brave.Browser · GitHub | github.com"
+            children:
+              -
+                name: Clear Brave cache
+                docs: |-
+                  Brave keeps copies of the pages, images and scripts it downloaded in a cache, so that websites load
+                  faster the next time.
+
+                  Brave follows Chromium's rule for the cache folder: when the user data folder is in `~/.config`, the cache
+                  is in the same place under `~/.cache` [1]. This gives `~/.cache/BraveSoftware/Brave-Browser` (with
+                  `-Beta` and `-Nightly` for the other channels), and
+                  `~/.var/app/com.brave.Browser/cache/BraveSoftware/Brave-Browser` for the Flathub package, because
+                  Flatpak moves the cache folder into the application's own folder [2].
+
+                  This script deletes everything inside these folders. Websites load more slowly the first time you visit
+                  them again.
+
+                  [1]: https://web.archive.org/web/20260922150720/https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md "Chromium Docs - User Data Directory | chromium.googlesource.com"
+                  [2]: https://web.archive.org/web/20261024162023/https://docs.flatpak.org/en/latest/conventions.html "Requirements & Conventions - Flatpak documentation | docs.flatpak.org"
+                call:
+                  function: ClearUserDirectoryContents
+                  parameters:
+                    directories: >-
+                      "$HOME/.cache/BraveSoftware/Brave-Browser"
+                      "$HOME/.cache/BraveSoftware/Brave-Browser-Beta"
+                      "$HOME/.cache/BraveSoftware/Brave-Browser-Nightly"
+                      "$HOME/.var/app/com.brave.Browser/cache/BraveSoftware/Brave-Browser"
+              -
+                name: Clear Brave browsing history
+                docs: |-
+                  This script deletes the databases in which Brave stores the pages you visited and data derived from
+                  them, in every profile [1] [2]:
+
+                  - `History`: the pages you visited and when [1].
+                  - `Top Sites`: the most visited sites that the new tab page shows [1] [3].
+                  - `Shortcuts`: the address bar suggestions you picked before, used to rank them [4].
+                  - `Favicons`: the icons of the sites you visited [1].
+                  - `Visited Links`: the list that older versions used to show links you already visited in a different
+                    color. Current versions keep this in the `History` database instead [5].
+
+                  It also deletes the `-journal` file that belongs to each of these databases [6].
+
+                  If you do not run this script, Brave keeps your browsing history until you clear it in the browser.
+
+                  [1]: https://web.archive.org/web/20261109164754/https://chromium.googlesource.com/chromium/src/+/main/components/history/core/browser/history_constants.cc "components/history/core/browser/history_constants.cc - chromium/src - Git at Google | chromium.googlesource.com"
+                  [2]: https://web.archive.org/web/20260922150720/https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md "Chromium Docs - User Data Directory | chromium.googlesource.com"
+                  [3]: https://web.archive.org/web/20261109170916/https://chromium.googlesource.com/chromium/src/+/main/chrome/browser/history/top_sites_factory.cc "chrome/browser/history/top_sites_factory.cc - chromium/src - Git at Google | chromium.googlesource.com"
+                  [4]: https://chromium.googlesource.com/chromium/src/+/main/components/omnibox/browser/shortcuts_constants.cc "components/omnibox/browser/shortcuts_constants.cc - chromium/src - Git at Google | chromium.googlesource.com"
+                  [5]: https://web.archive.org/web/20261109170706/https://chromium.googlesource.com/chromium/src/+/main/components/visitedlink/README.md "Welcome to components/visitedlink | chromium.googlesource.com"
+                  [6]: https://web.archive.org/web/20261109171239/https://chromium.googlesource.com/chromium/src/+/main/sql/database.cc "sql/database.cc - chromium/src - Git at Google | chromium.googlesource.com"
+                call:
+                  function: DeleteFromBraveProfiles
+                  parameters:
+                    profilePaths: >-
+                      'History' 'History-journal' 'Visited Links' 'Top Sites' 'Top Sites-journal' 'Shortcuts' 'Shortcuts-journal'
+                      'Favicons' 'Favicons-journal'
+              -
+                name: Clear Brave cookies
+                docs: |-
+                  Websites use cookies to keep you signed in and to recognize you, and advertising networks use them to
+                  follow you across websites.
+
+                  Brave stores cookies like Chromium does, in a database named `Cookies` [1]. On Linux, it stays in the
+                  profile folder by default. Chromium moves network data such as cookies into a `Network` subfolder only
+                  where that migration is turned on, which is the default on Windows [1] [2]. This script deletes both
+                  locations in every profile, together with their `-journal` files.
+
+                  > **Caution:** You are signed out of every website.
+
+                  [1]: https://web.archive.org/web/20261109170443/https://chromium.googlesource.com/chromium/src/+/main/chrome/common/chrome_constants.h "chrome/common/chrome_constants.h - chromium/src - Git at Google | chromium.googlesource.com"
+                  [2]: https://web.archive.org/web/20261109171036/https://chromium.googlesource.com/chromium/src/+/main/content/public/common/content_features.cc "content/public/common/content_features.cc - chromium/src - Git at Google | chromium.googlesource.com"
+                call:
+                  function: DeleteFromBraveProfiles
+                  parameters:
+                    profilePaths: "'Cookies' 'Cookies-journal' 'Network/Cookies' 'Network/Cookies-journal'"
       -
         category: Clear system and kernel usage data
         docs: |-
@@ -920,6 +1378,45 @@ actions:
               rm -rfv ~/snap/*/*/.local/share/RecentDocuments/*.desktop
               # From Flatpak packages
               rm -rfv ~/.var/app/*/data/RecentDocuments/*.desktop
+          -
+            name: Clear KDE activity history
+            docs: |-
+              KDE Plasma's activity manager (`kactivitymanagerd`) records which files and applications you open, and
+              scores them by how often and how recently you used them [1]. Plasma uses this history for its lists of
+              recent and frequently used items [2].
+
+              The history is an SQLite database in `~/.local/share/kactivitymanagerd/resources/`, made of the files
+              `database`, `database-wal` and `database-shm` [3]. This script deletes these files as your user. The
+              database also holds the links that applications create between items and activities [4], which are
+              deleted too.
+
+              Use *Disable KDE activity tracking* to stop new entries from being recorded.
+
+              > **Caution:** Sign out of Plasma before you run this script, for example from a text console. While you
+              > are signed in, the activity manager keeps the database open and does not notice that it was deleted until
+              > it restarts. Lists of recent and frequently used items are empty afterwards.
+
+              [1]: https://invent.kde.org/plasma/kactivitymanagerd/-/raw/v6.8.2/src/service/plugins/sqlite/StatsPlugin.cpp "StatsPlugin.cpp (tag v6.8.2) | invent.kde.org"
+              [2]: https://invent.kde.org/plasma/plasma-desktop/-/raw/v6.8.2/kcms/recentFiles/kactivitymanagerd_plugins_settings.kcfg "kactivitymanagerd_plugins_settings.kcfg (tag v6.8.2) | invent.kde.org"
+              [3]: https://invent.kde.org/plasma/kactivitymanagerd/-/raw/v6.8.2/src/service/plugins/sqlite/Database.cpp "Database.cpp (tag v6.8.2) | invent.kde.org"
+              [4]: https://invent.kde.org/plasma/kactivitymanagerd/-/raw/master/src/common/database/schema/ResourcesDatabaseSchema.cpp "ResourcesDatabaseSchema.cpp | invent.kde.org"
+            call:
+              function: RunAsTargetUser
+              parameters:
+                code: |-
+                  kde_activity_directory="$HOME/.local/share/kactivitymanagerd/resources"
+                  if [ ! -d "$kde_activity_directory" ]; then
+                    echo "Skipping, \"$kde_activity_directory\" does not exist."
+                  else
+                    for kde_activity_file in database database-wal database-shm; do
+                      kde_activity_path="$kde_activity_directory/$kde_activity_file"
+                      if [ -e "$kde_activity_path" ] || [ -L "$kde_activity_path" ]; then
+                        if ! run_as_target_user rm -fv -- "$kde_activity_path"; then
+                          >&2 echo "Failed to delete \"$kde_activity_path\"."
+                        fi
+                      fi
+                    done
+                  fi
       -
         name: Empty trash
         docs: |-
@@ -1404,6 +1901,141 @@ actions:
                 value: 'false'
                 defaultValue: 'true'
       -
+        category: Disable KDE data collection
+        docs: |-
+          KDE Plasma is a desktop environment. These scripts change Plasma's settings for the user who runs the
+          script, with Plasma's own configuration tools (`kwriteconfig6` or `kwriteconfig5`). They are skipped on
+          systems without these tools.
+        children:
+          -
+            name: Disable KDE activity tracking
+            recommend: strict # Lists of recent and frequently used files and applications stop updating
+            docs: |-
+              This script stops KDE Plasma from recording which files and applications you use.
+
+              Plasma's activity manager (`kactivitymanagerd`) records the files and applications you open, and scores
+              them by how often and how recently you used them [1]. It keeps this history for 4 months by default [2].
+              The "Recent Files" settings page decides what it remembers: all applications, only specific ones, or
+              nothing [2].
+
+              This script selects "Do not remember" by setting `what-to-remember` to `2` in
+              `~/.config/kactivitymanagerd-pluginsrc` [2] [3]. With this value, the activity manager discards new events
+              instead of recording them [1]. Reverting restores the value that was set before, or removes it if there
+              was none.
+
+              Plasma 6.5 and earlier pick up the change right away [4]. Plasma 6.6 and later do so when
+              `kwriteconfig6` supports its `--notify` option, which KDE Frameworks 6.11 added [5] [6], and otherwise
+              after you sign out and back in.
+
+              The history that was already recorded is kept. Use *Clear KDE activity history* to delete it.
+
+              > **Consideration:** Lists of recent and frequently used files and applications in Plasma stop updating.
+
+              If you do not run this script, Plasma keeps recording which files and applications you use.
+
+              [1]: https://invent.kde.org/plasma/kactivitymanagerd/-/raw/v6.8.2/src/service/plugins/sqlite/StatsPlugin.cpp "StatsPlugin.cpp (tag v6.8.2) | invent.kde.org"
+              [2]: https://invent.kde.org/plasma/plasma-desktop/-/raw/v6.8.2/kcms/recentFiles/kactivitymanagerd_plugins_settings.kcfg "kactivitymanagerd_plugins_settings.kcfg (tag v6.8.2) | invent.kde.org"
+              [3]: https://invent.kde.org/plasma/kactivitymanagerd/-/raw/v6.8.2/src/service/plugins/sqlite/StatsPlugin.h "StatsPlugin.h (tag v6.8.2) | invent.kde.org"
+              [4]: https://invent.kde.org/plasma/kactivitymanagerd/-/raw/v6.4.0/src/service/Config.cpp "Config.cpp (tag v6.4.0) | invent.kde.org"
+              [5]: https://invent.kde.org/plasma/kactivitymanagerd/-/commit/bea4c0e96a966720f682b9ed111247d1405aaceb "Use KConfigWatcher to monitor config changes | invent.kde.org"
+              [6]: https://invent.kde.org/frameworks/kconfig/-/commit/6d85a0009c17aad86acf4ff9ccdaa0a96a6640db "kwriteconfig: Add a flag to notify | invent.kde.org"
+            call:
+              function: RunAsTargetUser
+              parameters:
+                code: |-
+                  kde_config_file='kactivitymanagerd-pluginsrc'
+                  kde_config_group='Plugin-org.kde.ActivityManager.Resources.Scoring'
+                  kde_config_key='what-to-remember'
+                  kde_config_value='2' # 0 remembers all applications, 1 only specific ones, 2 none
+                  kde_absent_value='privacy.sexy-absent'
+                  kde_state_file="$target_home/.local/state/privacy.sexy/kde/what-to-remember"
+                  kde_write_command=''
+                  kde_read_command=''
+                  for kde_version in 6 5; do
+                    if [ -z "$kde_write_command" ] && command -v "kwriteconfig$kde_version" > /dev/null 2>&1 \
+                        && command -v "kreadconfig$kde_version" > /dev/null 2>&1; then
+                      kde_write_command="kwriteconfig$kde_version"
+                      kde_read_command="kreadconfig$kde_version"
+                    fi
+                  done
+                  kde_write_options=()
+                  # `--notify` lets a running Plasma 6.6 or later pick up the change; older tools do not have it.
+                  if [ -n "$kde_write_command" ] \
+                      && run_as_target_user "$kde_write_command" --help 2>/dev/null | grep --quiet -- '--notify'; then
+                    kde_write_options=(--notify)
+                  fi
+                  if [ -z "$kde_write_command" ]; then
+                    echo 'Skipping because "kwriteconfig6" or "kwriteconfig5" is not found.'
+                  else
+                    kde_current_value="$(run_as_target_user "$kde_read_command" --file "$kde_config_file" \
+                      --group "$kde_config_group" --key "$kde_config_key" --default "$kde_absent_value")"
+                    if [ "$kde_current_value" = "$kde_config_value" ]; then
+                      echo 'Skipping, KDE activity tracking already remembers no applications.'
+                    else
+                      kde_recorded_now='false'
+                      if [ ! -e "$kde_state_file" ] && run_as_target_user install --directory --mode=700 "${kde_state_file%/*}" \
+                          && printf '%s' "$kde_current_value" | run_as_target_user tee "$kde_state_file" > /dev/null; then
+                        run_as_target_user chmod 600 "$kde_state_file"
+                        kde_recorded_now='true'
+                      fi
+                      if [ ! -e "$kde_state_file" ]; then
+                        >&2 echo 'Skipping, could not record the original KDE activity tracking setting.'
+                      elif run_as_target_user "$kde_write_command" "${kde_write_options[@]}" --file "$kde_config_file" \
+                          --group "$kde_config_group" --key "$kde_config_key" "$kde_config_value"; then
+                        echo 'Successfully disabled KDE activity tracking.'
+                      else
+                        if [ "$kde_recorded_now" = 'true' ]; then
+                          run_as_target_user rm -f -- "$kde_state_file"
+                        fi
+                        >&2 echo 'Failed to disable KDE activity tracking.'
+                      fi
+                    fi
+                  fi
+                revertCode: |-
+                  kde_config_file='kactivitymanagerd-pluginsrc'
+                  kde_config_group='Plugin-org.kde.ActivityManager.Resources.Scoring'
+                  kde_config_key='what-to-remember'
+                  kde_config_value='2' # 0 remembers all applications, 1 only specific ones, 2 none
+                  kde_absent_value='privacy.sexy-absent'
+                  kde_state_file="$target_home/.local/state/privacy.sexy/kde/what-to-remember"
+                  kde_write_command=''
+                  kde_read_command=''
+                  for kde_version in 6 5; do
+                    if [ -z "$kde_write_command" ] && command -v "kwriteconfig$kde_version" > /dev/null 2>&1 \
+                        && command -v "kreadconfig$kde_version" > /dev/null 2>&1; then
+                      kde_write_command="kwriteconfig$kde_version"
+                      kde_read_command="kreadconfig$kde_version"
+                    fi
+                  done
+                  kde_write_options=()
+                  # `--notify` lets a running Plasma 6.6 or later pick up the change; older tools do not have it.
+                  if [ -n "$kde_write_command" ] \
+                      && run_as_target_user "$kde_write_command" --help 2>/dev/null | grep --quiet -- '--notify'; then
+                    kde_write_options=(--notify)
+                  fi
+                  if [ ! -e "$kde_state_file" ]; then
+                    echo 'Skipping, no original KDE activity tracking setting recorded by privacy.sexy was found.'
+                  elif [ -z "$kde_write_command" ]; then
+                    >&2 echo 'Cannot revert because "kwriteconfig6" or "kwriteconfig5" is not found.'
+                  elif [ "$(run_as_target_user "$kde_read_command" --file "$kde_config_file" --group "$kde_config_group" \
+                      --key "$kde_config_key" --default "$kde_absent_value")" != "$kde_config_value" ]; then
+                    >&2 echo 'Skipping revert because KDE activity tracking changed after privacy.sexy applied it.'
+                  else
+                    kde_previous_value="$(run_as_target_user cat -- "$kde_state_file")"
+                    if [ "$kde_previous_value" = "$kde_absent_value" ]; then
+                      kde_restore_arguments=(--delete)
+                    else
+                      kde_restore_arguments=("$kde_previous_value")
+                    fi
+                    if run_as_target_user "$kde_write_command" "${kde_write_options[@]}" --file "$kde_config_file" \
+                        --group "$kde_config_group" --key "$kde_config_key" "${kde_restore_arguments[@]}"; then
+                      run_as_target_user rm -f -- "$kde_state_file"
+                      echo 'Restored the original KDE activity tracking setting.'
+                    else
+                      >&2 echo 'Failed to restore the original KDE activity tracking setting.'
+                    fi
+                  fi
+      -
         category: Disable Debian telemetry
         docs: |-
           Debian, also known as Debian GNU/Linux, is a Linux distribution composed of free and open-source
@@ -1769,6 +2401,88 @@ actions:
                   function: UninstallAptPackage
                   parameters:
                     packageName: ubuntu-report
+          -
+            name: Disable participation in Ubuntu Insights
+            recommend: standard
+            docs: |-
+              Ubuntu Insights reports information about your computer to Canonical. It replaces Ubuntu Report
+              (`ubuntu-report`) [1] [2], and Ubuntu 25.10 and later include it [2]. A report contains details such as
+              your computer's manufacturer and model, processor, graphics, memory and disk sizes, screens, time zone,
+              language and desktop session [1], and it is collected once per month [2].
+
+              Participation is opt-in [2]. Ubuntu Insights keeps your answer per user and per kind of report in
+              `~/.config/ubuntu-insights` [1], and Settings offers it as "Send a system report every month" and "Send a
+              system report when upgrading to a new Ubuntu version" [3]. Without a recorded answer, nothing is sent [4].
+
+              This script withdraws your consent for every kind of report you agreed to, with `ubuntu-insights
+              consent` [1]. It leaves reports that you never answered or already declined untouched, because declining
+              makes Ubuntu Insights send a short opt-out notice instead of the report [4]. Reverting gives your consent
+              again for exactly the reports this script withdrew it from.
+
+              If you do not run this script and you agreed to Ubuntu Insights, it keeps sending a system report every
+              month.
+
+              [1]: https://github.com/ubuntu/ubuntu-insights "GitHub - ubuntu/ubuntu-insights | github.com"
+              [2]: https://web.archive.org/web/20261002100821/https://discourse.ubuntu.com/t/ubuntu-insights-how-telemetry-is-changing-on-ubuntu-desktop/73442 "Ubuntu Insights - How telemetry is changing on Ubuntu Desktop - Desktop - Ubuntu Discourse | discourse.ubuntu.com"
+              [3]: https://web.archive.org/web/20261109164303/https://salsa.debian.org/gnome-team/gnome-control-center/-/raw/ubuntu/resolute/debian/patches/ubuntu/telemetry-Repurpose-diagnostics-panel-for-all-telemetry-a.patch "telemetry-Repurpose-diagnostics-panel-for-all-telemetry-a.patch (ubuntu/resolute) | salsa.debian.org"
+              [4]: https://github.com/ubuntu/ubuntu-insights/blob/main/insights/internal/uploader/upload.go "ubuntu-insights/insights/internal/uploader/upload.go at main · ubuntu/ubuntu-insights · GitHub | github.com"
+            call:
+              function: RunAsTargetUser
+              parameters:
+                code: |-
+                  insights_consent_dir="$HOME/.config/ubuntu-insights"
+                  insights_state_dir="$target_home/.local/state/privacy.sexy/ubuntu-insights"
+                  if ! command -v ubuntu-insights > /dev/null 2>&1; then
+                    echo 'Skipping because "ubuntu-insights" is not found.'
+                  else
+                    insights_agreed='false'
+                    for insights_consent_file in "$insights_consent_dir"/*-consent.toml; do
+                      if [ ! -f "$insights_consent_file" ] \
+                          || ! grep --quiet '^[[:space:]]*consent_state[[:space:]]*=[[:space:]]*true[[:space:]]*$' "$insights_consent_file"; then
+                        continue # No consent file, or not agreed
+                      fi
+                      insights_agreed='true'
+                      insights_source="${insights_consent_file##*/}"
+                      insights_source="${insights_source%-consent.toml}"
+                      if ! run_as_target_user install --directory --mode=700 "$insights_state_dir" \
+                          || ! run_as_target_user touch "$insights_state_dir/$insights_source"; then
+                        >&2 echo "Skipping \"$insights_source\", could not record that you had agreed to it."
+                      elif run_as_target_user ubuntu-insights consent "$insights_source" --state=false; then
+                        echo "Withdrew consent for Ubuntu Insights reports from \"$insights_source\"."
+                      else
+                        run_as_target_user rm -f -- "$insights_state_dir/$insights_source"
+                        >&2 echo "Failed to withdraw consent for Ubuntu Insights reports from \"$insights_source\"."
+                      fi
+                    done
+                    if [ "$insights_agreed" = 'false' ]; then
+                      echo 'Skipping, you have not agreed to any Ubuntu Insights report.'
+                    fi
+                  fi
+                revertCode: |-
+                  insights_consent_dir="$HOME/.config/ubuntu-insights"
+                  insights_state_dir="$target_home/.local/state/privacy.sexy/ubuntu-insights"
+                  if [ ! -d "$insights_state_dir" ]; then
+                    echo 'Skipping, privacy.sexy did not withdraw any Ubuntu Insights consent.'
+                  elif ! command -v ubuntu-insights > /dev/null 2>&1; then
+                    >&2 echo 'Cannot revert because "ubuntu-insights" is not found.'
+                  else
+                    for insights_state_file in "$insights_state_dir"/*; do
+                      if [ ! -f "$insights_state_file" ]; then
+                        continue # Nothing was recorded
+                      fi
+                      insights_source="${insights_state_file##*/}"
+                      insights_consent_file="$insights_consent_dir/$insights_source-consent.toml"
+                      if ! grep --quiet '^[[:space:]]*consent_state[[:space:]]*=[[:space:]]*false[[:space:]]*$' "$insights_consent_file" 2>/dev/null; then
+                        >&2 echo "Skipping \"$insights_source\" because its consent changed after privacy.sexy withdrew it."
+                      elif run_as_target_user ubuntu-insights consent "$insights_source" --state=true; then
+                        run_as_target_user rm -f -- "$insights_state_file"
+                        echo "Gave consent again for Ubuntu Insights reports from \"$insights_source\"."
+                      else
+                        >&2 echo "Failed to give consent again for Ubuntu Insights reports from \"$insights_source\"."
+                      fi
+                    done
+                    run_as_target_user rmdir -- "$insights_state_dir" 2>/dev/null || true
+                  fi
           -
             category: Disable Ubuntu error tracker
             docs: |-
@@ -2181,6 +2895,74 @@ actions:
                   fi
                 fi
               fi
+      -
+        category: Disable command-line tool history
+        docs: |-
+          These scripts stop command-line programs from saving what you type in them to a history file. Each one sets
+          an environment variable that the program reads when it starts.
+
+          The variable is added to `/etc/environment`, which is read when someone signs in, so it applies to every
+          user from the next time they sign in [1] [2]. Programs started from a session that began earlier do not see
+          it. Reverting restores the variable to what it was before, or removes it.
+
+          Use the scripts in *Clear command-line tool history* to delete the history that was already saved.
+
+          [1]: https://web.archive.org/web/20260617004429/https://man7.org/linux/man-pages/man5/pam_env.conf.5.html "pam_env.conf(5) - Linux manual page | man7.org"
+          [2]: https://web.archive.org/web/20261005141442/https://man7.org/linux/man-pages/man8/pam_env.8.html "pam_env(8) - Linux manual page | man7.org"
+        children:
+          -
+            name: Disable less history
+            docs: |-
+              `less`, the program that most Linux systems use to page through long text such as manual pages, saves the search
+              terms and shell commands you type in it to a history file [1].
+
+              This script sets `LESSHISTFILE` to `-`. With this value, `less` does not use a history file [1].
+
+              If you do not run this script, `less` keeps saving your searches.
+
+              [1]: https://web.archive.org/web/20261014130006/https://man7.org/linux/man-pages/man1/less.1.html "less(1) - Linux manual page | man7.org"
+            call:
+              function: PersistSystemEnvironmentVariable
+              parameters:
+                variable: LESSHISTFILE
+                value: '-'
+          -
+            name: Disable Node.js REPL history
+            docs: |-
+              When you start `node` without a script, Node.js opens an interactive prompt (REPL) and saves what you type there to
+              `~/.node_repl_history` [1].
+
+              The `NODE_REPL_HISTORY` environment variable chooses a different file, and an empty value turns the history off [1] [2].
+              This script adds `NODE_REPL_HISTORY=` with an empty value to `/etc/environment`. `pam_env`, which reads that file,
+              sets a variable written this way to an empty value instead of leaving it out [3] [4].
+
+              If you do not run this script, the Node.js prompt keeps saving what you type.
+
+              [1]: https://web.archive.org/web/20261029130002/https://nodejs.org/api/repl.html "REPL | Node.js Documentation | nodejs.org"
+              [2]: https://web.archive.org/web/20261024073738/https://nodejs.org/api/cli.html "Command-line API | Node.js Documentation | nodejs.org"
+              [3]: https://web.archive.org/web/20260514102659/https://github.com/linux-pam/linux-pam/blob/master/modules/pam_env/pam_env.c "linux-pam/modules/pam_env/pam_env.c at master · linux-pam/linux-pam · GitHub | github.com"
+              [4]: https://web.archive.org/web/20261029041524/https://man7.org/linux/man-pages/man3/pam_putenv.3.html "pam_putenv(3) - Linux manual page | man7.org"
+            call:
+              function: PersistSystemEnvironmentVariable
+              parameters:
+                variable: NODE_REPL_HISTORY
+          -
+            name: Disable MySQL client history
+            docs: |-
+              The `mysql` command-line client, and the `mariadb` client of MariaDB, save the statements you run in them to
+              `~/.mysql_history` [1] [2].
+
+              This script sets `MYSQL_HISTFILE` to `/dev/null`, which is how MySQL and MariaDB document turning this history off [1] [2].
+
+              If you do not run this script, these clients keep saving the statements you run.
+
+              [1]: https://web.archive.org/web/20260520200608/https://dev.mysql.com/doc/refman/8.4/en/mysql-logging.html "MySQL :: MySQL 8.4 Reference Manual :: 6.5.1.3 mysql Client Logging | dev.mysql.com"
+              [2]: https://web.archive.org/web/20260809080625/https://mariadb.com/docs/server/clients-and-utilities/mariadb-client/mariadb-command-line-client "mariadb Command-Line Client | Server | MariaDB Documentation | mariadb.com"
+            call:
+              function: PersistSystemEnvironmentVariable
+              parameters:
+                variable: MYSQL_HISTFILE
+                value: '/dev/null'
       -
         category: Disable Visual Studio Code data collection
         docs: |-
@@ -2621,6 +3403,231 @@ actions:
           parameters:
               variable: POWERSHELL_TELEMETRY_OPTOUT
               value: '1'
+      -
+        category: Disable development tool telemetry
+        docs: |-
+          Many development tools and frameworks send usage data to their makers, such as the commands you run, the
+          version of the tool and details about your computer. Most of them document an environment variable that
+          turns this off.
+
+          These scripts add that variable to `/etc/environment`, which is read when someone signs in, so it applies to
+          every user and every project from the next time they sign in [1] [2]. Reverting restores the variable to
+          what it was before, or removes it.
+
+          Some of these tools collect nothing unless you agree to it first. For them, the variable keeps collection
+          off in every project.
+
+          [1]: https://web.archive.org/web/20260617004429/https://man7.org/linux/man-pages/man5/pam_env.conf.5.html "pam_env.conf(5) - Linux manual page | man7.org"
+          [2]: https://web.archive.org/web/20261005141442/https://man7.org/linux/man-pages/man8/pam_env.8.html "pam_env(8) - Linux manual page | man7.org"
+        children:
+          -
+            name: Disable Next.js telemetry
+            recommend: standard
+            docs: |-
+              Next.js is a web framework for React. By default, it collects anonymous telemetry about general usage: the command you
+              ran (such as `next build` or `next dev`), the version of Next.js and general information about your computer [1].
+
+              This script sets `NEXT_TELEMETRY_DISABLED` to `1`, which opts out [1].
+
+              If you do not run this script, Next.js keeps sending this data.
+
+              [1]: https://web.archive.org/web/20261029083429/https://nextjs.org/telemetry "Telemetry | Next.js | nextjs.org"
+            call:
+              function: PersistSystemEnvironmentVariable
+              parameters:
+                variable: NEXT_TELEMETRY_DISABLED
+                value: '1'
+          -
+            name: Disable Nuxt telemetry
+            recommend: standard
+            docs: |-
+              Nuxt is a web framework for Vue.js. It asks for your permission the first time, and if you agree, it sends the command
+              you ran (such as `nuxt dev`), the versions of Nuxt and Node.js, and the public dependencies of your project [1].
+
+              This script sets `NUXT_TELEMETRY_DISABLED` to `1`, which turns this telemetry off [1].
+
+              If you do not run this script, Nuxt can ask for your permission and send this data if you agree.
+
+              [1]: https://web.archive.org/web/20260711180841/https://github.com/nuxt/telemetry "GitHub - nuxt/telemetry: Nuxt Telemetry · GitHub | github.com"
+            call:
+              function: PersistSystemEnvironmentVariable
+              parameters:
+                variable: NUXT_TELEMETRY_DISABLED
+                value: '1'
+          -
+            name: Disable Astro telemetry
+            recommend: standard
+            docs: |-
+              Astro is a web framework. By default, its command-line tool collects anonymous telemetry about general usage: the
+              command you ran (such as `astro build`), the version of Astro and general information about your computer [1].
+
+              This script sets `ASTRO_TELEMETRY_DISABLED`, which turns this telemetry off [2]. Astro treats any non-empty value as
+              turned off, and the script uses `1` [3].
+
+              If you do not run this script, Astro keeps sending this data.
+
+              [1]: https://web.archive.org/web/20260923192027/https://astro.build/telemetry/ "Telemetry | Astro | astro.build"
+              [2]: https://web.archive.org/web/20261029075936/https://docs.astro.build/en/reference/cli-reference/ "CLI Commands | Docs | docs.astro.build"
+              [3]: https://web.archive.org/web/20260707155129/https://github.com/withastro/astro/blob/main/packages/telemetry/src/index.ts "astro/packages/telemetry/src/index.ts at main · withastro/astro · GitHub | github.com"
+            call:
+              function: PersistSystemEnvironmentVariable
+              parameters:
+                variable: ASTRO_TELEMETRY_DISABLED
+                value: '1'
+          -
+            name: Disable Angular CLI analytics
+            recommend: standard
+            docs: |-
+              The Angular CLI is the command-line tool of the Angular web framework. It collects usage statistics only if you agree
+              when it asks [1]. These include the commands and options you run, your operating system and the versions of Node.js
+              and the Angular CLI [1].
+
+              This script sets `NG_CLI_ANALYTICS` to `false`, which turns off all analytics reporting and takes precedence over the
+              global Angular CLI configuration [2] [3].
+
+              If you do not run this script, the Angular CLI can ask for and send these statistics.
+
+              [1]: https://web.archive.org/web/20260512131429/https://angular.dev/cli/analytics "ng analytics • Overview • Angular | angular.dev"
+              [2]: https://web.archive.org/web/20260510120040/https://github.com/angular/angular-cli/blob/main/docs/design/analytics.md "angular-cli/docs/design/analytics.md at main · angular/angular-cli · GitHub | github.com"
+              [3]: https://github.com/angular/angular-cli/blob/main/packages/angular/cli/src/utilities/environment-options.ts "angular-cli/packages/angular/cli/src/utilities/environment-options.ts at main · angular/angular-cli · GitHub | github.com"
+            call:
+              function: PersistSystemEnvironmentVariable
+              parameters:
+                variable: NG_CLI_ANALYTICS
+                value: 'false'
+          -
+            name: Disable Storybook telemetry
+            recommend: standard
+            docs: |-
+              Storybook is a tool for building user interface components. By default, it collects anonymous data such as the command
+              you ran, the Storybook version, your add-ons and the user interface framework, along with a one-way hash of your IP
+              address [1].
+
+              This script sets `STORYBOOK_DISABLE_TELEMETRY` to `true` [1]. Unlike the `disableTelemetry` option in a project's
+              configuration, the variable also stops the event that Storybook sends when it starts [1].
+
+              If you do not run this script, Storybook keeps sending this data.
+
+              [1]: https://web.archive.org/web/20261027020712/https://storybook.js.org/docs/configure/telemetry "Telemetry | Storybook docs | storybook.js.org"
+            call:
+              function: PersistSystemEnvironmentVariable
+              parameters:
+                variable: STORYBOOK_DISABLE_TELEMETRY
+                value: 'true'
+          -
+            name: Disable Turborepo telemetry
+            recommend: standard
+            docs: |-
+              Turborepo is a build system for JavaScript and TypeScript code bases. By default, it collects telemetry such as the
+              command you ran, the version of `turbo`, general information about your computer and the size of your project [1].
+
+              This script sets `TURBO_TELEMETRY_DISABLED` to `1`, which opts out [1].
+
+              If you do not run this script, Turborepo keeps sending this data.
+
+              [1]: https://web.archive.org/web/20251219235141/https://turborepo.com/docs/telemetry "Telemetry | Turborepo | turborepo.com"
+            call:
+              function: PersistSystemEnvironmentVariable
+              parameters:
+                variable: TURBO_TELEMETRY_DISABLED
+                value: '1'
+          -
+            name: Disable HashiCorp Checkpoint data collection
+            recommend: strict # Also turns off security bulletin notices
+            docs: |-
+              Terraform and other HashiCorp tools contact HashiCorp's Checkpoint service to check for new versions and for
+              critical security bulletins about the version you use [1]. These requests include an anonymous ID [1].
+
+              This script sets `CHECKPOINT_DISABLE` to `1`. Any non-empty value turns Checkpoint off for all HashiCorp products [1].
+
+              > **Consideration:** HashiCorp tools no longer tell you about new versions or about security bulletins for the version
+              > you use. Terraform's `disable_checkpoint_signature` setting is an alternative that keeps the bulletins but stops
+              > sending the anonymous ID [1].
+
+              If you do not run this script, HashiCorp tools keep contacting Checkpoint.
+
+              [1]: https://web.archive.org/web/20261022104607/https://developer.hashicorp.com/terraform/cli/commands "Terraform CLI overview | Terraform | HashiCorp Developer | developer.hashicorp.com"
+            call:
+              function: PersistSystemEnvironmentVariable
+              parameters:
+                variable: CHECKPOINT_DISABLE
+                value: '1'
+          -
+            name: Disable Azure CLI telemetry
+            recommend: standard
+            docs: |-
+              The Azure CLI is Microsoft's command-line tool for managing Azure resources. It collects telemetry by default [1].
+
+              The Azure CLI reads each configuration option from an environment variable named `AZURE_{section}_{name}` [2]. This
+              script sets `AZURE_CORE_COLLECT_TELEMETRY` to `false`, which turns off the `core.collect_telemetry` option that allows
+              Microsoft to collect anonymous data on the usage of the CLI [2].
+
+              If you do not run this script, the Azure CLI keeps sending usage data to Microsoft.
+
+              [1]: https://web.archive.org/web/20261101193250/https://github.com/Azure/azure-cli "GitHub - Azure/azure-cli: Azure Command-Line Interface · GitHub | github.com"
+              [2]: https://web.archive.org/web/20250404111413/https://learn.microsoft.com/en-us/cli/azure/azure-cli-configuration "Azure CLI configuration options | Microsoft Learn | learn.microsoft.com"
+            call:
+              function: PersistSystemEnvironmentVariable
+              parameters:
+                variable: AZURE_CORE_COLLECT_TELEMETRY
+                value: 'false'
+          -
+            name: Disable Google Cloud CLI usage statistics
+            recommend: standard
+            docs: |-
+              The Google Cloud CLI (`gcloud`) collects usage statistics only if you agree during its installation [1]. They include
+              the commands you run, how long they take and whether they fail [1].
+
+              The Google Cloud CLI reads each property from an environment variable named `CLOUDSDK_SECTION_NAME_PROPERTY_NAME` [2].
+              This script sets `CLOUDSDK_CORE_DISABLE_USAGE_REPORTING` to `true`, the `core/disable_usage_reporting` property that
+              stops these statistics [1] [2].
+
+              If you do not run this script, the Google Cloud CLI sends these statistics if you agreed to it during
+              installation.
+
+              [1]: https://web.archive.org/web/20250823232452/https://cloud.google.com/sdk/docs/usage-statistics "Usage statistics | Google Cloud SDK Documentation | cloud.google.com"
+              [2]: https://web.archive.org/web/20251113203430/https://cloud.google.com/sdk/docs/properties "Managing gcloud CLI properties | Google Cloud SDK | cloud.google.com"
+            call:
+              function: PersistSystemEnvironmentVariable
+              parameters:
+                variable: CLOUDSDK_CORE_DISABLE_USAGE_REPORTING
+                value: 'true'
+          -
+            name: Disable Hugging Face Hub telemetry
+            recommend: standard
+            docs: |-
+              Hugging Face libraries, such as `transformers`, `datasets` and `gradio`, collect some data by default to monitor usage,
+              debug issues and prioritize features [1].
+
+              This script sets `HF_HUB_DISABLE_TELEMETRY` to `1`, which turns telemetry off for all of them [1].
+
+              If you do not run this script, these libraries keep sending this data.
+
+              [1]: https://web.archive.org/web/20261030023729/https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables "Environment variables · Hugging Face | huggingface.co"
+            call:
+              function: PersistSystemEnvironmentVariable
+              parameters:
+                variable: HF_HUB_DISABLE_TELEMETRY
+                value: '1'
+          -
+            name: Disable vcpkg telemetry
+            recommend: standard
+            docs: |-
+              vcpkg is Microsoft's package manager for C and C++ libraries. Its telemetry is on by default and records events such
+              as the command line used, when it ran and how long it took, together with a random ID created on first use [1].
+
+              This script sets `VCPKG_DISABLE_METRICS`, which turns this telemetry off [1]. vcpkg treats the variable as set
+              whatever its value, and the script uses `1` [2].
+
+              If you do not run this script, vcpkg keeps sending this data.
+
+              [1]: https://web.archive.org/web/20261109165006/https://learn.microsoft.com/en-us/vcpkg/about/privacy "Telemetry and Privacy | Microsoft Learn | learn.microsoft.com"
+              [2]: https://github.com/microsoft/vcpkg-tool/blob/main/src/vcpkg/vcpkgcmdarguments.cpp "vcpkg-tool/src/vcpkg/vcpkgcmdarguments.cpp at main · microsoft/vcpkg-tool · GitHub | github.com"
+            call:
+              function: PersistSystemEnvironmentVariable
+              parameters:
+                variable: VCPKG_DISABLE_METRICS
+                value: '1'
       -
         category: Configure Firefox
         docs: |-
@@ -3247,6 +4254,240 @@ actions:
                   parameters:
                     prefName: browser.safebrowsing.phishing.enabled
                     jsonValue: 'false'
+      -
+        category: Configure Chrome
+        docs: |-
+          Google Chrome is Google's web browser. These scripts configure it through policies, the settings that
+          organizations use to manage Chrome [1] [2].
+
+          On Linux, Chrome reads policies from JSON files in `/etc/opt/chrome/policies/managed`, and applies all files
+          in that folder [1] [2]. Each script writes its own file there, named `privacy-sexy-<policy>.json`, and
+          reverting deletes it again. A policy set this way cannot be changed in Chrome's settings while the file
+          exists. Chrome applies it the next time it starts.
+
+          The scripts skip the change if Chrome is not installed. The Flathub package of Chrome links the policy files
+          from this folder into its sandbox, so it follows them too [3]. Other sandboxed packages may not read them.
+
+          [1]: https://web.archive.org/web/20260921180014/https://www.chromium.org/administrators/linux-quick-start/ "Linux Quick Start | chromium.org"
+          [2]: https://web.archive.org/web/20260608061313/https://support.google.com/chrome/a/answer/9027408?hl=en "2. Set policies - Chrome Enterprise and Education Help | support.google.com"
+          [3]: https://web.archive.org/web/20251021212235/https://github.com/flathub/com.google.Chrome/blob/master/chrome.sh "com.google.Chrome/chrome.sh at master · flathub/com.google.Chrome · GitHub | github.com"
+        children:
+          -
+            name: Disable Chrome metrics reporting
+            recommend: standard
+            docs: |-
+              This script stops Chrome from sending usage statistics and crash reports to Google.
+
+              Chrome can report how you use it and send crash reports to Google when this option is turned on in its
+              settings. Setting the `MetricsReportingEnabled` policy to `false` turns off this reporting, so no usage
+              or crash data is sent to Google, and you can no longer turn it on in the settings [1].
+
+              If you do not run this script, Chrome sends usage statistics and crash reports whenever the option is on.
+
+              [1]: https://web.archive.org/web/20261109171817/https://chromium.googlesource.com/chromium/src/+/main/components/policy/resources/templates/policy_definitions/Miscellaneous/MetricsReportingEnabled.yaml "components/policy/resources/templates/policy_definitions/Miscellaneous/MetricsReportingEnabled.yaml - chromium/src - Git at Google | chromium.googlesource.com"
+            call:
+              function: SetChromePolicy
+              parameters:
+                policyName: MetricsReportingEnabled
+                jsonValue: 'false'
+          -
+            name: Disable Chrome running in the background
+            recommend: strict # Apps and extensions no longer keep running after the last window closes
+            docs: |-
+              This script stops Chrome from running in the background after you close its last window.
+
+              In background mode, Chrome keeps running after its windows are closed, so that apps and extensions can
+              keep working [1]. Background mode is off at first, but you can turn it on [1]. Setting the
+              `BackgroundModeEnabled` policy to `false` turns it off and stops it from being turned on [1].
+
+              > **Consideration:** Apps and extensions that you expect to keep working after you close Chrome stop until
+              > you open it again.
+
+              If you do not run this script, Chrome can keep running in the background once background mode is on.
+
+              [1]: https://web.archive.org/web/20261109171856/https://chromium.googlesource.com/chromium/src/+/main/components/policy/resources/templates/policy_definitions/Miscellaneous/BackgroundModeEnabled.yaml "components/policy/resources/templates/policy_definitions/Miscellaneous/BackgroundModeEnabled.yaml - chromium/src - Git at Google | chromium.googlesource.com"
+            call:
+              function: SetChromePolicy
+              parameters:
+                policyName: BackgroundModeEnabled
+                jsonValue: 'false'
+      -
+        category: Configure Brave
+        docs: |-
+          Brave is a web browser by Brave Software that is built on Chromium. These scripts configure it through
+          policies, the settings that organizations use to manage Brave [1].
+
+          On Linux, Brave reads policies from JSON files in `/etc/brave/policies/managed/` [1]. Each script writes its
+          own file there, named `privacy-sexy-<policy>.json`, and reverting deletes it again. A policy set this way
+          cannot be changed in Brave's settings while the file exists. Brave applies it the next time it starts.
+
+          The scripts skip the change if Brave is not installed. The Flathub package of Brave links the policy files
+          from this folder into its sandbox, so it follows them too [2]. Other sandboxed packages may not read them.
+
+          [1]: https://web.archive.org/web/20261028190136/https://support.brave.app/hc/en-us/articles/360039248271-Group-Policy "Group Policy - Brave Help Center | support.brave.app"
+          [2]: https://web.archive.org/web/20261024175012/https://github.com/flathub/com.brave.Browser/blob/master/brave.sh "com.brave.Browser/brave.sh at master · flathub/com.brave.Browser · GitHub | github.com"
+        children:
+          -
+            name: Disable Brave product analytics
+            recommend: standard
+            docs: |-
+              This script turns off Brave's product analytics, called P3A, which are on by default [1].
+
+              Setting the `BraveP3AEnabled` policy to `false` disables P3A [1]. Brave supports this policy since
+              version 1.83 [2].
+
+              If you do not run this script, Brave keeps sending product analytics unless you turned them off in its
+              settings.
+
+              [1]: https://github.com/brave/brave-core/blob/master/components/policy/resources/templates/policy_definitions/BraveSoftware/BraveP3AEnabled.yaml "BraveP3AEnabled.yaml at master · brave/brave-core · GitHub | github.com"
+              [2]: https://web.archive.org/web/20261028190136/https://support.brave.app/hc/en-us/articles/360039248271-Group-Policy "Group Policy - Brave Help Center | support.brave.app"
+            call:
+              function: SetBravePolicy
+              parameters:
+                policyName: BraveP3AEnabled
+                jsonValue: 'false'
+          -
+            name: Disable Brave usage ping
+            recommend: standard
+            docs: |-
+              This script turns off the usage ping that Brave sends to Brave Software.
+
+              Setting the `BraveStatsPingEnabled` policy to `false` disables the usage ping [1]. Brave supports this
+              policy since version 1.83 [2].
+
+              If you do not run this script, Brave keeps sending its usage ping.
+
+              [1]: https://github.com/brave/brave-core/blob/master/components/policy/resources/templates/policy_definitions/BraveSoftware/BraveStatsPingEnabled.yaml "BraveStatsPingEnabled.yaml at master · brave/brave-core · GitHub | github.com"
+              [2]: https://web.archive.org/web/20261028190136/https://support.brave.app/hc/en-us/articles/360039248271-Group-Policy "Group Policy - Brave Help Center | support.brave.app"
+            call:
+              function: SetBravePolicy
+              parameters:
+                policyName: BraveStatsPingEnabled
+                jsonValue: 'false'
+          -
+            name: Disable Brave Web Discovery Project
+            recommend: standard
+            docs: |-
+              This script keeps Brave's Web Discovery Project turned off.
+
+              The Web Discovery Project is off unless you turn it on [1]. Setting the `BraveWebDiscoveryEnabled` policy
+              to `false` keeps it off, and it can no longer be turned on in Brave's settings [1]. Brave supports this
+              policy since version 1.83 [2].
+
+              If you do not run this script, the Web Discovery Project can be turned on in Brave's settings.
+
+              [1]: https://github.com/brave/brave-core/blob/master/components/policy/resources/templates/policy_definitions/BraveSoftware/BraveWebDiscoveryEnabled.yaml "BraveWebDiscoveryEnabled.yaml at master · brave/brave-core · GitHub | github.com"
+              [2]: https://web.archive.org/web/20261028190136/https://support.brave.app/hc/en-us/articles/360039248271-Group-Policy "Group Policy - Brave Help Center | support.brave.app"
+            call:
+              function: SetBravePolicy
+              parameters:
+                policyName: BraveWebDiscoveryEnabled
+                jsonValue: 'false'
+          -
+            name: Disable Brave Rewards
+            recommend: strict # Removes Brave Rewards for users who earn or give rewards with it
+            docs: |-
+              This script turns off Brave Rewards.
+
+              Setting the `BraveRewardsDisabled` policy to `true` always disables Brave Rewards [1] [2].
+
+              > **Consideration:** You can no longer use Brave Rewards in this browser.
+
+              [1]: https://web.archive.org/web/20261028190136/https://support.brave.app/hc/en-us/articles/360039248271-Group-Policy "Group Policy - Brave Help Center | support.brave.app"
+              [2]: https://github.com/brave/brave-core/blob/master/components/policy/resources/templates/policy_definitions/BraveSoftware/BraveRewardsDisabled.yaml "BraveRewardsDisabled.yaml at master · brave/brave-core · GitHub | github.com"
+            call:
+              function: SetBravePolicy
+              parameters:
+                policyName: BraveRewardsDisabled
+                jsonValue: 'true'
+          -
+            name: Disable Brave Wallet
+            recommend: strict # Removes the built-in crypto wallet and web3 features
+            docs: |-
+              This script turns off Brave Wallet, the cryptocurrency wallet built into Brave.
+
+              Setting the `BraveWalletDisabled` policy to `true` disables the wallet, web3, and the decentralized DNS
+              settings and functionality [1] [2].
+
+              > **Consideration:** You can no longer use Brave Wallet, and websites can no longer reach a wallet through
+              > Brave.
+
+              [1]: https://web.archive.org/web/20261028190136/https://support.brave.app/hc/en-us/articles/360039248271-Group-Policy "Group Policy - Brave Help Center | support.brave.app"
+              [2]: https://web.archive.org/web/20260217222618/https://github.com/brave/brave-core/blob/master/components/policy/resources/templates/policy_definitions/BraveSoftware/BraveWalletDisabled.yaml "BraveWalletDisabled.yaml at master · brave/brave-core · GitHub | github.com"
+            call:
+              function: SetBravePolicy
+              parameters:
+                policyName: BraveWalletDisabled
+                jsonValue: 'true'
+          -
+            name: Disable Brave Leo AI assistant
+            recommend: strict # Removes the built-in AI chat assistant
+            docs: |-
+              This script turns off Leo, the AI chat assistant built into Brave.
+
+              Setting the `BraveAIChatEnabled` policy to `false` always disables AI chat [1] [2].
+
+              > **Consideration:** You can no longer use the AI assistant in Brave.
+
+              [1]: https://web.archive.org/web/20261028190136/https://support.brave.app/hc/en-us/articles/360039248271-Group-Policy "Group Policy - Brave Help Center | support.brave.app"
+              [2]: https://github.com/brave/brave-core/blob/master/components/policy/resources/templates/policy_definitions/BraveSoftware/BraveAIChatEnabled.yaml "BraveAIChatEnabled.yaml at master · brave/brave-core · GitHub | github.com"
+            call:
+              function: SetBravePolicy
+              parameters:
+                policyName: BraveAIChatEnabled
+                jsonValue: 'false'
+      -
+        name: Disable Thunderbird telemetry
+        recommend: standard
+        docs: |-
+          This script stops Thunderbird, Mozilla's email client, from sending telemetry to its developers.
+
+          Thunderbird sends telemetry by default [1] [2]. Its settings offer an option to turn it off, called "Allow
+          Thunderbird to send technical and interaction data to Mozilla" [2] [3], or "Share anonymous performance data
+          with Mozilla" in newer versions [11].
+
+          This script sets to `false` the same preferences that Thunderbird's own `DisableTelemetry` policy sets [4]:
+
+          - `datareporting.healthreport.uploadEnabled`, which that option controls [3] and which is required to send
+            telemetry [1].
+          - `datareporting.policy.dataSubmissionEnabled`, the main switch for data submission [5].
+          - `toolkit.telemetry.archive.enabled`, which keeps copies of telemetry data on your computer [5].
+
+          They are written to the `user.js` file of every Thunderbird profile, which Thunderbird reads at every start
+          [6]. Profiles are found in `~/.thunderbird` [7], in `~/.config/thunderbird`, which Thunderbird 154 and later
+          use for new installations [8], and in the Flatpak and Snap folders
+          `~/.var/app/org.mozilla.Thunderbird/.thunderbird` and `~/snap/thunderbird/common/.thunderbird` [9] [10].
+          Reverting restores the preferences to the values they had before.
+
+          If you do not run this script, Thunderbird keeps sending telemetry unless you turned it off in its settings.
+
+          [1]: https://web.archive.org/web/20240801091131/https://searchfox.org/comm-central/source/mail/app/profile/all-thunderbird.js "all-thunderbird.js - mozsearch | searchfox.org"
+          [2]: https://web.archive.org/web/20260211234224/https://support.mozilla.org/en-US/kb/thunderbird-telemetry "Thunderbird Telemetry | support.mozilla.org"
+          [3]: https://web.archive.org/web/20241004072339/https://searchfox.org/comm-central/source/mail/components/preferences/privacy.js "privacy.js - mozsearch | searchfox.org"
+          [4]: https://web.archive.org/web/20240803023925/https://searchfox.org/comm-central/source/mail/components/enterprisepolicies/Policies.sys.mjs "Policies.sys.mjs - mozsearch | searchfox.org"
+          [5]: https://web.archive.org/web/20260825050609/https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html "Preferences and Defines | Firefox Source Docs documentation | firefox-source-docs.mozilla.org"
+          [6]: https://web.archive.org/web/20230811005205/https://kb.mozillazine.org/User.js_file "User.js file - MozillaZine Knowledge Base | kb.mozillazine.org"
+          [7]: https://web.archive.org/web/20260617145916/https://support.mozilla.org/en-US/kb/profiles-where-thunderbird-stores-user-data "Profiles - Where Thunderbird stores your messages and other user data | support.mozilla.org"
+          [8]: https://github.com/mozilla-firefox/firefox/blob/main/toolkit/xre/nsXREDirProvider.cpp "firefox/toolkit/xre/nsXREDirProvider.cpp at main · mozilla-firefox/firefox · GitHub | github.com"
+          [9]: https://hg.mozilla.org/comm-central/file/tip/taskcluster/docker/tb-flatpak/repack.sh "taskcluster/docker/tb-flatpak/repack.sh | hg.mozilla.org"
+          [10]: https://web.archive.org/web/20240804213019/https://git.launchpad.net/~desktop-snappers/thunderbird/+git/snap/tree/snapcraft.yaml?h=stable "snapcraft.yaml - ~desktop-snappers/thunderbird/+git/snap | git.launchpad.net"
+          [11]: https://web.archive.org/web/20261109173030/https://searchfox.org/comm-central/source/mail/locales/en-US/messenger/preferences/preferences.ftl "preferences.ftl - mozsearch | searchfox.org"
+        call:
+          -
+            function: AddThunderbirdPrefs
+            parameters:
+              prefName: datareporting.healthreport.uploadEnabled
+              jsonValue: 'false'
+          -
+            function: AddThunderbirdPrefs
+            parameters:
+              prefName: datareporting.policy.dataSubmissionEnabled
+              jsonValue: 'false'
+          -
+            function: AddThunderbirdPrefs
+            parameters:
+              prefName: toolkit.telemetry.archive.enabled
+              jsonValue: 'false'
   -
     category: Security improvements
     docs: |-
@@ -3396,6 +4637,436 @@ actions:
               parameters:
                 key: kernel.unprivileged_bpf_disabled
                 value: '2'
+          -
+            name: Disable automatic loading of TTY line disciplines
+            recommend: standard
+            docs: |-
+              This script stops programs without administrator rights from making the kernel load line discipline
+              modules.
+
+              A line discipline is a part of the kernel that sits between a terminal or serial device and the programs
+              that use it. When a program asks for a line discipline that is not loaded, the kernel has always loaded its
+              module automatically, even though systems rarely use some of these "ancient" line disciplines [1]. Any
+              program could make the kernel load them, and so expose their code to an attack.
+
+              When this setting is `1`, any program can trigger the load. Setting it to `0` allows it only for programs
+              with the `CAP_SYS_MODULE` capability, which usually means administrators [1] [2]. Line disciplines that
+              are already loaded, or built into the kernel, keep working. The setting exists since Linux 5.1 [3], and it
+              is `1` unless your distribution changed the default [1].
+
+              If you do not run this script, any local program can make the kernel load rarely used line discipline
+              modules.
+
+              [1]: https://web.archive.org/web/20241211212626/https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/tty/Kconfig "Kconfig « tty « drivers - kernel/git/torvalds/linux.git - Linux kernel source tree | git.kernel.org"
+              [2]: https://web.archive.org/web/20240708222908/https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/tty/tty_ldisc.c "tty_ldisc.c « tty « drivers - kernel/git/torvalds/linux.git - Linux kernel source tree | git.kernel.org"
+              [3]: https://web.archive.org/web/20230504131817/https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=7c0cca7c847e6e019d67b7d793efbbe3b947d004 "tty: ldisc: add sysctl to prevent autoloading of ldiscs | git.kernel.org"
+            call:
+              function: SetKernelParameter
+              parameters:
+                key: dev.tty.ldisc_autoload
+                value: '0' # Lower is stricter here, so `keepStricterValue` would skip every run
+          -
+            name: Disable core dumps of privileged programs
+            recommend: strict # Crashes of privileged programs no longer leave a core dump for debugging
+            docs: |-
+              This script stops programs that run with raised privileges from saving a copy of their memory when they
+              crash.
+
+              When a program crashes, the kernel can save a copy of its memory, called a core dump, for debugging. Some
+              programs, such as `sudo`, `su` and `passwd`, run with more privileges than the user who starts them, and
+              their memory can hold secrets that this user should not see.
+
+              This setting controls core dumps of such programs [1]:
+
+              - `0` does not dump them. It is the kernel default [1].
+              - `1` dumps them like any other program, which lets regular users read the memory of privileged
+                programs [1].
+              - `2` dumps them only to a crash handler program or to a fixed folder that administrators set up [1].
+
+              Many distributions use `2`: systemd sets it since version 246, so that its crash handler can collect these
+              dumps [2], and Ubuntu's crash reporter, Apport, sets it each time it starts [3]. This script sets `0` in a
+              file in `/etc/sysctl.d` whose name sorts after systemd's file, so it takes precedence [4].
+
+              > **Note:** On Ubuntu, Apport sets the value back to `2` whenever it starts, which happens at every boot
+              > while it is enabled [3]. Use this script together with *Disable Apport service* to keep `0`.
+
+              > **Consideration:** Crashes of privileged programs no longer leave a core dump that could help to
+              > diagnose them.
+
+              If you do not run this script, the memory of crashed privileged programs may be saved by a crash handler
+              on distributions that use `2`.
+
+              [1]: https://web.archive.org/web/20260923214353/https://docs.kernel.org/admin-guide/sysctl/fs.html "Documentation for /proc/sys/fs/ | The Linux Kernel documentation | docs.kernel.org"
+              [2]: https://web.archive.org/web/20240724231304/https://github.com/systemd/systemd/commit/6635f57d3eeb16051b00ba331da3c8d4f7e578da "sysctl: enable coredump for suid binaries · systemd/systemd@6635f57 · GitHub | github.com"
+              [3]: https://github.com/canonical/apport/blob/da651fef33fccb8661d72d343d1a1b95908b797c/data/apport#L696-L712 "apport/data/apport at da651fef33fccb8661d72d343d1a1b95908b797c · canonical/apport · GitHub | github.com"
+              [4]: https://web.archive.org/web/20260921032049/https://man7.org/linux/man-pages/man5/sysctl.d.5.html "sysctl.d(5) - Linux manual page | man7.org"
+            call:
+              function: SetKernelParameter
+              parameters:
+                key: fs.suid_dumpable
+                value: '0' # Lower is stricter here, so `keepStricterValue` would skip every run
+          -
+            name: Disable loading a new kernel at runtime
+            docs: |-
+              This script stops the running kernel from loading another kernel and starting it without a full restart.
+
+              With kexec, the running kernel can load a different kernel and boot into it, through the `kexec_load`
+              and `kexec_file_load` system calls [1]. Someone who gains administrator rights could use it to replace the
+              running kernel without a normal restart. Setting `kernel.kexec_load_disabled` to `1` disables both system
+              calls [1].
+
+              > **Caution:** This is a one-way switch. Once set, kexec stays disabled until the next restart, and the
+              > kernel rejects any attempt to change it back [1] [2]. Reverting removes the setting, so kexec is
+              > available again after you restart your computer.
+
+              > **Caution:** This breaks kernel crash dumps (kdump), which load a spare kernel through kexec at boot to
+              > save the memory of a crashed kernel [3], and `systemctl kexec`, which restarts the system through
+              > kexec [4].
+
+              If you do not run this script, administrators and programs running as root can load and start another
+              kernel at any time.
+
+              [1]: https://web.archive.org/web/20261102195221/https://docs.kernel.org/admin-guide/sysctl/kernel.html "Documentation for /proc/sys/kernel/ | The Linux Kernel documentation | docs.kernel.org"
+              [2]: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/kexec_core.c "kexec_core.c « kernel - kernel/git/torvalds/linux.git - Linux kernel source tree | git.kernel.org"
+              [3]: https://web.archive.org/web/20260225182814/https://documentation.ubuntu.com/server/how-to/software/kernel-crash-dump/ "Kernel crash dump - Ubuntu Server documentation | documentation.ubuntu.com"
+              [4]: https://web.archive.org/web/20261024021910/https://man7.org/linux/man-pages/man1/systemctl.1.html "systemctl(1) - Linux manual page | man7.org"
+            call:
+              function: SetKernelParameter
+              parameters:
+                key: kernel.kexec_load_disabled
+                value: '1'
+                revertNeedsRestart: 'true' # The kernel refuses to set it back to `0` until the next restart
+      -
+        category: Disable rarely used kernel modules
+        docs: |-
+          The Linux kernel loads most of its drivers as modules when it needs them, for example when a device is
+          connected or when a drive is mounted. Some of these drivers are for hardware and formats that most computers
+          never use, but the kernel still loads them on request, which exposes their code to anyone who can trigger
+          that.
+
+          These scripts stop the kernel from loading such modules with a file in `/etc/modprobe.d`, where `modprobe`
+          reads its configuration from [1]. For each module, the file contains:
+
+          - `blacklist <module>`, so that `modprobe` ignores the module's aliases [1] [2]. Automatic loading goes
+            through these aliases, both for a device that is connected and for a file system that is mounted [2] [3].
+          - `install <module> /bin/false`, so that loading the module by its name, for example because another module
+            depends on it, runs `/bin/false` instead and fails [1].
+
+          Reverting deletes the file, unless it changed after privacy.sexy created it. Modules that are already loaded
+          stay loaded until you restart your computer.
+
+          [1]: https://web.archive.org/web/20261107172821/https://man7.org/linux/man-pages/man5/modprobe.d.5.html "modprobe.d(5) - Linux manual page | man7.org"
+          [2]: https://github.com/kmod-project/kmod/blob/master/libkmod/libkmod.h "kmod/libkmod/libkmod.h at master · kmod-project/kmod · GitHub | github.com"
+          [3]: https://web.archive.org/web/20240810091436/https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/filesystems.c "filesystems.c « fs - kernel/git/torvalds/linux.git - Linux kernel source tree | git.kernel.org"
+        children:
+          -
+            name: Disable FireWire direct memory access
+            recommend: strict # Stops FireWire devices such as audio interfaces, cameras and disks from working
+            docs: |-
+              This script stops the FireWire drivers from loading, so that FireWire devices can no longer access your
+              computer's memory.
+
+              A FireWire (IEEE 1394) controller can read and write the computer's memory directly, without the processor,
+              when another device on the FireWire bus asks for it [1]. The Linux driver filters these requests by
+              default [1] [2], but it allows them from every device that presents itself as a FireWire storage device
+              (SBP-2) [3]. A malicious device plugged into a FireWire port can use this to read or change anything in
+              memory, including passwords and encryption keys.
+
+              This script blocks the `firewire-core`, `firewire-ohci` and `firewire-sbp2` modules [4].
+
+              Debian and Ubuntu also put the FireWire drivers into the initial RAM disk that starts the system, together
+              with a copy of `/etc/modprobe.d` [5] [6]. The script therefore rebuilds it with `update-initramfs` where that
+              command exists, which can take a minute. Reverting deletes the file and rebuilds it again.
+
+              > **Caution:** FireWire devices, such as audio interfaces, video cameras and external disks, stop working.
+              > Drivers that are loaded right now stay loaded until you restart your computer.
+
+              If you do not run this script, a FireWire device connected to your computer may be able to read and change
+              its memory.
+
+              [1]: https://web.archive.org/web/20261016010614/https://docs.kernel.org/core-api/debugging-via-ohci1394.html "Using physical DMA provided by OHCI-1394 FireWire controllers for debugging | The Linux Kernel documentation | docs.kernel.org"
+              [2]: https://web.archive.org/web/20261109165146/https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/firewire/ohci.c "ohci.c « firewire « drivers - kernel/git/torvalds/linux.git - Linux kernel source tree | git.kernel.org"
+              [3]: https://web.archive.org/web/20261109170334/https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/firewire/sbp2.c "sbp2.c « firewire « drivers - kernel/git/torvalds/linux.git - Linux kernel source tree | git.kernel.org"
+              [4]: https://web.archive.org/web/20261109163700/https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/firewire/Makefile "Makefile « firewire « drivers - kernel/git/torvalds/linux.git - Linux kernel source tree | git.kernel.org"
+              [5]: https://salsa.debian.org/kernel-team/initramfs-tools/-/raw/debian/latest/hook-functions "hook-functions | initramfs-tools | salsa.debian.org"
+              [6]: https://salsa.debian.org/kernel-team/initramfs-tools/-/raw/debian/latest/mkinitramfs "mkinitramfs | initramfs-tools | salsa.debian.org"
+            call:
+              function: BlockKernelModules
+              parameters:
+                fileName: privacy-sexy-firewire.conf
+                modules: firewire-core firewire-ohci firewire-sbp2
+                rebuildInitramfs: 'true'
+          -
+            name: Disable rarely used filesystems
+            recommend: strict # Drives and images that use these file systems can no longer be opened
+            docs: |-
+              This script stops the kernel from loading drivers for file systems that desktop computers rarely need.
+
+              When something mounts a file system, the kernel loads the matching driver automatically [1]. Desktop
+              environments mount USB drives and other removable media as soon as they are connected, so a drive with an
+              unusual file system can make the kernel load and run a driver that is otherwise never used.
+
+              This script blocks these drivers:
+
+              - `cramfs`: a compressed, read-only file system for small ROM chips in embedded devices [2].
+              - `freevxfs`: reads the VERITAS VxFS file system of SCO UnixWare and other old Unix systems [3]. Linux 7.3
+                removed this driver, so blocking it makes no difference there [4].
+              - `jffs2`: a file system for flash memory chips in embedded devices [5].
+              - `hfs`: the original file system of Macintosh computers [6]. Its successor, HFS+ (`hfsplus`), is not
+                blocked.
+
+              It does not block file systems that desktops use, such as those of USB drives, DVDs and Snap packages.
+
+              > **Caution:** You can no longer open drives, disk images or firmware images that use these file systems.
+
+              If you do not run this script, connecting a drive with one of these file systems can make the kernel load
+              its driver.
+
+              [1]: https://web.archive.org/web/20240810091436/https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/filesystems.c "filesystems.c « fs - kernel/git/torvalds/linux.git - Linux kernel source tree | git.kernel.org"
+              [2]: https://web.archive.org/web/20260914204202/https://docs.kernel.org/filesystems/cramfs.html "Cramfs - cram a filesystem onto a small ROM | The Linux Kernel documentation | docs.kernel.org"
+              [3]: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/freevxfs/Kconfig?h=v7.2 "Kconfig « freevxfs « fs - kernel/git/torvalds/linux.git - Linux kernel source tree | git.kernel.org"
+              [4]: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a3ed4fcd04b95347ad04cf4409b394bb7fbd0c02 "freevxfs: remove the driver | git.kernel.org"
+              [5]: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/jffs2/Kconfig "Kconfig « jffs2 « fs - kernel/git/torvalds/linux.git - Linux kernel source tree | git.kernel.org"
+              [6]: https://web.archive.org/web/20260901211825/https://docs.kernel.org/filesystems/hfs.html "Macintosh HFS Filesystem for Linux | The Linux Kernel documentation | docs.kernel.org"
+            call:
+              function: BlockKernelModules
+              parameters:
+                fileName: privacy-sexy-filesystems.conf
+                modules: cramfs freevxfs jffs2 hfs
+      -
+        category: Harden the GNOME desktop
+        docs: |-
+          These scripts change GNOME settings for the user who runs the script, through GSettings [1]. Settings that do
+          not exist on the current system are skipped, so the scripts are safe to run on other desktops. Reverting
+          restores the value that was set before.
+
+          [1]: https://web.archive.org/web/20240404013714/https://manpages.ubuntu.com/manpages/jammy/man1/gsettings.1.html "gsettings manual page | manpages.ubuntu.com"
+        children:
+          -
+            name: Disable automatic running of software from removable media in GNOME
+            recommend: standard
+            docs: |-
+              This script stops GNOME from starting programs, or asking you whether to start them, when you insert a
+              disc, USB drive or other removable media.
+
+              Unless this setting is on, GNOME can offer to run software that comes on the medium, or start the
+              application you chose for its type of content [1]. A malicious drive can use this to get you to run
+              its software with a single click. Setting `autorun-never` to `true` turns off these prompts and automatic
+              starts [1]. In GNOME Settings, it matches the "Media Autostart" switch being off [2].
+
+              GNOME 45 and later already use `true` by default [3], so this mostly changes older GNOME versions and
+              distributions that changed the default.
+
+              > **Consideration:** Inserting a camera, phone or music player no longer opens an application for it.
+
+              If you do not run this script on an older GNOME version, inserting removable media can prompt you to run
+              software from it.
+
+              [1]: https://web.archive.org/web/20261109165503/https://gitlab.gnome.org/GNOME/gsettings-desktop-schemas/-/raw/51.0/schemas/org.gnome.desktop.media-handling.gschema.xml.in "org.gnome.desktop.media-handling.gschema.xml.in (tag 51.0) | gitlab.gnome.org"
+              [2]: https://web.archive.org/web/20261109164117/https://gitlab.gnome.org/GNOME/gnome-control-center/-/raw/51.1/panels/applications/cc-default-apps-page.c "cc-default-apps-page.c (tag 51.1) | gitlab.gnome.org"
+              [3]: https://gitlab.gnome.org/GNOME/gsettings-desktop-schemas/-/commit/22076eab687958de1b0f3c63c8eec685c4c74e48 "media-handling: Don't autostart software by default when media is inserted | gitlab.gnome.org"
+            call:
+              function: SetGnomeSetting
+              parameters:
+                schema: org.gnome.desktop.media-handling
+                key: autorun-never
+                value: 'true'
+                defaultValue: 'true'
+          -
+            name: Disable automatic mounting of removable media in GNOME
+            recommend: strict # Connected drives must be opened by hand before use
+            docs: |-
+              This script stops GNOME from mounting drives and removable media automatically, and from opening a window
+              for them.
+
+              By default, GNOME mounts drives and removable media as soon as they are connected, and opens a folder for
+              media whose type of content it does not recognize [1]. Mounting makes the kernel read the drive's file
+              system, so a drive prepared by an attacker reaches the file system code of the kernel just by being
+              plugged in. This script sets `automount` and `automount-open` to `false` [1].
+
+              > **Consideration:** Connected drives are no longer opened for you. Open them in the Files application
+              > to mount them before you use them.
+
+              If you do not run this script, every drive you connect is mounted automatically.
+
+              [1]: https://web.archive.org/web/20261109165503/https://gitlab.gnome.org/GNOME/gsettings-desktop-schemas/-/raw/51.0/schemas/org.gnome.desktop.media-handling.gschema.xml.in "org.gnome.desktop.media-handling.gschema.xml.in (tag 51.0) | gitlab.gnome.org"
+            call:
+              -
+                function: SetGnomeSetting
+                parameters:
+                  schema: org.gnome.desktop.media-handling
+                  key: automount
+                  value: 'false'
+                  defaultValue: 'true'
+              -
+                function: SetGnomeSetting
+                parameters:
+                  schema: org.gnome.desktop.media-handling
+                  key: automount-open
+                  value: 'false'
+                  defaultValue: 'true'
+          -
+            name: Disable notifications on the GNOME lock screen
+            recommend: strict # Notifications that arrive while the screen is locked are seen only after unlocking
+            docs: |-
+              This script stops GNOME from showing notifications on the lock screen.
+
+              By default, GNOME shows notifications on the lock screen [1], where anyone near your computer can see
+              them while it is locked. For each application, it hides the summary and text of the notifications unless
+              you allowed them [1], but it still shows that notifications arrived. Setting `show-in-lock-screen` to
+              `false` hides them completely [1].
+
+              > **Consideration:** You see notifications that arrived while the screen was locked only after you unlock it.
+
+              If you do not run this script, notifications appear on the lock screen.
+
+              [1]: https://gitlab.gnome.org/GNOME/gsettings-desktop-schemas/-/raw/51.0/schemas/org.gnome.desktop.notifications.gschema.xml.in "org.gnome.desktop.notifications.gschema.xml.in (tag 51.0) | gitlab.gnome.org"
+            call:
+              function: SetGnomeSetting
+              parameters:
+                schema: org.gnome.desktop.notifications
+                key: show-in-lock-screen
+                value: 'false'
+                defaultValue: 'true'
+      -
+        name: Enable firewall to block incoming connections
+        docs: |-
+          This script turns on ufw (Uncomplicated Firewall), so that your computer blocks incoming network connections
+          that no rule allows.
+
+          ufw is the firewall tool that Ubuntu and other distributions ship. It is installed turned off, with a default
+          policy that denies incoming connections and allows outgoing ones [1]. Turning it on also starts it at every
+          boot [1]. On distributions such as Arch Linux, this also needs `ufw.service` to be enabled [2], which the
+          script does if it is not enabled yet.
+
+          The script does nothing if ufw is not installed, if it is already on, or if firewalld is running, because
+          firewalld then manages the firewall.
+
+          If an SSH server is running, the script first allows incoming SSH connections on the ports that the server
+          listens on, as reported by `sshd -T` [3]. This keeps remote sessions working, including one that runs this
+          script. On Ubuntu 22.10 and later, the SSH server can wait for connections through `ssh.socket`, which the
+          script also checks [4].
+
+          Reverting turns ufw off and removes the SSH rule, but only if this script turned it on or added the rule. The
+          SSH rule stays while ufw is on, so that a remote session is not cut off. Rules that you added yourself are not
+          touched.
+
+          > **Caution:** Services that wait for connections from other devices, such as file sharing, KDE Connect,
+          > game servers or development servers, can no longer be reached from other devices until you allow them with
+          > `sudo ufw allow` [1].
+
+          If you do not run this script, ufw stays off and every program that listens on the network can be reached by
+          other devices on your network.
+
+          [1]: https://web.archive.org/web/20260707102005/https://manpages.ubuntu.com/manpages/resolute/man8/ufw.8.html "Ubuntu Manpage: ufw - program for managing a netfilter firewall | manpages.ubuntu.com"
+          [2]: https://web.archive.org/web/20261109012501/https://wiki.archlinux.org/title/Uncomplicated_Firewall "Uncomplicated Firewall - ArchWiki | wiki.archlinux.org"
+          [3]: https://web.archive.org/web/20261019022030/https://man7.org/linux/man-pages/man8/sshd.8.html "sshd(8) - Linux manual page | man7.org"
+          [4]: https://web.archive.org/web/20261024002931/https://discourse.ubuntu.com/t/sshd-now-uses-socket-based-activation-ubuntu-22-10-and-later/30189 "SSHd now uses socket-based activation (Ubuntu 22.10 and later) - Server - Ubuntu Discourse | discourse.ubuntu.com"
+        # State is kept in `/var/lib/privacy.sexy/state/ufw`: `enabled-firewall` and `enabled-service` record what this
+        # script turned on, and `added-rules` lists the SSH rules it added, one per line.
+        # `sshd -T` prints `port 22` up to OpenSSH 10.4 and `Port 22` from 10.5, so the key is compared case-insensitively.
+        code: |-
+          ufw_state_dir='/var/lib/privacy.sexy/state/ufw'
+          if ! command -v ufw > /dev/null 2>&1; then
+            echo 'Skipping because "ufw" is not found.'
+          elif command -v systemctl > /dev/null 2>&1 && systemctl is-active --quiet firewalld; then
+            echo 'Skipping, firewalld is active and already manages the firewall.'
+          elif LC_ALL=C sudo ufw status | grep --quiet '^Status: active'; then
+            echo 'Skipping, ufw is already active.'
+          elif ! sudo install --directory --mode=700 "$ufw_state_dir"; then
+            >&2 echo "Skipping, could not create \"$ufw_state_dir\" to record the original state."
+          else
+            ssh_allow_failed='false'
+            ssh_server_active='false'
+            if command -v systemctl > /dev/null 2>&1; then
+              for ssh_unit in ssh.service sshd.service ssh.socket sshd.socket; do
+                if systemctl is-active --quiet "$ssh_unit"; then
+                  ssh_server_active='true'
+                fi
+              done
+            fi
+            if [ "$ssh_server_active" = 'true' ]; then
+              ssh_ports="$(sudo sshd -T 2>/dev/null | awk 'tolower($1) == "port" { print $2 }' | sort --unique)"
+              if [ -z "$ssh_ports" ]; then
+                ssh_ports='22'
+              fi
+              for ssh_port in $ssh_ports; do
+                ssh_rule="$ssh_port/tcp"
+                if LC_ALL=C sudo ufw show added | grep --quiet --line-regexp --fixed-strings "ufw allow $ssh_rule"; then
+                  echo "Incoming SSH connections on $ssh_rule are already allowed."
+                elif sudo ufw allow "$ssh_rule"; then
+                  printf '%s\n' "$ssh_rule" | sudo tee -a "$ufw_state_dir/added-rules" > /dev/null
+                  echo "Allowed incoming SSH connections on $ssh_rule so that remote sessions keep working."
+                else
+                  ssh_allow_failed='true'
+                  >&2 echo "Failed to allow incoming SSH connections on $ssh_rule."
+                fi
+              done
+            fi
+            if [ "$ssh_allow_failed" = 'true' ]; then
+              >&2 echo 'Skipping, ufw is not turned on because SSH could not be allowed and remote sessions could be cut off.'
+            elif ! sudo ufw --force enable; then
+              >&2 echo 'Failed to turn on ufw.'
+            else
+              sudo touch "$ufw_state_dir/enabled-firewall"
+              echo 'Successfully turned on ufw. It blocks incoming connections that no rule allows.'
+              if command -v systemctl > /dev/null 2>&1 \
+                  && [ "$(systemctl show --property=LoadState --value ufw.service 2>/dev/null)" = 'loaded' ] \
+                  && ! systemctl is-enabled --quiet ufw.service; then
+                if sudo systemctl enable ufw.service; then
+                  sudo touch "$ufw_state_dir/enabled-service"
+                  echo 'Enabled ufw.service so that the firewall starts at boot.'
+                else
+                  >&2 echo 'Failed to enable ufw.service; the firewall may be off after a restart.'
+                fi
+              fi
+            fi
+          fi
+        revertCode: |-
+          ufw_state_dir='/var/lib/privacy.sexy/state/ufw'
+          if [ ! -d "$ufw_state_dir" ]; then
+            echo 'Skipping, privacy.sexy did not turn on ufw or add a rule.'
+          elif ! command -v ufw > /dev/null 2>&1; then
+            >&2 echo 'Cannot revert because "ufw" is not found.'
+          else
+            if [ -e "$ufw_state_dir/enabled-firewall" ]; then
+              if LC_ALL=C sudo ufw status | grep --quiet '^Status: active' && ! sudo ufw disable; then
+                >&2 echo 'Failed to turn off ufw.'
+              else
+                sudo rm -f -- "$ufw_state_dir/enabled-firewall"
+                echo 'ufw is off again, as it was before privacy.sexy turned it on.'
+              fi
+            fi
+            if [ -e "$ufw_state_dir/enabled-service" ]; then
+              if sudo systemctl disable ufw.service; then
+                sudo rm -f -- "$ufw_state_dir/enabled-service"
+                echo 'Disabled ufw.service again.'
+              else
+                >&2 echo 'Failed to disable ufw.service.'
+              fi
+            fi
+            if [ -e "$ufw_state_dir/added-rules" ] \
+                && LC_ALL=C sudo ufw status | grep --quiet '^Status: active'; then
+              echo 'Kept the rules that allow incoming SSH connections, because ufw is still active.'
+            elif [ -e "$ufw_state_dir/added-rules" ]; then
+              ufw_rules_left='false'
+              while IFS= read -r ufw_rule; do
+                if [ -z "$ufw_rule" ]; then
+                  continue
+                fi
+                if sudo ufw --force delete allow "$ufw_rule"; then
+                  echo "Removed the rule that allowed incoming SSH connections on $ufw_rule."
+                else
+                  ufw_rules_left='true'
+                  >&2 echo "Failed to remove the rule that allows incoming SSH connections on $ufw_rule."
+                fi
+              done < <(sudo cat -- "$ufw_state_dir/added-rules")
+              if [ "$ufw_rules_left" = 'false' ]; then
+                sudo rm -f -- "$ufw_state_dir/added-rules"
+              fi
+            fi
+            sudo rmdir -- "$ufw_state_dir" 2>/dev/null || true
+          fi
 functions:
   -
     name: RunInlineCode
@@ -3905,7 +5576,8 @@ functions:
     name: PersistSystemEnvironmentVariable
     parameters:
       - name: variable
-      - name: value
+      - name: value # Leave it out to set the variable to an empty value (`pam_env` sets `NAME=` as empty)
+        optional: true
     # We can change different files:
     #   System-wide:
     #    [/etc/profile]
@@ -3936,7 +5608,7 @@ functions:
     #   - https://web.archive.org/web/20221029173825/https://wiki.debian.org/EnvironmentVariables
     code: |-
       variable='{{ $variable }}'
-      value='{{ $value }}'
+      value='{{ with $value }}{{ . }}{{ end }}'
       declaration_file='/etc/environment'
       environment_state_dir='/var/lib/privacy.sexy/state/environment'
       environment_state_file="$environment_state_dir/$variable"
@@ -3988,7 +5660,7 @@ functions:
       fi
     revertCode: |-
       variable='{{ $variable }}'
-      value='{{ $value }}'
+      value='{{ with $value }}{{ . }}{{ end }}'
       declaration_file='/etc/environment'
       environment_state_dir='/var/lib/privacy.sexy/state/environment'
       environment_state_file="$environment_state_dir/$variable"
@@ -4094,11 +5766,63 @@ functions:
       [2]: https://web.archive.org/web/20221029211757/https://kb.mozillazine.org/Prefs.js_file "Prefs.js file - MozillaZine Knowledge Base"
       [3]: https://github.com/undergroundwires/privacy.sexy/issues/282 "[BUG]: Reverting Firefox settings do not work on Linux · Issue #282 · undergroundwires/privacy.sexy | github.com"
     call:
+      function: AddMozillaProfilePrefs
+      parameters:
+        applicationName: Firefox
+        processPattern: '[f]irefox'
+        profilePatterns: >-
+          '~/.mozilla/firefox/*/',
+          '~/.var/app/org.mozilla.firefox/.mozilla/firefox/*/',
+          '~/snap/firefox/common/.mozilla/firefox/*/',
+        stateDirectoryName: firefox
+        prefName: '{{ $prefName }}'
+        jsonValue: '{{ $jsonValue }}'
+  -
+    name: AddThunderbirdPrefs
+    # 💡 Purpose:
+    #   Same as `AddFirefoxPrefs`, for the `user.js` file in Thunderbird profiles:
+    #   - Default: `~/.thunderbird/<profile-name>/user.js`
+    #   - Thunderbird 154 and later, on a new installation: `~/.config/thunderbird/<profile-name>/user.js`
+    #   - Flatpak: `~/.var/app/org.mozilla.Thunderbird/.thunderbird/<profile-name>/user.js`
+    #   - Snap: `~/snap/thunderbird/common/.thunderbird/<profile-name>/user.js`
+    #   Thunderbird reads `user.js` the same way Firefox does, so the same restoration logic applies.
+    parameters:
+      - name: prefName
+      - name: jsonValue
+    call:
+      function: AddMozillaProfilePrefs
+      parameters:
+        applicationName: Thunderbird
+        processPattern: '[t]hunderbird'
+        profilePatterns: >-
+          '~/.thunderbird/*/',
+          '~/.config/thunderbird/*/',
+          '~/.var/app/org.mozilla.Thunderbird/.thunderbird/*/',
+          '~/snap/thunderbird/common/.thunderbird/*/',
+        stateDirectoryName: thunderbird
+        prefName: '{{ $prefName }}'
+        jsonValue: '{{ $jsonValue }}'
+  -
+    name: AddMozillaProfilePrefs
+    # 💡 Purpose:
+    #   Sets a preference in the `user.js` file of every profile of a Mozilla application (Firefox,
+    #   Thunderbird), and restores both `user.js` and `prefs.js` on revert. Call it through
+    #   `AddFirefoxPrefs` or `AddThunderbirdPrefs`, which document the profile locations.
+    # ❗️ Runs as the invoking user, so files and the state under `~/.local/state/privacy.sexy/<application>`
+    #   stay owned by them.
+    parameters:
+      - name: applicationName # Shown in messages, such as `Firefox`
+      - name: processPattern # `grep` pattern that matches the running application but not `grep` itself
+      - name: profilePatterns # Python string literals, comma-separated: globs for the profile folders
+      - name: stateDirectoryName # Folder in `~/.local/state/privacy.sexy` that keeps the original values
+      - name: prefName
+      - name: jsonValue
+    call:
       function: RunAsTargetUser
       parameters:
         code: |-
           if ! command -v python3 > /dev/null 2>&1; then
-            >&2 echo 'Cannot configure Firefox because python3 is not found.'
+            >&2 echo 'Cannot configure {{ $applicationName }} because python3 is not found.'
           else
             run_as_target_user python3 <<'PYTHON'
           import glob, hashlib, json, os, re
@@ -4108,9 +5832,7 @@ functions:
           pref_prefix = f'user_pref("{pref_name}",'
           pref_line = f'user_pref("{pref_name}", {json.dumps(pref_value, separators=(",", ":"))});'
           patterns = (
-              '~/.mozilla/firefox/*/',
-              '~/.var/app/org.mozilla.firefox/.mozilla/firefox/*/',
-              '~/snap/firefox/common/.mozilla/firefox/*/',
+              {{ $profilePatterns }}
           )
           profiles = {
               Path(path) for pattern in patterns
@@ -4126,7 +5848,7 @@ functions:
                   print(f'Skipping, {pref_name} is already configured in {user_js}.')
                   continue
               state_id = hashlib.sha256(f'{profile}\0{pref_name}'.encode()).hexdigest()
-              state_dir = Path.home() / '.local/state/privacy.sexy/firefox'
+              state_dir = Path.home() / '.local/state/privacy.sexy/{{ $stateDirectoryName }}'
               state_file = state_dir / f'{state_id}.json'
               if not state_file.exists():
                   state = {'files': {}}
@@ -4150,15 +5872,15 @@ functions:
               user_js.write_text(f'{remaining}{pref_line}\n')
               print(f'Successfully configured {pref_name} in {user_js}.')
           if not profiles:
-              print('No Firefox profile folders were found; no changes were made.')
+              print('No {{ $applicationName }} profile folders were found; no changes were made.')
           PYTHON
           fi
         revertCode: |-
-          if command -v ps > /dev/null 2>&1 && ps aux | grep -i '[f]irefox' > /dev/null; then
-            >&2 echo 'Warning: Close Firefox before reverting preferences so it cannot overwrite restored values.'
+          if command -v ps > /dev/null 2>&1 && ps aux | grep -i '{{ $processPattern }}' > /dev/null; then
+            >&2 echo 'Warning: Close {{ $applicationName }} before reverting preferences so it cannot overwrite restored values.'
           fi
           if ! command -v python3 > /dev/null 2>&1; then
-            >&2 echo 'Cannot restore Firefox preferences because python3 is not found.'
+            >&2 echo 'Cannot restore {{ $applicationName }} preferences because python3 is not found.'
           else
             run_as_target_user python3 <<'PYTHON'
           import glob, hashlib, json, os, re
@@ -4168,9 +5890,7 @@ functions:
           pref_prefix = f'user_pref("{pref_name}",'
           pref_line = f'user_pref("{pref_name}", {json.dumps(pref_value, separators=(",", ":"))});'
           patterns = (
-              '~/.mozilla/firefox/*/',
-              '~/.var/app/org.mozilla.firefox/.mozilla/firefox/*/',
-              '~/snap/firefox/common/.mozilla/firefox/*/',
+              {{ $profilePatterns }}
           )
           profiles = {
               Path(path) for pattern in patterns
@@ -4179,7 +5899,7 @@ functions:
           }
           for profile in sorted(profiles):
               state_id = hashlib.sha256(f'{profile}\0{pref_name}'.encode()).hexdigest()
-              state_file = Path.home() / '.local/state/privacy.sexy/firefox' / f'{state_id}.json'
+              state_file = Path.home() / '.local/state/privacy.sexy/{{ $stateDirectoryName }}' / f'{state_id}.json'
               if not state_file.exists():
                   continue
               state = json.loads(state_file.read_text())
@@ -4361,6 +6081,12 @@ functions:
     #   (and persisting it in a drop-in that overrides theirs) lowered the protection this script promises
     #   to raise. With `keepStricterValue`, a running value that is already at least the target value is
     #   left alone: nothing is recorded, persisted or applied.
+    #   Do not use it for keys where a lower number is stricter (such as `dev.tty.ldisc_autoload`): the
+    #   comparison would then skip every run.
+    # ❗️ Why `revertNeedsRestart` exists:
+    #   Some keys are one-way switches, such as `kernel.kexec_load_disabled`: once set, the kernel rejects
+    #   any attempt to write the old value until the next restart. For those, revert removes the persisted
+    #   value and says that a restart is needed, instead of a live write that can only fail.
     # References:
     #   - https://web.archive.org/web/20240523090109/https://man7.org/linux/man-pages/man5/sysctl.d.5.html
     #   - https://web.archive.org/web/20240418183746/https://man7.org/linux/man-pages/man8/sysctl.8.html
@@ -4368,6 +6094,8 @@ functions:
       - name: key
       - name: value
       - name: keepStricterValue # When set, skips if the running value is a number that is at least `value`.
+        optional: true
+      - name: revertNeedsRestart # When set, revert does not write the previous value to the running kernel.
         optional: true
     code: |-
       kernel_key='{{ $key }}'
@@ -4414,6 +6142,7 @@ functions:
       fi
     revertCode: |-
       kernel_key='{{ $key }}'
+      kernel_revert_needs_restart='{{ with $revertNeedsRestart }}true{{ end }}'
       config_file='/etc/sysctl.d/60-privacy-sexy.conf'
       previous_marker="# privacy.sexy-previous:$kernel_key="
       previous_value=''
@@ -4436,10 +6165,361 @@ functions:
       if [ -z "$previous_value" ] || [ "$previous_value" = 'unset' ]; then
         echo "No previously recorded value for \"$kernel_key\", so the running value is left unchanged."
         echo 'The distribution default applies again after a reboot.'
+      elif [ "$kernel_revert_needs_restart" = 'true' ]; then
+        if [ "$(sysctl --values "$kernel_key" 2>/dev/null | head --lines=1)" = "$previous_value" ]; then
+          echo "\"$kernel_key\" is already \"$previous_value\"."
+        else
+          echo "\"$kernel_key\" cannot be changed back while the system is running."
+          echo "Restart your computer to return it to \"$previous_value\"."
+        fi
       elif ! command -v sysctl > /dev/null 2>&1; then
         >&2 echo 'Cannot restore the kernel parameter because "sysctl" is not found.'
       elif sudo sysctl --write "$kernel_key=$previous_value" > /dev/null 2>&1; then
         echo "Successfully restored \"$kernel_key\" to its previous value \"$previous_value\"."
       else
         >&2 echo "Failed to restore \"$kernel_key\" to \"$previous_value\"."
+      fi
+  -
+    name: DeleteFileFromUserAndRootHomeAsOwner
+    # 💡 Purpose:
+    #   Deletes a file from the home folder of the user who runs the script and from the home folder of
+    #   root, for history files that both accounts can have.
+    # ❗️ The user's copy is deleted by the user. As root, `rm` on a path inside the user's home folder
+    #   follows any folder on the way that the user replaced with a symbolic link, so it could delete a
+    #   file outside the home folder. Root's copy is deleted as root, which owns it. Paths stay quoted.
+    parameters:
+      - name: file # Path relative to the home folder, without a leading `~/`
+    call:
+      function: RunAsTargetUser
+      parameters:
+        code: |-
+          home_relative_file='{{ $file }}'
+          user_home_file="$HOME/$home_relative_file"
+          if [ -e "$user_home_file" ] || [ -L "$user_home_file" ]; then
+            if ! run_as_target_user rm -fv -- "$user_home_file"; then
+              >&2 echo "Failed to delete \"$user_home_file\"."
+            fi
+          else
+            echo "Skipping, \"$user_home_file\" does not exist."
+          fi
+          root_home_file="/root/$home_relative_file"
+          if [ "$HOME" != '/root' ] && { [ -e "$root_home_file" ] || [ -L "$root_home_file" ]; }; then
+            if ! sudo rm -fv -- "$root_home_file"; then
+              >&2 echo "Failed to delete \"$root_home_file\"."
+            fi
+          fi
+  -
+    name: ClearUserDirectoryContents
+    # 💡 Purpose:
+    #   Deletes everything inside the given folders in the home folder of the user who runs the script,
+    #   but keeps the folders themselves.
+    # ❗️ Runs `find` and `rm` as that user, so nothing outside what the user can delete is touched, even
+    #   if a folder inside was replaced with a symbolic link. File names reach `rm` as arguments.
+    parameters:
+      - name: directories # Bash words: one double-quoted folder that starts with "$HOME/" per location
+    call:
+      function: RunAsTargetUser
+      parameters:
+        code: |-
+          user_directories=({{ $directories }})
+          for user_directory in "${user_directories[@]}"; do
+            if [ ! -d "$user_directory" ]; then
+              echo "Skipping, \"$user_directory\" does not exist."
+            elif run_as_target_user find -H "$user_directory" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +; then
+              echo "Cleared \"$user_directory\"."
+            else
+              >&2 echo "Failed to clear \"$user_directory\" completely."
+            fi
+          done
+  -
+    name: DeleteFromChromiumBasedBrowserProfiles
+    # 💡 Purpose:
+    #   Deletes files and folders from every profile folder (`Default`, `Profile 1`, `Profile 2`, ...)
+    #   inside the given user data folders of a Chromium-based browser. Call it through
+    #   `DeleteFromChromeProfiles`, `DeleteFromChromiumProfiles` or `DeleteFromBraveProfiles`, which list
+    #   the folders of each installation type.
+    # ❗️ `rm` runs as the user who runs the script, and every path stays quoted, so a profile folder or
+    #   file name with spaces (such as `Profile 1`) or a symbolic link cannot make root delete anything else.
+    parameters:
+      - name: userDataDirectories # Bash words: one double-quoted folder that starts with "$HOME/" per installation type
+      - name: profilePaths # Bash words: one single-quoted path relative to a profile folder per file or folder
+    call:
+      function: RunAsTargetUser
+      parameters:
+        code: |-
+          browser_user_data_directories=({{ $userDataDirectories }})
+          browser_profile_paths=({{ $profilePaths }})
+          browser_deleted_count=0
+          for browser_user_data_directory in "${browser_user_data_directories[@]}"; do
+            if [ ! -d "$browser_user_data_directory" ]; then
+              echo "Skipping, \"$browser_user_data_directory\" does not exist."
+              continue
+            fi
+            for browser_profile_directory in "$browser_user_data_directory/Default" "$browser_user_data_directory/Profile "*; do
+              if [ ! -d "$browser_profile_directory" ]; then
+                continue # No profile folder, or the pattern matched nothing
+              fi
+              for browser_profile_path in "${browser_profile_paths[@]}"; do
+                browser_target_path="$browser_profile_directory/$browser_profile_path"
+                if [ ! -e "$browser_target_path" ] && [ ! -L "$browser_target_path" ]; then
+                  continue
+                fi
+                if run_as_target_user rm -rf -- "$browser_target_path"; then
+                  echo "Deleted \"$browser_target_path\"."
+                  browser_deleted_count=$((browser_deleted_count + 1))
+                else
+                  >&2 echo "Failed to delete \"$browser_target_path\"."
+                fi
+              done
+            done
+          done
+          echo "Deleted $browser_deleted_count file(s) or folder(s)."
+  -
+    name: DeleteFromChromeProfiles
+    parameters:
+      - name: profilePaths # Bash words: one single-quoted path relative to a profile folder per file or folder
+    call:
+      function: DeleteFromChromiumBasedBrowserProfiles
+      parameters:
+        userDataDirectories: >-
+          "$HOME/.config/google-chrome"
+          "$HOME/.config/google-chrome-beta"
+          "$HOME/.config/google-chrome-unstable"
+          "$HOME/.var/app/com.google.Chrome/config/google-chrome"
+        profilePaths: '{{ $profilePaths }}'
+  -
+    name: DeleteFromChromiumProfiles
+    parameters:
+      - name: profilePaths # Bash words: one single-quoted path relative to a profile folder per file or folder
+    call:
+      function: DeleteFromChromiumBasedBrowserProfiles
+      parameters:
+        userDataDirectories: >-
+          "$HOME/.config/chromium"
+          "$HOME/.var/app/org.chromium.Chromium/config/chromium"
+          "$HOME/snap/chromium/common/chromium"
+        profilePaths: '{{ $profilePaths }}'
+  -
+    name: DeleteFromBraveProfiles
+    parameters:
+      - name: profilePaths # Bash words: one single-quoted path relative to a profile folder per file or folder
+    call:
+      function: DeleteFromChromiumBasedBrowserProfiles
+      parameters:
+        userDataDirectories: >-
+          "$HOME/.config/BraveSoftware/Brave-Browser"
+          "$HOME/.config/BraveSoftware/Brave-Browser-Beta"
+          "$HOME/.config/BraveSoftware/Brave-Browser-Nightly"
+          "$HOME/.var/app/com.brave.Browser/config/BraveSoftware/Brave-Browser"
+        profilePaths: '{{ $profilePaths }}'
+  -
+    name: SetChromiumBasedBrowserPolicy
+    # 💡 Purpose:
+    #   Sets one mandatory policy of a Chromium-based browser by writing a JSON file to the folder that
+    #   the browser reads managed policies from on Linux. Each policy gets its own file,
+    #   `privacy-sexy-<policy>.json`, so reverting one policy never touches another policy or a file that
+    #   someone else wrote. Call it through `SetChromePolicy` or `SetBravePolicy`.
+    # ❗️ Folders that did not exist before are recorded in a state file named after the policy folder.
+    #   Revert deletes the policy file only if it is unchanged, and removes the recorded folders only once
+    #   the policy folder is empty again.
+    # ❗️ The Flathub packages of Google Chrome and Brave link the host's policy files into their sandbox,
+    #   so an installation from Flathub counts as installed too.
+    #   - https://github.com/flathub/com.google.Chrome/blob/master/chrome.sh
+    #   - https://github.com/flathub/com.brave.Browser/blob/master/brave.sh
+    # ❗️ Revert does not check whether the browser is still installed, so a policy file is not left
+    #   behind after the browser is removed.
+    parameters:
+      - name: browserName # Shown in messages
+      - name: browserCommands # Space-separated commands; the browser counts as installed if one is found
+      - name: flatpakId # Flathub application ID; its package links the host policy files into its sandbox
+      - name: policyDirectory # Absolute path of the managed policy folder
+      - name: policyName
+      - name: jsonValue
+    code: |-
+      browser_name='{{ $browserName }}'
+      browser_commands='{{ $browserCommands }}'
+      browser_flatpak_id='{{ $flatpakId }}'
+      policy_directory='{{ $policyDirectory }}'
+      policy_name='{{ $policyName }}'
+      policy_value='{{ $jsonValue }}'
+      policy_file="$policy_directory/privacy-sexy-$policy_name.json"
+      policy_content="$(printf '{\n  "%s": %s\n}' "$policy_name" "$policy_value")"
+      policy_state_dir='/var/lib/privacy.sexy/state/browser-policies'
+      policy_state_file="$policy_state_dir/$(printf '%s' "$policy_directory" | tr --complement '[:alnum:]._-' '_')"
+      browser_installed='false'
+      for browser_command in $browser_commands; do
+        if command -v "$browser_command" > /dev/null 2>&1; then
+          browser_installed='true'
+        fi
+      done
+      if [ -d "/var/lib/flatpak/app/$browser_flatpak_id" ] \
+          || [ -d "$HOME/.local/share/flatpak/app/$browser_flatpak_id" ]; then
+        browser_installed='true' # Flathub package, system-wide or for this user
+      fi
+      if [ "$browser_installed" != 'true' ]; then
+        echo "Skipping, $browser_name is not installed."
+      elif [ -f "$policy_file" ] && [ "$(cat "$policy_file")" = "$policy_content" ]; then
+        echo "Skipping, the $browser_name policy \"$policy_name\" is already set to $policy_value."
+      else
+        if [ ! -d "$policy_directory" ]; then
+          missing_directories=()
+          missing_directory="$policy_directory"
+          while [ -n "$missing_directory" ] && [ ! -d "$missing_directory" ]; do
+            missing_directories=("$missing_directory" "${missing_directories[@]}")
+            missing_directory="${missing_directory%/*}"
+          done
+          sudo install --directory --mode=700 "$policy_state_dir"
+          if [ ! -e "$policy_state_file" ]; then
+            printf '%s\n' "${missing_directories[@]}" | sudo tee "$policy_state_file" > /dev/null
+            sudo chmod 600 "$policy_state_file"
+          fi
+          for missing_directory in "${missing_directories[@]}"; do
+            sudo mkdir --mode=755 -- "$missing_directory"
+          done
+        fi
+        if printf '%s\n' "$policy_content" | sudo tee "$policy_file" > /dev/null \
+            && sudo chmod 644 "$policy_file"; then
+          echo "Successfully set the $browser_name policy \"$policy_name\" to $policy_value."
+          echo "It applies the next time $browser_name starts."
+        else
+          >&2 echo "Failed to write \"$policy_file\"."
+        fi
+      fi
+    revertCode: |-
+      browser_name='{{ $browserName }}'
+      policy_directory='{{ $policyDirectory }}'
+      policy_name='{{ $policyName }}'
+      policy_value='{{ $jsonValue }}'
+      policy_file="$policy_directory/privacy-sexy-$policy_name.json"
+      policy_content="$(printf '{\n  "%s": %s\n}' "$policy_name" "$policy_value")"
+      policy_state_dir='/var/lib/privacy.sexy/state/browser-policies'
+      policy_state_file="$policy_state_dir/$(printf '%s' "$policy_directory" | tr --complement '[:alnum:]._-' '_')"
+      if [ ! -e "$policy_file" ]; then
+        echo "Skipping, no $browser_name policy file for \"$policy_name\" was found."
+      elif [ "$(cat "$policy_file")" != "$policy_content" ]; then
+        >&2 echo "Skipping revert because \"$policy_file\" changed after privacy.sexy wrote it."
+      elif ! sudo rm -f -- "$policy_file"; then
+        >&2 echo "Failed to delete \"$policy_file\"."
+      else
+        echo "Successfully removed the $browser_name policy \"$policy_name\"."
+        echo "It no longer applies the next time $browser_name starts."
+        if [ -e "$policy_state_file" ] && [ -z "$(ls -A -- "$policy_directory" 2>/dev/null)" ]; then
+          # Folders are recorded from the outermost to the innermost, so they are removed in reverse.
+          sudo tac -- "$policy_state_file" | while IFS= read -r created_directory; do
+            sudo rmdir -- "$created_directory" 2>/dev/null || break
+          done
+          sudo rm -f -- "$policy_state_file"
+        fi
+      fi
+  -
+    name: SetChromePolicy
+    parameters:
+      - name: policyName
+      - name: jsonValue
+    call:
+      function: SetChromiumBasedBrowserPolicy
+      parameters:
+        browserName: Google Chrome
+        browserCommands: google-chrome google-chrome-stable google-chrome-beta google-chrome-unstable
+        flatpakId: com.google.Chrome
+        policyDirectory: /etc/opt/chrome/policies/managed
+        policyName: '{{ $policyName }}'
+        jsonValue: '{{ $jsonValue }}'
+  -
+    name: SetBravePolicy
+    parameters:
+      - name: policyName
+      - name: jsonValue
+    call:
+      function: SetChromiumBasedBrowserPolicy
+      parameters:
+        browserName: Brave
+        browserCommands: brave-browser brave-browser-beta brave-browser-nightly
+        flatpakId: com.brave.Browser
+        policyDirectory: /etc/brave/policies/managed
+        policyName: '{{ $policyName }}'
+        jsonValue: '{{ $jsonValue }}'
+  -
+    name: BlockKernelModules
+    # 💡 Purpose:
+    #   Stops the kernel from loading the given modules by writing a dedicated file to `/etc/modprobe.d`.
+    #   Each module gets two lines:
+    #   - `blacklist`, so modprobe ignores the module's aliases. Automatic loading goes through aliases,
+    #     both when matching hardware shows up and when the kernel requests a file system type on `mount`.
+    #   - `install <module> /bin/false`, because `blacklist` does not stop loading the module by its name,
+    #     for example with `modprobe <module>` or as a dependency of another module. modprobe runs
+    #     `/bin/false` instead, so that load fails.
+    #   Modules that are already loaded stay loaded until the next restart.
+    # ❗️ An existing file with the same name but different content is never replaced, and revert deletes
+    #   the file only while it still has exactly the content that privacy.sexy wrote.
+    # ❗️ Why `rebuildInitramfs` exists:
+    #   Debian and Ubuntu put some drivers, such as the FireWire ones, into the initial RAM disk, together
+    #   with a copy of `/etc/modprobe.d` taken when it was built. Until it is rebuilt, that old copy can
+    #   still load such a driver early during boot. `update-initramfs` exists on both, also where Ubuntu
+    #   builds the initial RAM disk with Dracut. Without `-k`, it rebuilds the one of the newest kernel, which
+    #   is the one that boots by default.
+    # References:
+    #   - https://man7.org/linux/man-pages/man5/modprobe.d.5.html
+    #   - https://man7.org/linux/man-pages/man8/modprobe.8.html
+    #   - https://salsa.debian.org/kernel-team/initramfs-tools/-/raw/debian/latest/hook-functions
+    #   - https://salsa.debian.org/kernel-team/initramfs-tools/-/raw/debian/latest/mkinitramfs
+    parameters:
+      - name: fileName # File name inside `/etc/modprobe.d`, ending with `.conf`
+      - name: modules # Space-separated module names
+      - name: rebuildInitramfs # When set, rebuilds the initial RAM disk with `update-initramfs` if it exists
+        optional: true
+    code: |-
+      modprobe_file='/etc/modprobe.d/{{ $fileName }}'
+      blocked_modules='{{ $modules }}'
+      modprobe_rebuild_initramfs='{{ with $rebuildInitramfs }}true{{ end }}'
+      modprobe_content='# Created by privacy.sexy'
+      for blocked_module in $blocked_modules; do
+        modprobe_content+=$'\n'"blacklist $blocked_module"$'\n'"install $blocked_module /bin/false"
+      done
+      if [ -e "$modprobe_file" ] || [ -L "$modprobe_file" ]; then
+        if [ "$(cat "$modprobe_file" 2>/dev/null)" = "$modprobe_content" ]; then
+          echo "Skipping, \"$modprobe_file\" already blocks these modules."
+        else
+          >&2 echo "Skipping, \"$modprobe_file\" already exists with different content and is not replaced."
+        fi
+      elif ! sudo mkdir -p /etc/modprobe.d \
+          || ! printf '%s\n' "$modprobe_content" | sudo tee "$modprobe_file" > /dev/null; then
+        >&2 echo "Failed to write \"$modprobe_file\"."
+      else
+        sudo chmod 644 "$modprobe_file"
+        echo "Successfully blocked loading of: $blocked_modules."
+        for blocked_module in $blocked_modules; do
+          if [ -d "/sys/module/${blocked_module//-/_}" ]; then
+            echo "\"$blocked_module\" is loaded right now and stays loaded until you restart your computer."
+          fi
+        done
+        if [ "$modprobe_rebuild_initramfs" = 'true' ] && command -v update-initramfs > /dev/null 2>&1; then
+          echo 'Rebuilding the initial RAM disk so that it blocks these modules during early boot too.'
+          if ! sudo update-initramfs -u; then
+            >&2 echo 'Failed to rebuild the initial RAM disk; the modules may still load early during boot.'
+          fi
+        fi
+      fi
+    revertCode: |-
+      modprobe_file='/etc/modprobe.d/{{ $fileName }}'
+      blocked_modules='{{ $modules }}'
+      modprobe_rebuild_initramfs='{{ with $rebuildInitramfs }}true{{ end }}'
+      modprobe_content='# Created by privacy.sexy'
+      for blocked_module in $blocked_modules; do
+        modprobe_content+=$'\n'"blacklist $blocked_module"$'\n'"install $blocked_module /bin/false"
+      done
+      if [ ! -e "$modprobe_file" ] && [ ! -L "$modprobe_file" ]; then
+        echo "Skipping, \"$modprobe_file\" does not exist."
+      elif [ "$(cat "$modprobe_file" 2>/dev/null)" != "$modprobe_content" ]; then
+        >&2 echo "Skipping revert because \"$modprobe_file\" changed after privacy.sexy created it."
+      elif sudo rm -f -- "$modprobe_file"; then
+        echo "Successfully removed \"$modprobe_file\". These modules can load again: $blocked_modules."
+        if [ "$modprobe_rebuild_initramfs" = 'true' ] && command -v update-initramfs > /dev/null 2>&1; then
+          echo 'Rebuilding the initial RAM disk so that it no longer blocks these modules during early boot.'
+          if ! sudo update-initramfs -u; then
+            >&2 echo 'Failed to rebuild the initial RAM disk; run "sudo update-initramfs -u" yourself.'
+          fi
+        fi
+      else
+        >&2 echo "Failed to delete \"$modprobe_file\"."
       fi

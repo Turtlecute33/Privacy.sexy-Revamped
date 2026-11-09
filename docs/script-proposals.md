@@ -2227,7 +2227,7 @@ All Windows. The macOS, Linux and browser sets below have not been vetted yet.
                                 publisherId: 8wekyb3d8bbwe
 ```
 
-## Rejected by vetting (6)
+## Rejected by vetting (17)
 
 Kept here so the same ideas are not re-proposed.
 
@@ -2260,6 +2260,61 @@ Kept here so the same ideas are not re-proposed.
 
 - **Reason:** unverifiable
 - **Detail:** The capability name cannot be confirmed from vendor documentation, and the proposal's own confidence was 'likely'. I fetched all three cited sources plus the FoD reference. `https://learn.microsoft.com/en-us/windows/whats-new/deprecated-features-resources#vbscript` says only: "VBScript will be available as a feature on demand before being retired in future Windows releases. Initially, the VBScript feature on demand will be preinstalled...", future tense, no capability name. `https://learn.microsoft.com/en-us/windows/whats-new/deprecated-features` likewise: "In future releases of Windows, VBScript will be available as a feature on demand before its removal from the operating system" (announced October 2023). Critically, `https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/features-on-demand-non-language-fod` (the authoritative capability-name list, last updated 2026-02-20) has no VBSCRIPT entry at all, in any of its four sections; it does list WMIC (`WMIC~~~~`), Quick Assist, Notepad, Paint, etc. So neither the proposed name `VBSCRIPT~~~~` nor the claimed "🟢 Installed" default on Windows 11 ≥ 24H2 is verifiable, and the repo's own research files under docs/research/windows/ cover Appx packages only, not capabilities. Because `UninstallCapability` matches by prefix and silently no-ops when nothing matches, an incorrect name would ship a script that appears to work and never does anything. Separately, the docs understate the impact: they name installer custom actions and logon scripts, but not the in-box VBScript tools that break: most notably `slmgr.vbs` (Windows license/activation management), `winrm.vbs` and `pubprn.vbs`. Given an unverifiable target plus undisclosed breakage of activation tooling, this does not clear the bar.
+
+### Enable Microsoft vulnerable driver blocklist (Windows)
+
+- **Reason:** unverifiable
+- **Detail:** No Microsoft source documents `HKLM\SYSTEM\CurrentControlSet\Control\CI\Config!VulnerableDriverBlocklistEnable`. Microsoft documents the blocklist only as a toggle in the Windows Security app; the registry value appears only in third-party guides.
+
+### Disable "mDNS" protocol (Windows)
+
+- **Reason:** unverifiable
+- **Detail:** Microsoft's "mDNS in the Enterprise" post explicitly declines to name a registry value for turning mDNS off. `Dnscache\Parameters!EnableMDNS` appears only in a reader's comment, and the post says it has little effect.
+
+### Enable Compact OS (Windows)
+
+- **Reason:** unsafe revert
+- **Detail:** `compact /compactos:never` would also decompress devices that Windows compressed by itself. `compact /compactos:query` prints localized text and its exit codes are undocumented, so the prior state cannot be recorded reliably.
+
+### Disable Start menu account notifications and tips (Windows)
+
+- **Reason:** unverifiable
+- **Detail:** The Start Policy CSP documents no policy for account notifications or tips. Only `HideRecommendedPersonalizedSites` exists, and it shipped as "Disable personalized website recommendations in Start menu".
+
+### Disable Safari preloading of the top search result (macOS)
+
+- **Reason:** unverifiable
+- **Detail:** `com.apple.Safari!PreloadTopHit` is not in Apple's device-management schemas, the macOS Security Compliance Project, the CIS benchmark or WebKit; only third-party dotfiles use it.
+
+### Disable Internet Sharing (macOS)
+
+- **Reason:** unverifiable
+- **Detail:** For macOS 14, 15 and 26 the macOS Security Compliance Project and DISA document only a configuration profile (`com.apple.MCX!forceInternetSharingOff`). Editing `/Library/Preferences/SystemConfiguration/com.apple.nat` appears only in CIS guidance up to Sonoma, replaces the whole `NAT` dictionary, and is not documented to take effect immediately.
+
+### Disable media sharing (macOS)
+
+- **Reason:** unverifiable
+- **Detail:** The CIS macOS 15 benchmark states the per-user `com.apple.amp.mediasharingd` keys were replaced by the profile-only `com.apple.applicationaccess!allowMediaSharing`.
+
+### Disable PostgreSQL and SQLite client history (macOS, Linux)
+
+- **Reason:** unverifiable
+- **Detail:** The psql documentation describes `PSQL_HISTORY` only as an alternative file location, not as a way to turn history off. `SQLITE_HISTORY` is read in SQLite's `shell.c.in` but is not documented on `sqlite.org/cli.html`. The matching "Clear ... history" scripts shipped.
+
+### Disable ABRT automatic crash reporting (Fedora)
+
+- **Reason:** ineffective
+- **Detail:** `AutoreportingEnabled` already defaults to `no` in `abrt.conf`; per-user reporting follows GNOME's `report-technical-problems` key, which "Disable GNOME technical problem reports" already sets; and Fedora 44 removes ABRT from Workstation.
+
+### Disable user list on the GDM login screen (Linux)
+
+- **Reason:** unsafe revert
+- **Detail:** Fedora's gdm reads the `system-db:gdm` dconf database, but Ubuntu's gdm3 reads the ucf-managed `/etc/gdm3/greeter.dconf-defaults` instead, and `dconf update` never deletes a stale compiled database. No single approach is reliable and cleanly revertible on both.
+
+### Disable Brave VPN (Linux)
+
+- **Reason:** not applicable
+- **Detail:** Brave VPN is only offered on Windows, macOS, Android and iOS, so the Linux policy has nothing to turn off. The script shipped for Windows and macOS.
 
 ## Unvetted proposals (47)
 

@@ -693,6 +693,181 @@ actions:
                             function: ClearRegistryValues
                             parameters:
                                 keyPath: HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\TypedPaths
+                    -
+                        name: Clear PowerShell command history
+                        docs: |-
+                            This script deletes the saved history of commands typed into PowerShell.
+
+                            PowerShell lets you recall and search the commands you typed earlier. The PSReadLine module
+                            does this by saving every command you enter to a text file in your user profile, which is
+                            kept between sessions [1]. This file can show what you did, which computers and folders you
+                            worked with, and sometimes secrets that you typed.
+
+                            PSReadLine tries to leave out commands that look sensitive, for example lines containing
+                            `password` or `token` [1], but it cannot recognize every secret.
+
+                            ### Technical details
+
+                            On Windows, PSReadLine stores the history in
+                            `%APPDATA%\Microsoft\Windows\PowerShell\PSReadLine` [1]. Each program that hosts PowerShell
+                            has its own file, named after the host and ending with `_history.txt` [1]. For example,
+                            `ConsoleHost_history.txt` is used by the PowerShell console and
+                            `Visual Studio Code Host_history.txt` by the PowerShell extension of Visual Studio Code [1].
+
+                            This script deletes every file in that folder whose name ends with `_history.txt`.
+
+                            > **Caution:** You can no longer recall or search commands from earlier PowerShell sessions.
+
+                            If you do not run this script, every command you typed in PowerShell stays saved in your user
+                            profile.
+
+                            [1]: https://web.archive.org/web/20260925195329/https://learn.microsoft.com/en-us/powershell/module/psreadline/about/about_psreadline?view=powershell-7.4 "about_PSReadLine | Microsoft Learn"
+                        call:
+                            function: DeleteFiles
+                            parameters:
+                                fileGlob: '%APPDATA%\Microsoft\Windows\PowerShell\PSReadLine\*_history.txt'
+                    -
+                        name: Clear Remote Desktop connection history
+                        docs: |-
+                            This script removes the list of computers you connected to with Remote Desktop Connection.
+
+                            After you connect to another computer with Remote Desktop Connection (`mstsc.exe`), the name
+                            or address of that computer is added to the **Computer** box, so you can select it again
+                            later [1]. The tool offers no way to clear this list [1], so it keeps a record of every
+                            computer you connected to, including names and addresses from your home or company network.
+
+                            ### Technical details
+
+                            Windows stores the list as values named `MRU0`, `MRU1` and so on under
+                            `HKCU\Software\Microsoft\Terminal Server Client\Default` [1]. Every new connection is saved as
+                            `MRU0`, and the older entries move down [1]. Each value holds a computer name or an IP
+                            address [1].
+
+                            This script deletes all values under this key. Microsoft documents deleting these values as
+                            the way to remove entries from the list [1].
+
+                            > **Caution:** You need to type the computer name or address again the next time you connect.
+
+                            If you do not run this script, every computer you connected to stays listed in Remote Desktop
+                            Connection.
+
+                            [1]: https://web.archive.org/web/20260610223938/https://learn.microsoft.com/en-us/troubleshoot/windows-server/remote/remove-entries-from-remote-desktop-connection-computer "Remove entries from the Remote Desktop Connection Computer box | Microsoft Learn"
+                        call:
+                            function: ClearRegistryValues
+                            parameters:
+                                keyPath: HKCU\Software\Microsoft\Terminal Server Client\Default
+                    -
+                        name: Clear File Explorer folder view history
+                        docs: |-
+                            This script clears the record that File Explorer keeps of the folders you opened and how you
+                            viewed them.
+
+                            Windows remembers the view settings of each folder you open, such as the layout, sort order,
+                            window position and columns, and stores them in the registry [1]. Because an entry is created
+                            for every folder you browse, these entries, known as "shellbags", also form a history of the
+                            folders you opened. Forensic investigators use them to reconstruct which folders a person
+                            accessed [2].
+
+                            ### Technical details
+
+                            Windows stores the folder view entries in `BagMRU` and `Bags` subkeys [1]. This script deletes
+                            these subkeys under both locations:
+
+                            - `HKCU\Software\Microsoft\Windows\Shell` [1]
+                            - `HKCU\Software\Classes\Local Settings\Software\Microsoft\Windows\Shell`, where current
+                              Windows versions keep most entries
+
+                            Values stored directly under these keys, such as `BagMRU Size`, which sets how many folders
+                            Windows remembers [1], are kept.
+
+                            > **Caution:**
+                            > - All folders go back to their default view, so custom layouts, sort orders and column
+                            >   choices are lost.
+                            > - Restart File Explorer (`explorer.exe`) or sign out after running this script.
+
+                            If you do not run this script, Windows keeps a record of the folders you opened.
+
+                            [1]: https://web.archive.org/web/20150301183603/http://support.microsoft.com/kb/813711/en-us "Your view settings or customizations for a folder are lost or incorrect (KB813711) | Microsoft Support"
+                            [2]: https://web.archive.org/web/20260510145443/https://dfrws.org/sites/default/files/session-files/2009_USA_paper-using_shellbag_information_to_reconstruct_user_activities.pdf "Using shellbag information to reconstruct user activities | Yuandong Zhu, Pavel Gladyshev, Joshua James | DFRWS 2009 | dfrws.org"
+                        call:
+                            -
+                                function: DeleteRegistryKey
+                                parameters:
+                                    keyPath: HKCU\Software\Classes\Local Settings\Software\Microsoft\Windows\Shell\BagMRU
+                            -
+                                function: DeleteRegistryKey
+                                parameters:
+                                    keyPath: HKCU\Software\Classes\Local Settings\Software\Microsoft\Windows\Shell\Bags
+                            -
+                                function: DeleteRegistryKey
+                                parameters:
+                                    keyPath: HKCU\Software\Microsoft\Windows\Shell\BagMRU
+                            -
+                                function: DeleteRegistryKey
+                                parameters:
+                                    keyPath: HKCU\Software\Microsoft\Windows\Shell\Bags
+                            -
+                                function: ShowMessage
+                                parameters:
+                                    message: Restart explorer.exe or sign out so that File Explorer starts with the cleared folder views.
+                    -
+                        name: Clear program usage history
+                        docs: |-
+                            This script clears the record that Windows keeps of the programs you start and how often you
+                            start them.
+
+                            File Explorer counts how many times you run each program and when you last ran it [1]. Windows
+                            uses this data, known as "UserAssist", to show your most used programs in the Start menu [1].
+                            It is also a detailed log of the programs you use. The program names are only disguised with
+                            ROT13, a simple letter substitution, so anyone with access to your user profile can read
+                            them [1] [2].
+
+                            ### Technical details
+
+                            The data is stored under
+                            `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\UserAssist` [1] [2]. Every subkey of
+                            this key has a `Count` subkey [2] that holds one value per program, with its run count and
+                            the time it last ran [1]. This script deletes all values under every `Count` subkey and keeps
+                            the keys themselves.
+
+                            This complements *Disable app launch tracking (hides most-used apps)*.
+
+                            > **Caution:** Lists of your most used apps are reset and fill up again as you use your
+                            > computer.
+
+                            If you do not run this script, Windows keeps the record of the programs you started.
+
+                            [1]: https://web.archive.org/web/20260902185545/https://blog.didierstevens.com/programs/userassist/ "UserAssist | Didier Stevens | blog.didierstevens.com"
+                            [2]: https://web.archive.org/web/20251212223336/https://blog.didierstevens.com/2006/07/24/rot13-is-used-in-windows-you%E2%80%99re-joking/ "ROT13 is used in Windows? You're joking! | Didier Stevens | blog.didierstevens.com"
+                        call:
+                            function: RunPowerShell
+                            parameters:
+                                codeComment: Clear the program usage entries under every UserAssist "Count" subkey
+                                code: |-
+                                    $userAssistKeyPath = 'Software\Microsoft\Windows\CurrentVersion\Explorer\UserAssist'
+                                    $userAssistKey = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey($userAssistKeyPath)
+                                    if (-Not $userAssistKey) {
+                                        Write-Host 'Skipping, no program usage history found.'
+                                        exit 0
+                                    }
+                                    $subKeyNames = $userAssistKey.GetSubKeyNames()
+                                    $userAssistKey.Close()
+                                    $clearedCount = 0
+                                    foreach ($subKeyName in $subKeyNames) {
+                                        $countKey = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey("$userAssistKeyPath\$subKeyName\Count", $true)
+                                        if (-Not $countKey) {
+                                            continue
+                                        }
+                                        try {
+                                            foreach ($valueName in $countKey.GetValueNames()) {
+                                                $countKey.DeleteValue($valueName)
+                                                $clearedCount++
+                                            }
+                                        } finally {
+                                            $countKey.Close()
+                                        }
+                                    }
+                                    Write-Host "Successfully cleared $clearedCount program usage entries."
             -
                 category: Clear third-party application data
                 children:
@@ -2564,6 +2739,86 @@ actions:
                         dataType: REG_DWORD
                         data: '0'
                         dataOnRevert: '1' # Default value: `1` on Windows 10 Pro (≥ 21H1) | 🔍 Missing on Windows 11 Pro 21H1 | `1` on Windows 11 Pro (≥ 22H2)
+            -
+                name: Clear Delivery Optimization cache
+                docs: |-
+                    This script deletes the files that Delivery Optimization keeps in its cache.
+
+                    Delivery Optimization is the Windows downloader for content such as Windows updates and Microsoft
+                    Store apps. It can also get this content from, and share it with, other devices [1]. It keeps the
+                    downloaded files in a cache. By default, it keeps a file for up to three days and lets the cache
+                    use up to 20 percent of the disk [2].
+
+                    Clearing the cache frees this disk space right away.
+
+                    ### Technical details
+
+                    The script runs the `Delete-DeliveryOptimizationCache` PowerShell command with the `-Force`
+                    parameter [3]. If the command is not available on your version of Windows, the script skips this
+                    step.
+
+                    This complements the scripts that turn off update and app sharing with other devices, which
+                    keep Windows from sharing these files in the first place.
+
+                    If you do not run this script, Windows deletes cached files on its own once they are older than
+                    the maximum cache age [2].
+
+                    [1]: https://web.archive.org/web/20260913104243/https://learn.microsoft.com/en-us/windows/deployment/do/waas-delivery-optimization "What is Delivery Optimization? | Microsoft Learn"
+                    [2]: https://web.archive.org/web/20260926154537/https://learn.microsoft.com/en-us/windows/deployment/do/waas-delivery-optimization-reference "Delivery Optimization reference | Microsoft Learn"
+                    [3]: https://web.archive.org/web/20261109164519/https://learn.microsoft.com/en-us/powershell/module/deliveryoptimization/delete-deliveryoptimizationcache?view=windowsserver2025-ps "Delete-DeliveryOptimizationCache (DeliveryOptimization) | Microsoft Learn"
+                call:
+                    function: RunPowerShell
+                    parameters:
+                        codeComment: Delete the files in the Delivery Optimization cache
+                        code: |-
+                            if (-Not (Get-Command -Name 'Delete-DeliveryOptimizationCache' -ErrorAction SilentlyContinue)) {
+                                Write-Host 'Skipping, clearing the Delivery Optimization cache is not supported on this system.'
+                                exit 0
+                            }
+                            try {
+                                Delete-DeliveryOptimizationCache -Force -ErrorAction Stop
+                                Write-Host 'Successfully cleared the Delivery Optimization cache.'
+                            } catch {
+                                Write-Warning "Failed to clear the Delivery Optimization cache: $($_.Exception.Message)"
+                            }
+            -
+                name: Clear superseded Windows component versions
+                docs: |-
+                    This script removes old versions of Windows components that newer updates have replaced.
+
+                    Windows keeps the files of its components in the WinSxS folder. When an update replaces a
+                    component, Windows keeps the previous version for a while, so that the update can be rolled back
+                    if needed [1]. Windows removes these old versions on its own, but only at least 30 days after the
+                    update was installed, and only when the computer is not in use [1].
+
+                    This script removes the old versions right away, which frees disk space.
+
+                    ### Technical details
+
+                    The script runs `Dism.exe /Online /Cleanup-Image /StartComponentCleanup` [1]. This gives similar
+                    results to the `StartComponentCleanup` scheduled task, except that previous versions are deleted
+                    immediately, without the 30-day grace period, and without the task's 1-hour time limit [1].
+
+                    Unlike *Minimize DISM "Reset Base" update data*, this script does not use the `/ResetBase`
+                    option, which would remove all superseded versions and make every installed update permanent [1].
+
+                    > **Caution:**
+                    > - Updates installed in the last 30 days may no longer be possible to roll back.
+                    > - The cleanup can take a long time on systems with many installed updates.
+
+                    If you do not run this script, Windows removes the old versions automatically after the grace
+                    period [1].
+
+                    [1]: https://web.archive.org/web/20230806160827/https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/clean-up-the-winsxs-folder?view=windows-11 "Clean Up the WinSxS Folder | Microsoft Learn"
+                call:
+                    -
+                        function: Comment
+                        parameters:
+                            codeComment: Remove superseded versions of Windows components without resetting the update base
+                    -
+                        function: RunInlineCode
+                        parameters:
+                            code: Dism.exe /Online /Cleanup-Image /StartComponentCleanup
             -
                 name: Remove Windows product key from registry
                 # Helps to protect it from being stolen and used for identity theft or identifying you.
@@ -6809,6 +7064,40 @@ actions:
                                     dataType: REG_DWORD
                                     data: '0'
                                     dataOnRevert: '1' # Default value: `1` on Windows 10 Pro (≥ 22H2) | `1` on Windows 11 Pro (≥ 23H2)
+                    -
+                        name: Disable Find My Device
+                        recommend: strict # You can no longer locate a lost or stolen device from your Microsoft account
+                        docs: |-
+                            This script turns off Find My Device.
+
+                            When Find My Device is on, the device and its location are registered in Microsoft's cloud,
+                            so that the device can be located from account.microsoft.com [1]. On devices that support an
+                            active pen, it also stores the location where the pen was last used [1].
+
+                            ### Technical details
+
+                            The script sets `HKLM\SOFTWARE\Policies\Microsoft\FindMyDevice!AllowFindMyDevice` to `0`, which
+                            is the **Turn On/Off Find My Device** policy [1]. `0` means not allowed, and `1` means allowed,
+                            which is the default [1].
+
+                            When the policy is set to `0`, the device and its location are not registered, and Find My
+                            Device does not work [1].
+
+                            > **Caution:** You can no longer locate this device from your Microsoft account if it is lost or
+                            > stolen, and you can no longer see where your pen was last used [1].
+
+                            If you do not run this script, the device and its location are registered with Microsoft
+                            whenever Find My Device is turned on.
+
+                            [1]: https://web.archive.org/web/20251223133636/https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-experience "Experience Policy CSP | Microsoft Learn"
+                        call:
+                            function: SetRegistryValue
+                            parameters:
+                                keyPath: HKLM\SOFTWARE\Policies\Microsoft\FindMyDevice
+                                valueName: AllowFindMyDevice
+                                dataType: REG_DWORD
+                                data: "0" # 0: Not allowed, 1: Allowed (default)
+                                deleteOnRevert: 'true' # Missing by default; absence leaves the choice to the user
             -
                 name: Disable device sensors
                 recommend: standard
@@ -7963,6 +8252,42 @@ actions:
                                             dataType: REG_DWORD
                                             data: "1"
                                             deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
+                            -
+                                name: Disable personalized website recommendations in Start menu
+                                recommend: strict
+                                docs: |-
+                                    This script removes personalized website recommendations from the **Recommended**
+                                    section of the Start menu.
+
+                                    Windows 11 can show personalized website recommendations in the Recommended section of
+                                    the Start menu [1]. These are suggestions chosen for you rather than items you opened
+                                    yourself.
+
+                                    ### Technical details
+
+                                    The script sets
+                                    `HKLM\SOFTWARE\Policies\Microsoft\Windows\Explorer!HideRecommendedPersonalizedSites` to
+                                    `1`, the **Remove Personalized Website Recommendations from the Recommended section in
+                                    the Start Menu** policy [1]. `0` shows the recommendations and is the default, and `1`
+                                    hides them [1].
+
+                                    The policy is available on Windows 11, version 22H2 with update KB5027303 and later [1],
+                                    so this script does not run on earlier versions of Windows. Recommended files and apps
+                                    are not affected.
+
+                                    If you do not run this script, the Start menu can keep showing personalized website
+                                    recommendations.
+
+                                    [1]: https://web.archive.org/web/20261019100902/https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-start "Start Policy CSP | Microsoft Learn"
+                                call:
+                                    function: SetRegistryValue
+                                    parameters:
+                                        keyPath: HKLM\SOFTWARE\Policies\Microsoft\Windows\Explorer
+                                        valueName: HideRecommendedPersonalizedSites
+                                        dataType: REG_DWORD
+                                        data: "1" # 0: Shown (default), 1: Hidden
+                                        deleteOnRevert: 'true' # Missing by default
+                                        minimumWindowsVersion: Windows11-22H2 # Policy added in Windows 11 22H2 (KB5027303)
             -
                 category: Disable biometrics (breaks fingerprinting/facial login)
                 children:
@@ -8807,6 +9132,287 @@ actions:
                 docs: https://web.archive.org/web/20221011165907/https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_telemetry?view=powershell-7.2
                 code: setx POWERSHELL_TELEMETRY_OPTOUT 1
                 revertCode: setx POWERSHELL_TELEMETRY_OPTOUT 0
+            -
+                category: Disable development tool telemetry
+                docs: |-
+                    This category contains scripts that stop popular software development tools from sending usage
+                    data to their makers.
+
+                    Many command-line tools and frameworks for developers collect telemetry. They report which
+                    commands you run and details about your project and computer. Most of them let you opt out by
+                    setting an environment variable.
+
+                    The scripts in this category set these variables for all users of the computer:
+
+                    - A variable that is already set for all users is left unchanged, so your own choice is kept.
+                    - Reverting a script removes the variable only if it still has the value that the script set.
+
+                    > **Note:** Programs that are already running, such as open terminals and code editors, keep their
+                    > old settings. Programs that you start afterwards pick up the change [1], so restart them or open a
+                    > new terminal.
+
+                    [1]: https://web.archive.org/web/20251104130323/https://learn.microsoft.com/en-us/dotnet/api/system.environment.setenvironmentvariable?view=net-9.0 "Environment.SetEnvironmentVariable Method | Microsoft Learn"
+                children:
+                    -
+                        name: Disable Next.js telemetry
+                        recommend: standard
+                        docs: |-
+                            This script stops the Next.js framework from sending usage data to its makers.
+
+                            Next.js collects anonymous telemetry about general usage [1]. Taking part is optional [1].
+
+                            ### Technical details
+
+                            The script sets the `NEXT_TELEMETRY_DISABLED` environment variable to `1`, which Next.js
+                            documents as a way to opt out [1].
+
+                            If you do not run this script, Next.js sends usage data unless you opted out another way.
+
+                            [1]: https://web.archive.org/web/20261029083429/https://nextjs.org/telemetry "Telemetry | Next.js | nextjs.org"
+                        call:
+                            function: SetMachineEnvironmentVariable
+                            parameters:
+                                variableName: NEXT_TELEMETRY_DISABLED
+                                value: '1'
+                    -
+                        name: Disable Nuxt telemetry
+                        recommend: standard
+                        docs: |-
+                            This script stops the Nuxt framework from sending usage data to its makers.
+
+                            Nuxt collects anonymous telemetry about general usage, to measure how its features and
+                            options are used [1].
+
+                            ### Technical details
+
+                            The script sets the `NUXT_TELEMETRY_DISABLED` environment variable to `1`, which Nuxt
+                            documents as a way to disable its telemetry [1].
+
+                            If you do not run this script, Nuxt sends usage data unless you opted out another way.
+
+                            [1]: https://web.archive.org/web/20260711180841/https://github.com/nuxt/telemetry "nuxt/telemetry | GitHub | github.com"
+                        call:
+                            function: SetMachineEnvironmentVariable
+                            parameters:
+                                variableName: NUXT_TELEMETRY_DISABLED
+                                value: '1'
+                    -
+                        name: Disable Astro telemetry
+                        recommend: standard
+                        docs: |-
+                            This script stops the Astro framework from sending usage data to its makers.
+
+                            The `astro` command-line tool collects anonymous telemetry about general usage [1]. Taking
+                            part is optional [1].
+
+                            ### Technical details
+
+                            The script sets the `ASTRO_TELEMETRY_DISABLED` environment variable to `1`. Astro documents
+                            this variable as a way to disable telemetry [2].
+
+                            If you do not run this script, Astro sends usage data unless you opted out another way.
+
+                            [1]: https://web.archive.org/web/20260923192027/https://astro.build/telemetry/ "Telemetry | Astro | astro.build"
+                            [2]: https://web.archive.org/web/20251226021542/https://docs.astro.build/en/reference/cli-reference/ "CLI Commands | Docs | docs.astro.build"
+                        call:
+                            function: SetMachineEnvironmentVariable
+                            parameters:
+                                variableName: ASTRO_TELEMETRY_DISABLED
+                                value: '1'
+                    -
+                        name: Disable Angular CLI analytics
+                        recommend: standard
+                        docs: |-
+                            This script stops the Angular command-line tool from collecting usage statistics.
+
+                            The Angular CLI asks whether you want to share usage statistics when you install it, and
+                            collects them only if you agree [1].
+
+                            ### Technical details
+
+                            The script sets the `NG_CLI_ANALYTICS` environment variable to `false`. The Angular CLI
+                            disables all analytics reporting when this variable is `0` or `false` [2].
+
+                            If you do not run this script, the Angular CLI collects usage statistics if you agreed to
+                            share them.
+
+                            [1]: https://web.archive.org/web/20260512131429/https://angular.dev/cli/analytics "ng analytics | Angular | angular.dev"
+                            [2]: https://github.com/angular/angular-cli/blob/d502a5ed89bcf1fdc0518ac013f902102a77b91d/packages/angular/cli/src/utilities/environment-options.ts "angular-cli/packages/angular/cli/src/utilities/environment-options.ts | angular/angular-cli | GitHub | github.com"
+                        call:
+                            function: SetMachineEnvironmentVariable
+                            parameters:
+                                variableName: NG_CLI_ANALYTICS
+                                value: 'false'
+                    -
+                        name: Disable Storybook telemetry
+                        recommend: standard
+                        docs: |-
+                            This script stops the Storybook tool from sending usage data to its makers.
+
+                            Storybook collects anonymous usage details, such as the commands you run, the Storybook
+                            version, add-ons and the user interface framework you use [1]. Taking part is optional [1].
+
+                            ### Technical details
+
+                            The script sets the `STORYBOOK_DISABLE_TELEMETRY` environment variable to `true`, which
+                            Storybook documents as a way to disable telemetry [1].
+
+                            Unlike the `disableTelemetry` option in a project's configuration, this variable also stops
+                            the "boot" event that Storybook sends before it reads the configuration [1].
+
+                            If you do not run this script, Storybook sends usage data unless you opted out another way.
+
+                            [1]: https://web.archive.org/web/20261027020712/https://storybook.js.org/docs/configure/telemetry "Telemetry | Storybook docs | storybook.js.org"
+                        call:
+                            function: SetMachineEnvironmentVariable
+                            parameters:
+                                variableName: STORYBOOK_DISABLE_TELEMETRY
+                                value: 'true'
+                    -
+                        name: Disable Turborepo telemetry
+                        recommend: standard
+                        docs: |-
+                            This script stops the Turborepo build tool from sending usage data to Vercel, its maker.
+
+                            Turborepo collects anonymous data about how it is used and about the computer it runs on [1].
+                            Taking part is optional [1].
+
+                            ### Technical details
+
+                            The script sets the `TURBO_TELEMETRY_DISABLED` environment variable to `1`, which Turborepo
+                            documents as a way to opt out [1].
+
+                            If you do not run this script, Turborepo sends usage data unless you opted out another way.
+
+                            [1]: https://web.archive.org/web/20251219235141/https://turborepo.com/docs/telemetry "Telemetry | Turborepo | turborepo.com"
+                        call:
+                            function: SetMachineEnvironmentVariable
+                            parameters:
+                                variableName: TURBO_TELEMETRY_DISABLED
+                                value: '1'
+                    -
+                        name: Disable HashiCorp Checkpoint data collection
+                        recommend: strict # Also stops notices about new versions and critical security bulletins
+                        docs: |-
+                            This script stops HashiCorp tools, such as Terraform, from contacting HashiCorp's Checkpoint
+                            service.
+
+                            HashiCorp command-line tools contact the Checkpoint service to check for new versions and for
+                            critical security bulletins about the version you use [1]. These requests include an
+                            anonymous ID [1].
+
+                            ### Technical details
+
+                            The script sets the `CHECKPOINT_DISABLE` environment variable to `1`. Setting this variable to
+                            any value turns Checkpoint off for all HashiCorp products [1].
+
+                            > **Caution:** The tools no longer tell you about new versions or about critical security
+                            > bulletins for the version you use [1].
+
+                            If you do not run this script, HashiCorp tools keep contacting Checkpoint.
+
+                            [1]: https://web.archive.org/web/20261022104607/https://developer.hashicorp.com/terraform/cli/commands "Basic CLI features | Terraform | HashiCorp Developer | developer.hashicorp.com"
+                        call:
+                            function: SetMachineEnvironmentVariable
+                            parameters:
+                                variableName: CHECKPOINT_DISABLE
+                                value: '1'
+                    -
+                        name: Disable Azure CLI telemetry
+                        recommend: standard
+                        docs: |-
+                            This script stops the Azure command-line tool from sending usage data to Microsoft.
+
+                            The Azure CLI has a `collect_telemetry` setting that allows Microsoft to collect anonymous
+                            data about how the tool is used [1].
+
+                            ### Technical details
+
+                            Every Azure CLI setting can also be set with an environment variable named
+                            `AZURE_{section}_{name}` in capital letters [1]. The script sets
+                            `AZURE_CORE_COLLECT_TELEMETRY`, which is the `collect_telemetry` setting in the `core`
+                            section, to `false` [1].
+
+                            If you do not run this script, the Azure CLI uses the `collect_telemetry` value from its
+                            configuration.
+
+                            [1]: https://web.archive.org/web/20250404111413/https://learn.microsoft.com/en-us/cli/azure/azure-cli-configuration "Azure CLI configuration | Microsoft Learn"
+                        call:
+                            function: SetMachineEnvironmentVariable
+                            parameters:
+                                variableName: AZURE_CORE_COLLECT_TELEMETRY
+                                value: 'false'
+                    -
+                        name: Disable Google Cloud CLI usage statistics
+                        recommend: standard
+                        docs: |-
+                            This script stops the Google Cloud command-line tool (`gcloud`) from sending usage statistics
+                            to Google.
+
+                            The gcloud CLI collects usage statistics only if you agree when you install it [1]. These
+                            statistics include the commands you run, how long they take and whether an error occurred [1].
+
+                            ### Technical details
+
+                            The script sets the `CLOUDSDK_CORE_DISABLE_USAGE_REPORTING` environment variable to `true`.
+                            Every gcloud property can be set with an environment variable that follows the
+                            `CLOUDSDK_SECTION_NAME_PROPERTY_NAME` pattern [2], so this variable sets the
+                            `disable_usage_reporting` property in the `core` section [1] [2].
+
+                            If you do not run this script, gcloud sends usage statistics if you agreed to share them.
+
+                            [1]: https://web.archive.org/web/20250823232452/https://cloud.google.com/sdk/docs/usage-statistics "Usage statistics | Google Cloud SDK | cloud.google.com"
+                            [2]: https://web.archive.org/web/20251113203430/https://cloud.google.com/sdk/docs/properties "Managing gcloud CLI properties | Google Cloud SDK | cloud.google.com"
+                        call:
+                            function: SetMachineEnvironmentVariable
+                            parameters:
+                                variableName: CLOUDSDK_CORE_DISABLE_USAGE_REPORTING
+                                value: 'true'
+                    -
+                        name: Disable Hugging Face Hub telemetry
+                        recommend: standard
+                        docs: |-
+                            This script stops Hugging Face libraries from sending usage data.
+
+                            Libraries built on the `huggingface_hub` Python package, such as `transformers`, `diffusers`
+                            and `gradio`, can send telemetry about how they are used [1].
+
+                            ### Technical details
+
+                            The script sets the `HF_HUB_DISABLE_TELEMETRY` environment variable to `1`, which disables
+                            telemetry globally in these libraries [1].
+
+                            If you do not run this script, these libraries can keep sending usage data.
+
+                            [1]: https://web.archive.org/web/20261030023729/https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables "Environment variables | Hugging Face Hub documentation | huggingface.co"
+                        call:
+                            function: SetMachineEnvironmentVariable
+                            parameters:
+                                variableName: HF_HUB_DISABLE_TELEMETRY
+                                value: '1'
+                    -
+                        name: Disable vcpkg telemetry
+                        recommend: standard
+                        docs: |-
+                            This script stops the vcpkg C and C++ package manager from sending usage data to Microsoft.
+
+                            vcpkg collects anonymous telemetry, such as failing packages, every time you run one of its
+                            commands, and this telemetry is enabled by default [1].
+
+                            ### Technical details
+
+                            The script sets the `VCPKG_DISABLE_METRICS` environment variable to `1`. Microsoft documents
+                            setting this variable as a way to opt out [1].
+
+                            If you do not run this script, vcpkg keeps sending usage data unless you opted out another
+                            way.
+
+                            [1]: https://web.archive.org/web/20261017221806/https://learn.microsoft.com/en-us/vcpkg/about/privacy "vcpkg Telemetry and Privacy | Microsoft Learn"
+                        call:
+                            function: SetMachineEnvironmentVariable
+                            parameters:
+                                variableName: VCPKG_DISABLE_METRICS
+                                value: '1'
             -
                 category: Disable Nvidia telemetry
                 docs:
@@ -11367,6 +11973,36 @@ actions:
                                         valueName: StartupBoostEnabled # Edge ≥ 88
                                         dwordData: '0'
                             -
+                                name: Disable Edge running in the background
+                                recommend: strict # Background apps and extensions stop when the last Edge window closes
+                                docs: |- # refactor-with-variables: • Chromium Policy Caution
+                                    This script stops Microsoft Edge from running in the background after you close it.
+
+                                    In background mode, Edge processes start when you sign in to Windows and keep running
+                                    after the last browser window is closed [1]. Background apps and the current browsing
+                                    session, including session cookies, then stay active, and an Edge icon is shown in the
+                                    system tray [1].
+
+                                    This script configures the `BackgroundModeEnabled` Edge policy [1]. When this policy is
+                                    disabled, background mode is turned off [1]. Changing this policy does not require
+                                    restarting the browser [1].
+
+                                    This complements *Disable Edge automatic startup*, which turns off Startup boost.
+
+                                    > **Caution**:
+                                    > - This will display the message "Your browser is managed by your organization" on the settings page.
+                                    > - This locks settings and prevents them from being changed on the settings page.
+
+                                    If you do not run this script, background mode is off at first, but it can be turned on
+                                    in Edge settings [1].
+
+                                    [1]: https://web.archive.org/web/20260503193147/https://learn.microsoft.com/en-us/deployedge/microsoft-edge-browser-policies/backgroundmodeenabled "BackgroundModeEnabled | Microsoft Edge Browser Policy Documentation | Microsoft Learn"
+                                call:
+                                    function: SetEdgePolicyViaRegistry
+                                    parameters:
+                                        valueName: BackgroundModeEnabled # Edge ≥ 77
+                                        dwordData: '0'
+                            -
                                 name: Disable Edge external connectivity checks
                                 recommend: standard # Edge can still rely on native connectivity check APIs
                                 docs: |- # refactor-with-variables: • Chromium Policy Caution
@@ -11711,6 +12347,224 @@ actions:
                                             dwordData: "0"
                                     -
                                         function: ShowChromeRestartSuggestion
+                            -
+                                name: Disable Chrome running in the background
+                                recommend: strict # Background apps and extensions stop when the last Chrome window closes
+                                docs: |- # refactor-with-variables: • Chromium Policy Caution
+                                    This script stops Google Chrome from running in the background after you close it.
+
+                                    In background mode, a Chrome process starts when you sign in to Windows and keeps
+                                    running after the last browser window is closed [1] [2]. Background apps and the browsing
+                                    session then stay active, and a Chrome icon is shown in the system tray [1] [2].
+
+                                    This script configures the `BackgroundModeEnabled` policy [1] [2]. When this policy is
+                                    disabled, background mode is turned off, and users cannot change it in the browser
+                                    settings [1] [2]. Changing this policy does not require restarting the browser [2].
+
+                                    > **Caution**:
+                                    > - This will display the message "Your browser is managed by your organization" on the settings page.
+                                    > - This locks settings and prevents them from being changed on the settings page.
+
+                                    If you do not run this script, background mode is off at first, but users can turn it
+                                    on [1] [2].
+
+                                    [1]: https://web.archive.org/web/20260317123400/https://chromeenterprise.google/policies/background-mode-enabled/ "BackgroundModeEnabled: Continue running background apps when Google Chrome is closed | Chrome Enterprise | chromeenterprise.google"
+                                    [2]: https://web.archive.org/web/20261109171856/https://chromium.googlesource.com/chromium/src/+/main/components/policy/resources/templates/policy_definitions/Miscellaneous/BackgroundModeEnabled.yaml "components/policy/resources/templates/policy_definitions/Miscellaneous/BackgroundModeEnabled.yaml - chromium/src - Git at Google | chromium.googlesource.com"
+                                call:
+                                    function: SetChromePolicyViaRegistry
+                                    parameters:
+                                        valueName: BackgroundModeEnabled # Chrome ≥ 19
+                                        dwordData: "0"
+                    -
+                        category: Configure Brave
+                        docs: |-
+                            This category contains scripts that configure the Brave browser to send less data to Brave and
+                            to turn off built-in features that you may not need.
+
+                            Brave is based on Chromium, the same open source project as Chrome and Edge. Like them, it
+                            can be configured with policies that are stored in the Windows registry, under
+                            `HKLM\SOFTWARE\Policies\BraveSoftware\Brave` [1] [2].
+
+                            > **Caution:** When a policy sets one of these options, you can no longer change it in Brave's
+                            > settings [3].
+
+                            [1]: https://web.archive.org/web/20250428052158/https://support.brave.com/hc/en-us/articles/360039248271-Group-Policy "Group Policy | Brave Help Center | support.brave.com"
+                            [2]: https://github.com/brave/brave-core/blob/9de62cd696cbc6c16c1d50df38f6581388b32395/chromium_src/chrome/install_static/user_data_dir.cc "brave-core/chromium_src/chrome/install_static/user_data_dir.cc | brave/brave-core | GitHub | github.com"
+                            [3]: https://github.com/brave/brave-core/blob/9de62cd696cbc6c16c1d50df38f6581388b32395/components/policy/resources/templates/policy_definitions/BraveSoftware/BraveP3AEnabled.yaml "BraveP3AEnabled.yaml | brave/brave-core | GitHub | github.com"
+                        children:
+                            -
+                                name: Disable Brave product analytics
+                                recommend: standard
+                                docs: |-
+                                    This script turns off Brave's Privacy-Preserving Product Analytics (P3A).
+
+                                    P3A sends Brave answers about how certain features are used, so that Brave can
+                                    estimate their overall usage [1]. Brave describes the answers as private and
+                                    non-identifying [1], but they still describe how you use the browser.
+
+                                    ### Technical details
+
+                                    The script sets the `BraveP3AEnabled` policy to `0` (false), which disables P3A [1].
+
+                                    If you do not run this script, P3A is enabled unless you turned it off in Brave's
+                                    settings [1].
+
+                                    [1]: https://github.com/brave/brave-core/blob/9de62cd696cbc6c16c1d50df38f6581388b32395/components/policy/resources/templates/policy_definitions/BraveSoftware/BraveP3AEnabled.yaml "BraveP3AEnabled.yaml | brave/brave-core | GitHub | github.com"
+                                call:
+                                    -
+                                        function: SetBravePolicyViaRegistry
+                                        parameters:
+                                            valueName: BraveP3AEnabled # Brave based on Chromium ≥ 138
+                                            dwordData: '0'
+                                    -
+                                        function: ShowBraveRestartSuggestion
+                            -
+                                name: Disable Brave usage ping
+                                recommend: standard
+                                docs: |-
+                                    This script turns off the anonymous usage ping that Brave sends to count its active
+                                    users.
+
+                                    Brave uses this ping to estimate how many people use the browser [1].
+
+                                    ### Technical details
+
+                                    The script sets the `BraveStatsPingEnabled` policy to `0` (false), which disables the
+                                    usage ping [1].
+
+                                    If you do not run this script, the usage ping is enabled unless you turned it off in
+                                    Brave's settings [1].
+
+                                    [1]: https://github.com/brave/brave-core/blob/9de62cd696cbc6c16c1d50df38f6581388b32395/components/policy/resources/templates/policy_definitions/BraveSoftware/BraveStatsPingEnabled.yaml "BraveStatsPingEnabled.yaml | brave/brave-core | GitHub | github.com"
+                                call:
+                                    -
+                                        function: SetBravePolicyViaRegistry
+                                        parameters:
+                                            valueName: BraveStatsPingEnabled # Brave based on Chromium ≥ 138
+                                            dwordData: '0'
+                                    -
+                                        function: ShowBraveRestartSuggestion
+                            -
+                                name: Disable Brave Web Discovery Project
+                                recommend: standard
+                                docs: |-
+                                    This script turns off Brave's Web Discovery feature.
+
+                                    Web Discovery is an opt-in feature that helps improve Brave's search index [1].
+
+                                    ### Technical details
+
+                                    The script sets the `BraveWebDiscoveryEnabled` policy to `0` (false), which disables
+                                    Web Discovery [1].
+
+                                    If you do not run this script, Web Discovery stays off unless you turn it on in Brave's
+                                    settings [1].
+
+                                    [1]: https://github.com/brave/brave-core/blob/9de62cd696cbc6c16c1d50df38f6581388b32395/components/policy/resources/templates/policy_definitions/BraveSoftware/BraveWebDiscoveryEnabled.yaml "BraveWebDiscoveryEnabled.yaml | brave/brave-core | GitHub | github.com"
+                                call:
+                                    -
+                                        function: SetBravePolicyViaRegistry
+                                        parameters:
+                                            valueName: BraveWebDiscoveryEnabled # Brave based on Chromium ≥ 138
+                                            dwordData: '0'
+                                    -
+                                        function: ShowBraveRestartSuggestion
+                            -
+                                name: Disable Brave Rewards
+                                recommend: strict # Removes the option to earn rewards for viewing Brave ads
+                                docs: |-
+                                    This script turns off Brave Rewards.
+
+                                    Brave Rewards lets you get paid for ads that Brave shows you and send contributions
+                                    to websites and creators [1].
+
+                                    ### Technical details
+
+                                    The script sets the `BraveRewardsDisabled` policy to `1` (true), which always disables
+                                    Brave Rewards [1].
+
+                                    If you do not run this script, Brave Rewards is enabled [1].
+
+                                    [1]: https://github.com/brave/brave-core/blob/9de62cd696cbc6c16c1d50df38f6581388b32395/components/policy/resources/templates/policy_definitions/BraveSoftware/BraveRewardsDisabled.yaml "BraveRewardsDisabled.yaml | brave/brave-core | GitHub | github.com"
+                                call:
+                                    -
+                                        function: SetBravePolicyViaRegistry
+                                        parameters:
+                                            valueName: BraveRewardsDisabled # Brave based on Chromium ≥ 105
+                                            dwordData: '1'
+                                    -
+                                        function: ShowBraveRestartSuggestion
+                            -
+                                name: Disable Brave Wallet
+                                recommend: strict # Removes the built-in crypto wallet
+                                docs: |-
+                                    This script turns off Brave Wallet, the crypto wallet built into Brave.
+
+                                    Brave Wallet manages crypto tokens and connects websites to decentralized
+                                    applications [1].
+
+                                    ### Technical details
+
+                                    The script sets the `BraveWalletDisabled` policy to `1` (true), which always disables
+                                    Brave Wallet [1].
+
+                                    If you do not run this script, Brave Wallet is enabled [1].
+
+                                    [1]: https://web.archive.org/web/20260217222618/https://github.com/brave/brave-core/blob/master/components/policy/resources/templates/policy_definitions/BraveSoftware/BraveWalletDisabled.yaml "BraveWalletDisabled.yaml | brave/brave-core | GitHub | github.com"
+                                call:
+                                    -
+                                        function: SetBravePolicyViaRegistry
+                                        parameters:
+                                            valueName: BraveWalletDisabled # Brave based on Chromium ≥ 106
+                                            dwordData: '1'
+                                    -
+                                        function: ShowBraveRestartSuggestion
+                            -
+                                name: Disable Brave VPN
+                                recommend: strict # Removes the built-in paid VPN
+                                docs: |-
+                                    This script turns off Brave VPN, the VPN service built into Brave.
+
+                                    ### Technical details
+
+                                    The script sets the `BraveVPNDisabled` policy to `1` (true), which always disables
+                                    Brave VPN [1].
+
+                                    If you do not run this script, Brave VPN is enabled [1].
+
+                                    [1]: https://github.com/brave/brave-core/blob/9de62cd696cbc6c16c1d50df38f6581388b32395/components/policy/resources/templates/policy_definitions/BraveSoftware/BraveVPNDisabled.yaml "BraveVPNDisabled.yaml | brave/brave-core | GitHub | github.com"
+                                call:
+                                    -
+                                        function: SetBravePolicyViaRegistry
+                                        parameters:
+                                            valueName: BraveVPNDisabled # Brave based on Chromium ≥ 112
+                                            dwordData: '1'
+                                    -
+                                        function: ShowBraveRestartSuggestion
+                            -
+                                name: Disable Brave Leo AI assistant
+                                recommend: strict # Removes the built-in AI chat assistant
+                                docs: |-
+                                    This script turns off AI Chat, the AI assistant built into Brave.
+
+                                    AI Chat answers questions, summarizes pages and creates content [1].
+
+                                    ### Technical details
+
+                                    The script sets the `BraveAIChatEnabled` policy to `0` (false), which always disables
+                                    AI Chat [1].
+
+                                    If you do not run this script, AI Chat is enabled [1].
+
+                                    [1]: https://github.com/brave/brave-core/blob/9de62cd696cbc6c16c1d50df38f6581388b32395/components/policy/resources/templates/policy_definitions/BraveSoftware/BraveAIChatEnabled.yaml "BraveAIChatEnabled.yaml | brave/brave-core | GitHub | github.com"
+                                call:
+                                    -
+                                        function: SetBravePolicyViaRegistry
+                                        parameters:
+                                            valueName: BraveAIChatEnabled # Brave based on Chromium ≥ 121
+                                            dwordData: '0'
+                                    -
+                                        function: ShowBraveRestartSuggestion
                     -
                         category: Configure Firefox
                         docs: |-
@@ -12609,6 +13463,46 @@ actions:
                                         dataType: REG_DWORD
                                         data: "2"
                                         deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
+                            -
+                                name: Disable automatic proxy discovery (WPAD)
+                                recommend: strict # Breaks automatic proxy setup on networks that announce their proxy through WPAD
+                                docs: |-
+                                    This script stops Windows from searching the local network for proxy settings.
+
+                                    With the Web Proxy Auto-Discovery protocol (WPAD), Windows looks for a configuration
+                                    file on the local network that tells it which proxy server to use [1]. The search
+                                    can be answered by other devices on the network. Microsoft has fixed vulnerabilities
+                                    in which an attacker answered these requests to gain higher privileges or to access
+                                    and control network traffic [2].
+
+                                    ### Technical details
+
+                                    The script sets
+                                    `HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings\WinHttp!DisableWpad`
+                                    to `1` [1]. Microsoft documents this value for Windows 10, version 1809 and later [1].
+                                    It stops WPAD detection for all proxy detection done through the Windows HTTP
+                                    Services (WinHTTP) programming interface [1].
+
+                                    Programs can still look up the name `wpad` through DNS themselves [1]. Microsoft also
+                                    recommends turning off automatic proxy detection in the Windows Settings app, because
+                                    some third-party apps and browsers rely on that setting instead [1].
+
+                                    > **Caution:** On networks that set up the proxy automatically through WPAD, such as
+                                    > some company networks, you must then configure the proxy manually [1].
+
+                                    If you do not run this script, Windows keeps searching for proxy settings on the
+                                    networks you join.
+
+                                    [1]: https://web.archive.org/web/20260217054808/https://learn.microsoft.com/en-us/troubleshoot/windows-server/networking/disable-http-proxy-auth-features "How to disable HTTP proxy features | Microsoft Learn"
+                                    [2]: https://web.archive.org/web/20260128093141/https://learn.microsoft.com/en-us/security-updates/securitybulletins/2016/ms16-077 "Microsoft Security Bulletin MS16-077 - Important | Microsoft Learn"
+                                call:
+                                    function: SetRegistryValue
+                                    parameters:
+                                        keyPath: HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings\WinHttp
+                                        valueName: DisableWpad
+                                        dataType: REG_DWORD
+                                        data: "1" # 1: WPAD detection is disabled for WinHTTP
+                                        deleteOnRevert: 'true' # Missing by default (verified on Windows 11 Pro 24H2)
                     -
                         category: Enable strong secret key requirements
                         docs: |- # refactor-with-variables: Same • Key Size Caution
@@ -14331,6 +15225,213 @@ actions:
                                     function: UninstallCapability
                                     parameters:
                                         capabilityName: WMI-SNMP-Provider.Client
+                            -
+                                name: Disable network device discovery (SSDP and UPnP)
+                                docs: |-
+                                    This script turns off the Windows services that find and announce devices on the local
+                                    network with the Simple Service Discovery Protocol (SSDP) and Universal Plug and Play
+                                    (UPnP).
+
+                                    - **SSDP Discovery** (`SSDPSRV`) finds devices and services on the network that use
+                                      SSDP, such as UPnP devices. It also announces the SSDP devices and services that run
+                                      on your computer [1].
+                                    - **UPnP Device Host** (`upnphost`) lets your computer host UPnP devices [1].
+
+                                    These services make your computer and its services visible to other devices on the
+                                    network. Microsoft's guidance for Windows Server lists both services as safe to
+                                    disable [1].
+
+                                    ### Technical details
+
+                                    Both services start manually by default [1]. The script stops them and sets them to
+                                    disabled. Reverting the script sets them back to manual start.
+
+                                    > **Caution:**
+                                    > - Your computer can no longer discover SSDP-based devices, such as UPnP devices on
+                                    >   your network [1].
+                                    > - UPnP devices that your computer hosts stop working [1].
+                                    > - Services that depend on these services can no longer start [1].
+
+                                    If you do not run this script, Windows can discover and announce devices on every
+                                    network you join.
+
+                                    [1]: https://web.archive.org/web/20251220053351/https://learn.microsoft.com/en-us/windows-server/security/windows-services/security-guidelines-for-disabling-system-services-in-windows-server "Guidance on disabling system services on Windows Server with Desktop Experience | Microsoft Learn"
+                                call:
+                                    -
+                                        function: DisableService
+                                        parameters:
+                                            serviceName: upnphost # Check: (Get-Service -Name 'upnphost').StartType
+                                            defaultStartupMode: Manual # Manual by default on Windows (verified on Windows 11 Pro 24H2)
+                                    -
+                                        function: DisableService
+                                        parameters:
+                                            serviceName: SSDPSRV # Check: (Get-Service -Name 'SSDPSRV').StartType
+                                            defaultStartupMode: Manual # Manual by default on Windows
+                            -
+                                name: Disable IPv6 transition technologies
+                                recommend: strict # Breaks Xbox party chat and some multiplayer games on Windows, and IP-HTTPS remote access
+                                docs: |-
+                                    This script turns off the IPv6 transition technologies Teredo, 6to4, ISATAP and IP-HTTPS.
+
+                                    These technologies give a computer IPv6 connectivity across networks that only support
+                                    IPv4, by wrapping IPv6 traffic inside IPv4 or HTTPS traffic, which is known as
+                                    tunneling [1].
+
+                                    Tunneling also carries traffic past the protections of your network. Teredo, for
+                                    example, is designed to make the computer reachable from the IPv6 internet through
+                                    your router's network address translation (NAT). The computer then gives up the
+                                    protection that the router's firewall provides, and services that listen on its
+                                    Teredo address can be reached from the entire IPv6 internet [2].
+
+                                    ### Technical details
+
+                                    The script configures the Group Policy settings under
+                                    **Network > TCPIP Settings > IPv6 Transition Technologies** [1]. It writes the values
+                                    that these policies use for their disabled state:
+
+                                    - `Teredo_State` is set to `Disabled`, so no Teredo interface is present [1].
+                                    - `6to4_State` is set to `Disabled`, which turns 6to4 off [1].
+                                    - `ISATAP_State` is set to `Disabled`, so no ISATAP interface is present [1].
+                                    - `IPHTTPS_ClientState` is set to `3`, the disabled state, so no IP-HTTPS interface is
+                                      present [1].
+
+                                    The first three values are stored under
+                                    `HKLM\SOFTWARE\Policies\Microsoft\Windows\TCPIP\v6Transition`, and the last one under
+                                    `HKLM\SOFTWARE\Policies\Microsoft\Windows\TCPIP\v6Transition\IPHTTPS\IPHTTPSInterface`
+                                    [1]. IPv6 connectivity that your network provides directly is not affected.
+
+                                    > **Caution:**
+                                    > - The Xbox app and games on Windows use Teredo for party chat and some multiplayer
+                                    >   games. Without it, Windows reports "Teredo is unable to qualify" [3].
+                                    > - IP-HTTPS provides connectivity to remote networks over HTTPS [1]. Remote access to
+                                    >   a company network that relies on it stops working.
+                                    > - The change takes full effect after you restart your computer.
+
+                                    If you do not run this script, Windows uses its own settings for these technologies [1].
+                                    For Teredo, the default state is "Client", in which Teredo is available whenever the
+                                    computer is not on a network with a domain controller [1].
+
+                                    [1]: https://web.archive.org/web/20251219145109/https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-admx-tcpip "ADMX_TCPIP Policy CSP | Microsoft Learn"
+                                    [2]: https://web.archive.org/web/20261008112945/https://www.rfc-editor.org/rfc/rfc4380.txt "RFC 4380: Teredo: Tunneling IPv6 over UDP through Network Address Translations (NATs) | Christian Huitema, Microsoft | rfc-editor.org"
+                                    [3]: https://web.archive.org/web/20260824143913/https://support.xbox.com/en-US/help/hardware-network/connect-network/troubleshoot-party-chat "NAT type on Windows displays \"Teredo is unable to qualify\" | Xbox Support | support.xbox.com"
+                                call:
+                                    -
+                                        function: SetRegistryValue
+                                        parameters:
+                                            keyPath: HKLM\SOFTWARE\Policies\Microsoft\Windows\TCPIP\v6Transition
+                                            valueName: Teredo_State
+                                            dataType: REG_SZ
+                                            data: Disabled # Options in tcpip.admx: Default | Disabled | Client | Enterprise Client
+                                            deleteOnRevert: 'true' # Missing by default
+                                    -
+                                        function: SetRegistryValue
+                                        parameters:
+                                            keyPath: HKLM\SOFTWARE\Policies\Microsoft\Windows\TCPIP\v6Transition
+                                            valueName: 6to4_State
+                                            dataType: REG_SZ
+                                            data: Disabled # Options in tcpip.admx: Default | Enabled | Disabled
+                                            deleteOnRevert: 'true' # Missing by default
+                                    -
+                                        function: SetRegistryValue
+                                        parameters:
+                                            keyPath: HKLM\SOFTWARE\Policies\Microsoft\Windows\TCPIP\v6Transition
+                                            valueName: ISATAP_State
+                                            dataType: REG_SZ
+                                            data: Disabled # Options in tcpip.admx: Default | Enabled | Disabled
+                                            deleteOnRevert: 'true' # Missing by default
+                                    -
+                                        function: SetRegistryValue
+                                        parameters:
+                                            keyPath: HKLM\SOFTWARE\Policies\Microsoft\Windows\TCPIP\v6Transition\IPHTTPS\IPHTTPSInterface
+                                            valueName: IPHTTPS_ClientState
+                                            dataType: REG_DWORD
+                                            data: "3" # Options in tcpip.admx: 0 (Default state) | 2 (Enabled state) | 3 (Disabled state)
+                                            deleteOnRevert: 'true' # Missing by default
+                                    -
+                                        function: ShowComputerRestartSuggestion
+                    -
+                        name: Disable IP source routing
+                        recommend: standard
+                        docs: |-
+                            This script makes Windows refuse network packets that choose their own route through the
+                            network.
+
+                            IP source routing lets the sender of a packet decide which route the packet takes through
+                            the network [1]. Turning it off protects against spoofed network traffic [2]. The DISA
+                            security guidelines (STIG) require turning it off completely [2] [3], and Microsoft's security
+                            baseline recommends the same for high-security environments [1].
+
+                            ### Technical details
+
+                            The script sets `DisableIPSourceRouting` to `2`, which means "Highest protection, source
+                            routing is completely disabled" [1] [2] [3]:
+
+                            - `HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters!DisableIPSourceRouting` for
+                              IPv4 [1] [2]
+                            - `HKLM\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters!DisableIPSourceRouting` for
+                              IPv6 [1] [3]
+
+                            If you do not run this script, Windows keeps its default handling of source-routed packets.
+
+                            [1]: https://web.archive.org/web/20261001161618/https://learn.microsoft.com/en-us/azure/governance/policy/samples/guest-configuration-baseline-windows "Windows security baseline | Azure Policy | Microsoft Learn"
+                            [2]: https://web.archive.org/web/20241125062609/https://stigviewer.com/stig/microsoft_windows_10/2024-02-21/finding/V-220796 "The system must be configured to prevent IP source routing. | Microsoft Windows 10 STIG | stigviewer.com"
+                            [3]: https://web.archive.org/web/20241125062607/https://stigviewer.com/stig/microsoft_windows_10/2024-02-21/finding/V-220795 "IPv6 source routing must be configured to highest protection. | Microsoft Windows 10 STIG | stigviewer.com"
+                        call:
+                            -
+                                function: SetRegistryValue
+                                parameters:
+                                    keyPath: HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters
+                                    valueName: DisableIPSourceRouting
+                                    dataType: REG_DWORD
+                                    data: "2" # 2: Highest protection, source routing is completely disabled
+                                    deleteOnRevert: 'true' # Missing by default (verified on Windows 11 Pro 24H2)
+                            -
+                                function: SetRegistryValue
+                                parameters:
+                                    keyPath: HKLM\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters
+                                    valueName: DisableIPSourceRouting
+                                    dataType: REG_DWORD
+                                    data: "2" # 2: Highest protection, source routing is completely disabled
+                                    deleteOnRevert: 'true' # Missing by default (verified on Windows 11 Pro 24H2)
+                            -
+                                function: ShowComputerRestartSuggestion
+                    -
+                        name: Disable ICMP redirects
+                        recommend: standard
+                        docs: |-
+                            This script stops Windows from changing its network routes when it receives ICMP redirect
+                            messages.
+
+                            ICMP redirect messages make Windows add routes to specific destinations, which override
+                            other routes, such as those generated by the OSPF routing protocol [1]. By default, Windows updates its routes
+                            in response to these messages [2]. Allowing this can lead to traffic not being routed
+                            properly, so security guidelines require turning it off [1] [3].
+
+                            ### Technical details
+
+                            The script sets `HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters!EnableICMPRedirect`
+                            to `0` [1] [3]. This is the setting behind the **MSS: (EnableICMPRedirect) Allow ICMP
+                            redirects to override OSPF generated routes** policy, and it applies to IPv4 [1].
+
+                            Reverting the script sets the value back to `1`, the default, which lets ICMP redirects
+                            update the routes again [2].
+
+                            If you do not run this script, Windows keeps following ICMP redirect messages [2].
+
+                            [1]: https://web.archive.org/web/20261001161618/https://learn.microsoft.com/en-us/azure/governance/policy/samples/guest-configuration-baseline-windows "Windows security baseline | Azure Policy | Microsoft Learn"
+                            [2]: https://web.archive.org/web/20261109164448/https://learn.microsoft.com/en-us/windows-hardware/customize/desktop/unattend/microsoft-windows-tcpip-icmpredirectsenabled "IcmpRedirectsEnabled | Unattended Windows Setup Reference | Microsoft Learn"
+                            [3]: https://web.archive.org/web/20241125062546/https://stigviewer.com/stig/microsoft_windows_10/2024-02-21/finding/V-220797 "The system must be configured to prevent ICMP redirects from overriding OSPF generated routes. | Microsoft Windows 10 STIG | stigviewer.com"
+                        call:
+                            -
+                                function: SetRegistryValue
+                                parameters:
+                                    keyPath: HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters
+                                    valueName: EnableICMPRedirect
+                                    dataType: REG_DWORD
+                                    data: "0" # 0: Ignore ICMP redirects, 1: Follow them (default)
+                                    dataOnRevert: '1' # Default value: `1` (present on Windows 11 Pro 24H2)
+                            -
+                                function: ShowComputerRestartSuggestion
             -
                 category: Disable clipboard data collection
                 docs: |-
@@ -14717,6 +15818,390 @@ actions:
                             dataType: REG_DWORD
                             data: "0"
                             deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
+            -
+                name: Maximize User Account Control notification level
+                recommend: strict # Also asks for confirmation when you change Windows settings
+                docs: |-
+                    This script makes User Account Control (UAC) ask for confirmation every time a program or setting
+                    needs administrator rights.
+
+                    UAC shows a prompt before something can make changes that need administrator rights. By default,
+                    administrators are only asked for programs that are not part of Windows ("Prompt for consent for
+                    non-Windows binaries") [1]. Changes made by Windows components, such as many Windows settings,
+                    get administrator rights without a prompt [1] [2].
+
+                    With this script, every request for administrator rights shows a prompt on the secure desktop,
+                    where you choose **Permit** or **Deny** [1]. This matches the highest level of the UAC slider,
+                    **Always notify**, which notifies you when programs try to make changes and when you change Windows
+                    settings, and freezes other tasks until you respond [2].
+
+                    ### Technical details
+
+                    The script sets these values under `HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System`
+                    [1]:
+
+                    - `ConsentPromptBehaviorAdmin` to `2`, "Prompt for consent on the secure desktop". The default is
+                      `5`, "Prompt for consent for non-Windows binaries" [1].
+                    - `PromptOnSecureDesktop` to `1`, so prompts are shown on the secure desktop. This is also the
+                      default, and the script makes sure that it is kept [1].
+
+                    Reverting the script restores both default values [1].
+
+                    > **Caution:** You see more prompts, including when you change Windows settings that need
+                    > administrator rights.
+
+                    If you do not run this script, Windows components can get administrator rights without asking you.
+
+                    [1]: https://web.archive.org/web/20261028115150/https://learn.microsoft.com/en-us/windows/security/application-security/application-control/user-account-control/settings-and-configuration "User Account Control settings and configuration | Microsoft Learn"
+                    [2]: https://web.archive.org/web/20260925102010/https://learn.microsoft.com/en-us/windows/security/application-security/application-control/user-account-control/architecture "How User Account Control works | Microsoft Learn"
+                call:
+                    -
+                        function: SetRegistryValue
+                        parameters:
+                            keyPath: HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+                            valueName: ConsentPromptBehaviorAdmin
+                            dataType: REG_DWORD
+                            data: "2" # 2: Prompt for consent on the secure desktop, 5: Prompt for consent for non-Windows binaries (default)
+                            dataOnRevert: '5' # Default value: `5` on Windows 10 and Windows 11
+                    -
+                        function: SetRegistryValue
+                        parameters:
+                            keyPath: HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+                            valueName: PromptOnSecureDesktop
+                            dataType: REG_DWORD
+                            data: "1" # 1: Prompts are shown on the secure desktop (default), 0: On the user's desktop
+                            dataOnRevert: '1' # Default value: `1` on Windows 10 and Windows 11
+            -
+                name: Disable account details on sign-in screen
+                recommend: standard
+                docs: |-
+                    This script prevents the sign-in screen from showing account details such as your email address.
+
+                    Windows lets users choose to show account details, such as their email address or user name, on
+                    the sign-in screen [1]. Anyone who can see the screen, for example while the computer is locked, can
+                    then read them.
+
+                    ### Technical details
+
+                    The script sets
+                    `HKLM\SOFTWARE\Policies\Microsoft\Windows\System!BlockUserFromShowingAccountDetailsOnSignin` to
+                    `1`, which enables the **Block user from showing account details on sign-in** policy [1]. With this
+                    policy enabled, users cannot choose to show account details on the sign-in screen [1].
+
+                    If you do not run this script, users may choose to show their account details on the sign-in
+                    screen [1].
+
+                    [1]: https://web.archive.org/web/20251130145840/https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-admx-logon "ADMX_Logon Policy CSP | Microsoft Learn"
+                call:
+                    function: SetRegistryValue
+                    parameters:
+                        keyPath: HKLM\SOFTWARE\Policies\Microsoft\Windows\System
+                        valueName: BlockUserFromShowingAccountDetailsOnSignin
+                        dataType: REG_DWORD
+                        data: "1" # 1: Enabled, 0: Disabled
+                        deleteOnRevert: 'true' # Missing by default
+            -
+                name: Disable display of last signed-in user name
+                docs: |-
+                    This script hides the name of the last person who signed in from the Windows sign-in screen.
+
+                    By default, the sign-in screen shows the full name and the sign-in tile of the last user who
+                    signed in [1]. Anyone who looks at the screen can then see who uses the computer. On devices with
+                    sensitive data, showing user names may go against security requirements [1].
+
+                    ### Technical details
+
+                    The script sets `HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System!DontDisplayLastUserName`
+                    to `1` [3]. This is the **Interactive logon: Don't display last signed-in** security policy, where
+                    `0` shows the user name and is the default, and `1` hides it [2]. The change takes effect without a
+                    restart [1].
+
+                    > **Caution:** The sign-in tiles of users are no longer shown, so you must type your user name as
+                    > well as your password every time you sign in [1].
+
+                    If you do not run this script, the sign-in screen keeps showing the name of the last user who
+                    signed in.
+
+                    [1]: https://web.archive.org/web/20261009022706/https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/security-policy-settings/interactive-logon-do-not-display-last-user-name "Interactive logon Don't display last user name | Microsoft Learn"
+                    [2]: https://web.archive.org/web/20260925150540/https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-localpoliciessecurityoptions "LocalPoliciesSecurityOptions Policy CSP | Microsoft Learn"
+                    [3]: https://web.archive.org/web/20261001161618/https://learn.microsoft.com/en-us/azure/governance/policy/samples/guest-configuration-baseline-windows "Windows security baseline | Azure Policy | Microsoft Learn"
+                call:
+                    function: SetRegistryValue
+                    parameters:
+                        keyPath: HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+                        valueName: DontDisplayLastUserName
+                        dataType: REG_DWORD
+                        data: "1" # 1: User name hidden, 0: User name shown (default)
+                        dataOnRevert: '0' # Default value: `0` (present on Windows 11 Pro 24H2)
+            -
+                name: Disable password reveal button
+                recommend: strict # You can no longer check a typed password before submitting it
+                docs: |-
+                    This script removes the button that shows the password you typed in Windows password boxes.
+
+                    By default, after you type a password, Windows shows a password reveal button [1]. Clicking it shows
+                    the password in plain text [1], so anyone who can see or use the screen at that moment can read it.
+
+                    ### Technical details
+
+                    The script sets `HKLM\SOFTWARE\Policies\Microsoft\Windows\CredUI!DisablePasswordReveal` to `1`,
+                    which enables the **Do not display the password reveal button** policy [1]. The policy applies to all
+                    Windows components and apps that use the standard Windows password controls [1].
+
+                    > **Caution:** You can no longer check what you typed before you submit a password.
+
+                    If you do not run this script, the password reveal button is shown after you type a password [1].
+
+                    [1]: https://web.archive.org/web/20261029131827/https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-credentialsui "CredentialsUI Policy CSP | Microsoft Learn"
+                call:
+                    function: SetRegistryValue
+                    parameters:
+                        keyPath: HKLM\SOFTWARE\Policies\Microsoft\Windows\CredUI
+                        valueName: DisablePasswordReveal
+                        dataType: REG_DWORD
+                        data: "1" # 1: Button hidden, 0: Button shown
+                        deleteOnRevert: 'true' # Missing by default
+            -
+                name: Enable potentially unwanted app blocking in Defender
+                recommend: strict # Defender may block and quarantine bundled installers and adware-like tools
+                docs: |-
+                    This script makes Microsoft Defender Antivirus block potentially unwanted applications (PUA).
+
+                    Potentially unwanted applications are not viruses, but they can slow your computer down, show
+                    unexpected ads, or install other software that you did not want [1]. Examples are software that
+                    shows ads, installers that bundle other software, and software that tries to evade security
+                    products [1].
+
+                    With PUA blocking on, Defender blocks detected PUA files and any attempt to download, move, run or
+                    install them, and moves them to quarantine [1].
+
+                    ### Technical details
+
+                    The script sets `HKLM\SOFTWARE\Policies\Microsoft\Windows Defender!PUAProtection` to `1`, which is the
+                    block mode of the **Configure detection for potentially unwanted applications** policy [1]. `0`
+                    turns the protection off, and `2` is audit mode, which only records detections [1].
+
+                    On devices that are not managed with Microsoft Defender for Endpoint, Defender uses audit mode by
+                    default with current security intelligence updates, so PUA are detected but not blocked [1].
+
+                    > **Caution:** Software that you install on purpose, such as free programs that bundle offers for
+                    > other software, may be blocked. Blocked files are listed in quarantine in the Windows Security
+                    > app [1].
+
+                    If you do not run this script, Defender only records PUA without blocking them, unless PUA
+                    blocking was turned on in another way.
+
+                    [1]: https://web.archive.org/web/20261004215801/https://learn.microsoft.com/en-us/defender-endpoint/detect-block-potentially-unwanted-apps-microsoft-defender-antivirus "Detect and block potentially unwanted applications with Microsoft Defender Antivirus | Microsoft Learn"
+                call:
+                    function: SetRegistryValue
+                    parameters:
+                        keyPath: HKLM\SOFTWARE\Policies\Microsoft\Windows Defender
+                        valueName: PUAProtection
+                        dataType: REG_DWORD
+                        data: "1" # 0: Disabled, 1: Block, 2: Audit mode
+                        deleteOnRevert: 'true' # Missing by default
+            -
+                name: Enable page file clearing at shutdown
+                docs: |-
+                    This script makes Windows erase the page file every time the computer shuts down.
+
+                    Windows writes data from memory to the paging file on disk when it is not actively used [1]. This
+                    data can include sensitive information. An attacker with physical access to a computer that is
+                    shut down can move its disk to another computer and read the paging file [1].
+
+                    ### Technical details
+
+                    The script sets
+                    `HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management!ClearPageFileAtShutdown`
+                    to `1` [2]. This is the **Shutdown: Clear virtual memory pagefile** security policy [1] [2]. It also
+                    makes Windows clear the hibernation file when hibernation is disabled on a portable device [1].
+
+                    > **Caution:**
+                    > - Shutting down takes longer, because the page file is overwritten. Depending on its size, this
+                    >   can take several minutes [1].
+                    > - The page file is only cleared when the computer shuts down normally. Cutting the power skips
+                    >   it [1].
+
+                    If you do not run this script, the page file keeps its contents after the computer shuts down.
+
+                    [1]: https://web.archive.org/web/20260312141700/https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/security-policy-settings/shutdown-clear-virtual-memory-pagefile "Shutdown Clear virtual memory pagefile | Microsoft Learn"
+                    [2]: https://web.archive.org/web/20261001161618/https://learn.microsoft.com/en-us/azure/governance/policy/samples/guest-configuration-baseline-windows "Windows security baseline | Azure Policy | Microsoft Learn"
+                call:
+                    function: SetRegistryValue
+                    parameters:
+                        keyPath: HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management
+                        valueName: ClearPageFileAtShutdown
+                        dataType: REG_DWORD
+                        data: "1" # 1: Clear at shutdown, 0: Keep (default)
+                        dataOnRevert: '0' # Default value: `0` (present on Windows 11 Pro 24H2)
+            -
+                category: Improve Microsoft Office security
+                docs: |-
+                    This category contains scripts that protect you from malicious macros in Microsoft Office files.
+
+                    Macros are small programs, written in Visual Basic for Applications (VBA), that run inside Office
+                    files. Attackers commonly use them to install malware and ransomware [1].
+
+                    The scripts configure Office Group Policy settings for the current user, under
+                    `HKCU\Software\Policies\Microsoft\Office\16.0`, which Microsoft 365 Apps use [1] [2].
+
+                    > **Note:** Microsoft states that these policies are available for Microsoft 365 Apps for
+                    > enterprise, and not for Microsoft 365 Apps for business [1]. Other Office editions may ignore
+                    > them.
+
+                    [1]: https://web.archive.org/web/20261018210340/https://learn.microsoft.com/en-us/microsoft-365-apps/security/internet-macros-blocked "Macros from the internet are blocked by default in Office | Microsoft Learn"
+                    [2]: https://web.archive.org/web/20241125193009/https://www.stigviewer.com/stig/microsoft_office_365_proplus/2024-02-21/finding/V-223336 "Macros must be blocked from running in Excel files from the Internet. | Microsoft Office 365 ProPlus STIG | stigviewer.com"
+                children:
+                    -
+                        name: Disable macros in Office files from the internet
+                        recommend: standard # Matches the current Microsoft 365 default behavior
+                        docs: |-
+                            This script blocks macros in Office files that come from the internet.
+
+                            Windows marks files that you download or receive as email attachments as coming from the
+                            internet, which is known as the Mark of the Web [1]. Files with malicious macros are a common
+                            way for attackers to get into a computer [1].
+
+                            Microsoft changed the default behavior of current Office versions to block macros in these
+                            files [1]. This script turns on the **Block macros from running in Office files from the
+                            Internet** policy, which Microsoft recommends as part of its security baseline [1]. With the
+                            policy enabled, macros in files from the internet are blocked even if the Trust Center is set to
+                            enable all macros [2].
+
+                            ### Technical details
+
+                            The script sets `blockcontentexecutionfrominternet` to `1` under
+                            `HKCU\Software\Policies\Microsoft\Office\16.0\<app>\security` for Access, Excel, PowerPoint,
+                            Visio and Word [1] [2] [3] [4] [5] [6].
+
+                            > **Caution:** Macros in files that you download or receive by email no longer run. To use a
+                            > file you trust, save it to a trusted location, or select **Unblock** in the file's properties
+                            > [1].
+
+                            If you do not run this script, current Microsoft 365 versions still block these macros by
+                            default, but Office versions without this default follow the macro settings in the Trust
+                            Center [1].
+
+                            [1]: https://web.archive.org/web/20261018210340/https://learn.microsoft.com/en-us/microsoft-365-apps/security/internet-macros-blocked "Macros from the internet are blocked by default in Office | Microsoft Learn"
+                            [2]: https://web.archive.org/web/20241125193007/https://www.stigviewer.com/stig/microsoft_office_365_proplus/2024-02-21/finding/V-223415 "In Word, macros must be blocked from running, even if Enable all macros is selected in the Macro Settings section of the Trust Center. | Microsoft Office 365 ProPlus STIG | stigviewer.com"
+                            [3]: https://web.archive.org/web/20241125193009/https://www.stigviewer.com/stig/microsoft_office_365_proplus/2024-02-21/finding/V-223336 "Macros must be blocked from running in Excel files from the Internet. | Microsoft Office 365 ProPlus STIG | stigviewer.com"
+                            [4]: https://web.archive.org/web/20241125193008/https://www.stigviewer.com/stig/microsoft_office_365_proplus/2024-02-21/finding/V-223383 "Macros from the Internet must be blocked from running in PowerPoint. | Microsoft Office 365 ProPlus STIG | stigviewer.com"
+                            [5]: https://web.archive.org/web/20241125193003/https://www.stigviewer.com/stig/microsoft_office_365_proplus/2024-02-21/finding/V-223399 "Macros must be blocked from running in Visio files from the Internet. | Microsoft Office 365 ProPlus STIG | stigviewer.com"
+                            [6]: https://web.archive.org/web/20241125193009/https://www.stigviewer.com/stig/microsoft_office_365_proplus/2024-02-21/finding/V-223280 "Macros must be blocked from running in Access files from the Internet. | Microsoft Office 365 ProPlus STIG | stigviewer.com"
+                        call:
+                            -
+                                function: SetRegistryValue
+                                parameters:
+                                    keyPath: HKCU\Software\Policies\Microsoft\Office\16.0\access\security
+                                    valueName: blockcontentexecutionfrominternet
+                                    dataType: REG_DWORD
+                                    data: "1"
+                                    deleteOnRevert: 'true' # Missing by default
+                            -
+                                function: SetRegistryValue
+                                parameters:
+                                    keyPath: HKCU\Software\Policies\Microsoft\Office\16.0\excel\security
+                                    valueName: blockcontentexecutionfrominternet
+                                    dataType: REG_DWORD
+                                    data: "1"
+                                    deleteOnRevert: 'true' # Missing by default
+                            -
+                                function: SetRegistryValue
+                                parameters:
+                                    keyPath: HKCU\Software\Policies\Microsoft\Office\16.0\powerpoint\security
+                                    valueName: blockcontentexecutionfrominternet
+                                    dataType: REG_DWORD
+                                    data: "1"
+                                    deleteOnRevert: 'true' # Missing by default
+                            -
+                                function: SetRegistryValue
+                                parameters:
+                                    keyPath: HKCU\Software\Policies\Microsoft\Office\16.0\visio\security
+                                    valueName: blockcontentexecutionfrominternet
+                                    dataType: REG_DWORD
+                                    data: "1"
+                                    deleteOnRevert: 'true' # Missing by default
+                            -
+                                function: SetRegistryValue
+                                parameters:
+                                    keyPath: HKCU\Software\Policies\Microsoft\Office\16.0\word\security
+                                    valueName: blockcontentexecutionfrominternet
+                                    dataType: REG_DWORD
+                                    data: "1"
+                                    deleteOnRevert: 'true' # Missing by default
+                    -
+                        name: Disable unsigned Office macros
+                        docs: |-
+                            This script lets Office apps run only macros that are digitally signed.
+
+                            By default, Office disables macros and shows a message bar that lets you turn them on with
+                            **Enable Content** [1]. Attackers try to lure users into selecting this button so that a
+                            malicious macro runs [1].
+
+                            This script sets the **VBA Macro Notification Settings** policy to **Disable all except
+                            digitally signed macros** [1] [2]. Office then disables unsigned macros without asking, and
+                            only offers to run macros that are digitally signed [2]. Microsoft recommends this setting for
+                            users who need macros [1].
+
+                            ### Technical details
+
+                            The script sets `vbawarnings` to `3`, "Disable all except digitally signed macros", under
+                            `HKCU\Software\Policies\Microsoft\Office\16.0\<app>\security` for Access, Excel, PowerPoint,
+                            Visio and Word [2] [3] [4] [5] [6].
+
+                            > **Caution:**
+                            > - Your own macros, and macros from others, stop working unless they are digitally signed.
+                            > - You can no longer open Access databases that are not signed [2].
+
+                            If you do not run this script, users can turn on unsigned macros from the message bar [1].
+
+                            [1]: https://web.archive.org/web/20261018210340/https://learn.microsoft.com/en-us/microsoft-365-apps/security/internet-macros-blocked "Macros from the internet are blocked by default in Office | Microsoft Learn"
+                            [2]: https://web.archive.org/web/20241125193005/https://www.stigviewer.com/stig/microsoft_office_365_proplus/2024-02-21/finding/V-223282 "VBA macros not digitally signed must be blocked in Access. | Microsoft Office 365 ProPlus STIG | stigviewer.com"
+                            [3]: https://web.archive.org/web/20241125193010/https://www.stigviewer.com/stig/microsoft_office_365_proplus/2024-02-21/finding/V-223311 "VBA Macros not digitally signed must be blocked in Excel. | Microsoft Office 365 ProPlus STIG | stigviewer.com"
+                            [4]: https://web.archive.org/web/20241125192959/https://www.stigviewer.com/stig/microsoft_office_365_proplus/2024-02-21/finding/V-223377 "VBA Macros not digitally signed must be blocked in PowerPoint. | Microsoft Office 365 ProPlus STIG | stigviewer.com"
+                            [5]: https://web.archive.org/web/20241125193005/https://www.stigviewer.com/stig/microsoft_office_365_proplus/2024-02-21/finding/V-223393 "VBA Macros not digitally signed must be blocked in Visio. | Microsoft Office 365 ProPlus STIG | stigviewer.com"
+                            [6]: https://web.archive.org/web/20241125193000/https://www.stigviewer.com/stig/microsoft_office_365_proplus/2024-02-21/finding/V-223417 "VBA Macros not digitally signed must be blocked in Word. | Microsoft Office 365 ProPlus STIG | stigviewer.com"
+                        call:
+                            -
+                                function: SetRegistryValue
+                                parameters:
+                                    keyPath: HKCU\Software\Policies\Microsoft\Office\16.0\access\security
+                                    valueName: vbawarnings
+                                    dataType: REG_DWORD
+                                    data: "3" # 3: Disable all except digitally signed macros
+                                    deleteOnRevert: 'true' # Missing by default
+                            -
+                                function: SetRegistryValue
+                                parameters:
+                                    keyPath: HKCU\Software\Policies\Microsoft\Office\16.0\excel\security
+                                    valueName: vbawarnings
+                                    dataType: REG_DWORD
+                                    data: "3" # 3: Disable all except digitally signed macros
+                                    deleteOnRevert: 'true' # Missing by default
+                            -
+                                function: SetRegistryValue
+                                parameters:
+                                    keyPath: HKCU\Software\Policies\Microsoft\Office\16.0\powerpoint\security
+                                    valueName: vbawarnings
+                                    dataType: REG_DWORD
+                                    data: "3" # 3: Disable all except digitally signed macros
+                                    deleteOnRevert: 'true' # Missing by default
+                            -
+                                function: SetRegistryValue
+                                parameters:
+                                    keyPath: HKCU\Software\Policies\Microsoft\Office\16.0\visio\security
+                                    valueName: vbawarnings
+                                    dataType: REG_DWORD
+                                    data: "3" # 3: Disable all except digitally signed macros
+                                    deleteOnRevert: 'true' # Missing by default
+                            -
+                                function: SetRegistryValue
+                                parameters:
+                                    keyPath: HKCU\Software\Policies\Microsoft\Office\16.0\word\security
+                                    valueName: vbawarnings
+                                    dataType: REG_DWORD
+                                    data: "3" # 3: Disable all except digitally signed macros
+                                    deleteOnRevert: 'true' # Missing by default
     -
         category: Block tracking hosts
         docs: |-
@@ -42040,6 +43525,125 @@ functions:
                 parameters:
                     message: For the changes to fully take effect, please restart Google Chrome.
                     showOnRevert: 'true'
+    -
+        name: SetBravePolicyViaRegistry
+        parameters:
+            - name: valueName
+            - name: dwordData
+        docs: |-
+            This function sets a specified Brave policy value to given REG_DWORD data.
+
+            Brave reads its policies from the Windows Registry at `HKLM\SOFTWARE\Policies\BraveSoftware\Brave` [1] [2].
+            Brave uses this path instead of `HKLM\SOFTWARE\Policies\BraveSoftware\Brave-Browser` [2].
+            When a policy is set, users cannot change or override that setting in the browser [3].
+
+            By default, no policies are configured under this registry path.
+
+            [1]: https://web.archive.org/web/20250428052158/https://support.brave.com/hc/en-us/articles/360039248271-Group-Policy "Group Policy | Brave Help Center | support.brave.com"
+            [2]: https://github.com/brave/brave-core/blob/9de62cd696cbc6c16c1d50df38f6581388b32395/chromium_src/chrome/install_static/user_data_dir.cc "brave-core/chromium_src/chrome/install_static/user_data_dir.cc | brave/brave-core | GitHub | github.com"
+            [3]: https://github.com/brave/brave-core/blob/9de62cd696cbc6c16c1d50df38f6581388b32395/components/policy/resources/templates/policy_definitions/BraveSoftware/BraveP3AEnabled.yaml "BraveP3AEnabled.yaml | brave/brave-core | GitHub | github.com"
+        call:
+            -
+                function: Comment
+                parameters:
+                    codeComment: Configure "{{ $valueName }}" Brave policy
+                    revertCodeComment: Restore "{{ $valueName }}" Brave policy
+            -
+                function: SetRegistryValue
+                parameters:
+                    keyPath: HKLM\SOFTWARE\Policies\BraveSoftware\Brave
+                    valueName: "{{ $valueName }}"
+                    dataType: REG_DWORD
+                    data: "{{ $dwordData }}"
+                    deleteOnRevert: 'true' # Missing by default
+    -
+        name: ShowBraveRestartSuggestion
+        docs: |-
+            This function alerts users to restart Brave to activate changes.
+
+            Brave's own policies are not refreshed while the browser is running (`dynamic_refresh: false`), so they
+            take effect after the browser is restarted [1].
+
+            [1]: https://github.com/brave/brave-core/blob/9de62cd696cbc6c16c1d50df38f6581388b32395/components/policy/resources/templates/policy_definitions/BraveSoftware/BraveP3AEnabled.yaml "BraveP3AEnabled.yaml | brave/brave-core | GitHub | github.com"
+        call:
+            -
+                function: Comment
+                parameters:
+                    codeComment: Suggest restarting Brave for changes to take effect
+                    revertCodeComment: Suggest restarting Brave for changes to take effect
+            -
+                function: ShowMessage
+                parameters:
+                    message: For the changes to fully take effect, please restart Brave.
+                    showOnRevert: 'true'
+    -
+        name: SetMachineEnvironmentVariable
+        parameters:
+            - name: variableName    # Name of the environment variable, such as `NEXT_TELEMETRY_DISABLED`.
+            - name: value           # Value to set when the variable does not exist for all users yet.
+        docs: |-
+            This function sets an environment variable for all users of the computer, without overwriting a value
+            that already exists.
+
+            It uses `[Environment]::SetEnvironmentVariable` with the `Machine` target, which stores the variable in
+            the registry for the whole computer and notifies other applications with a `WM_SETTINGCHANGE`
+            message [1]. File Explorer copies the variable, and programs started from it afterwards inherit it [1].
+            Programs that are already running keep their old environment.
+
+            - **Apply:** If the variable already has a value for all users, it is left unchanged, so a choice that
+              was made before is kept. Otherwise, it is set to the given value.
+            - **Revert:** The variable is deleted only if it still has the value that this function sets. Passing
+              `$null` as the value deletes the variable [1].
+
+            > 💡 Prefer this function over `setx`, whose revert can only set another value instead of restoring the
+            > previous state.
+
+            [1]: https://web.archive.org/web/20251104130323/https://learn.microsoft.com/en-us/dotnet/api/system.environment.setenvironmentvariable?view=net-9.0 "Environment.SetEnvironmentVariable Method | Microsoft Learn"
+        call:
+            -
+                function: Comment
+                parameters:
+                    codeComment: Set the environment variable "{{ $variableName }}" for all users
+                    revertCodeComment: Remove the environment variable "{{ $variableName }}" if it still has the value set by this script
+            -
+                function: RunPowerShell
+                parameters:
+                    code: |-
+                        $variableName = '{{ $variableName }}'
+                        $desiredValue = '{{ $value }}'
+                        $currentValue = [Environment]::GetEnvironmentVariable($variableName, 'Machine')
+                        if ($currentValue -ceq $desiredValue) {
+                            Write-Host "Skipping, `"$variableName`" is already set to `"$desiredValue`" for all users."
+                            exit 0
+                        }
+                        if ($currentValue) {
+                            Write-Host "Skipping, `"$variableName`" is already set to `"$currentValue`" for all users, keeping it unchanged."
+                            exit 0
+                        }
+                        try {
+                            [Environment]::SetEnvironmentVariable($variableName, $desiredValue, 'Machine')
+                            Write-Host "Successfully set `"$variableName`" to `"$desiredValue`" for all users. Restart open terminals and editors to use it."
+                        } catch {
+                            Write-Error "Failed to set `"$variableName`": $($_.Exception.Message)"
+                        }
+                    revertCode: |-
+                        $variableName = '{{ $variableName }}'
+                        $expectedValue = '{{ $value }}'
+                        $currentValue = [Environment]::GetEnvironmentVariable($variableName, 'Machine')
+                        if (-Not $currentValue) {
+                            Write-Host "Skipping, `"$variableName`" is not set for all users."
+                            exit 0
+                        }
+                        if ($currentValue -cne $expectedValue) {
+                            Write-Host "Skipping, `"$variableName`" is set to `"$currentValue`", not to the value this script sets, keeping it unchanged."
+                            exit 0
+                        }
+                        try {
+                            [Environment]::SetEnvironmentVariable($variableName, $null, 'Machine')
+                            Write-Host "Successfully removed `"$variableName`" for all users."
+                        } catch {
+                            Write-Error "Failed to remove `"$variableName`": $($_.Exception.Message)"
+                        }
     -
         name: SetEdgePolicyViaRegistry
         parameters:

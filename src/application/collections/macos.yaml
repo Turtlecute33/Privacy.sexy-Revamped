@@ -43,6 +43,347 @@ actions:
                     -
                         name: Clear zsh history
                         code: rm -f ~/.zsh_history
+                    -
+                        name: Clear zsh session history
+                        docs: |-
+                            This script deletes the per-window command history that Terminal keeps for zsh in `~/.zsh_sessions`.
+
+                            When you use zsh in Terminal, macOS loads `/etc/zshrc_Apple_Terminal` [1] [2].
+                            That file saves the state of each Terminal window, including a separate copy of the commands typed in it,
+                            so that Terminal can restore them when you reopen the window [2].
+                            The files are kept in `~/.zsh_sessions`, named after each Terminal session [2].
+                            *Clear zsh history* only removes `~/.zsh_history`, so without this script the commands you typed stay
+                            readable in these per-window copies.
+
+                            > **Caution:** Terminal windows that are open while this script runs write their history again when they close.
+                            > Close other Terminal windows first, or run this script again afterwards.
+
+                            ### Technical details
+
+                            This script empties `~/.zsh_sessions` but keeps the directory, which the same startup file creates again
+                            anyway [2]. That file already deletes session files older than two weeks [2], so this mainly removes recent
+                            history.
+                            A directory set through `ZDOTDIR` is not cleared, because the script cannot see your shell configuration.
+
+                            [1]: https://web.archive.org/web/20241214075352/https://github.com/apple-oss-distributions/zsh/blob/main/zshrc "zsh/zshrc at main · apple-oss-distributions/zsh | github.com"
+                            [2]: https://github.com/yoro-gh/default-dotfiles/blob/main/macOS/etc/zshrc_Apple_Terminal "default-dotfiles/macOS/etc/zshrc_Apple_Terminal at main · yoro-gh/default-dotfiles | github.com"
+                        call:
+                            function: ClearDirectoryContents
+                            parameters:
+                                directoryGlob: $HOME/.zsh_sessions
+                                # grantPermissions: 'false' # Home directory does not require `sudo` access.
+            -
+                category: Clear command-line tool history
+                docs: |-
+                    These scripts delete the history files that command-line tools keep in your home folder.
+
+                    Interactive tools such as language shells, database clients and pagers save what you typed so you can recall it
+                    in a later session. These files can hold passwords typed into SQL statements, connection details, file paths and
+                    search terms, and they stay on disk until you remove them.
+
+                    Each tool starts a new, empty history file the next time you use it.
+                    To stop a tool from saving its history in the first place, see *Disable command-line tool history* under
+                    *Configure programs*.
+                children:
+                    -
+                        name: Clear Python history
+                        docs: |-
+                            This script deletes `~/.python_history`, the file in which the interactive Python shell saves the lines you typed [1].
+
+                            Python writes this file by default whenever you use its interactive prompt [1].
+
+                            [1]: https://web.archive.org/web/20261108073117/https://docs.python.org/3/library/site.html "site - Site-specific configuration hook | Python documentation | docs.python.org"
+                        call:
+                            function: DeleteFiles
+                            parameters:
+                                fileGlob: $HOME/.python_history
+                    -
+                        name: Clear Vim history
+                        docs: |-
+                            This script deletes `~/.viminfo`, the file in which Vim remembers information between sessions [1].
+
+                            Vim stores the following in it [1]:
+
+                            - The command-line history, the search history and the input-line history.
+                            - The contents of registers, which include text you copied or deleted.
+                            - Marks and the last cursor position in files you edited, which reveal the files you opened.
+                            - The buffer list.
+
+                            > **Caution:** Besides the history, Vim forgets your registers, marks and the positions it would reopen
+                            > files at.
+
+                            [1]: https://web.archive.org/web/20261027145629/https://vimhelp.org/starting.txt.html "Vim: starting.txt | vimhelp.org"
+                        call:
+                            function: DeleteFiles
+                            parameters:
+                                fileGlob: $HOME/.viminfo
+                    -
+                        name: Clear less history
+                        docs: |-
+                            This script deletes the history file of `less`, the program that shows `man` pages and other long text one
+                            screen at a time.
+
+                            `less` remembers the search terms and shell commands you entered in it between sessions [1].
+                            Older versions keep them in `~/.lesshst`, while newer versions prefer `~/.local/state/lesshst` [1].
+                            This script deletes both.
+
+                            [1]: https://web.archive.org/web/20260507193930/https://github.com/gwsw/less/blob/master/less.nro.VER "less/less.nro.VER at master · gwsw/less | github.com"
+                        call:
+                            -
+                                function: DeleteFiles
+                                parameters:
+                                    fileGlob: $HOME/.lesshst
+                            -
+                                function: DeleteFiles
+                                parameters:
+                                    fileGlob: $HOME/.local/state/lesshst
+                    -
+                        name: Clear Node.js REPL history
+                        docs: |-
+                            This script deletes `~/.node_repl_history`, the file in which the interactive Node.js shell (REPL) saves the
+                            lines you typed [1].
+
+                            [1]: https://web.archive.org/web/20261029130002/https://nodejs.org/api/repl.html "REPL | Node.js Documentation | nodejs.org"
+                        call:
+                            function: DeleteFiles
+                            parameters:
+                                fileGlob: $HOME/.node_repl_history
+                    -
+                        name: Clear MySQL client history
+                        docs: |-
+                            This script deletes `~/.mysql_history`, the file in which the `mysql` command-line client saves the
+                            statements you ran [1].
+
+                            MySQL warns that this file may contain sensitive information, such as the text of statements that include
+                            passwords [1].
+
+                            [1]: https://web.archive.org/web/20260520200608/https://dev.mysql.com/doc/refman/8.4/en/mysql-logging.html "MySQL :: MySQL 8.4 Reference Manual :: 6.5.1.3 mysql Client Logging | dev.mysql.com"
+                        call:
+                            function: DeleteFiles
+                            parameters:
+                                fileGlob: $HOME/.mysql_history
+                    -
+                        name: Clear PostgreSQL client history
+                        docs: |-
+                            This script deletes `~/.psql_history`, the file in which the `psql` command-line client saves the commands
+                            you ran [1].
+
+                            A history file set with the `HISTFILE` variable or the `PSQL_HISTORY` environment variable [1] is not
+                            deleted, because the script cannot see your `psql` configuration.
+
+                            [1]: https://web.archive.org/web/20261022115431/https://www.postgresql.org/docs/current/app-psql.html "PostgreSQL: Documentation: psql | postgresql.org"
+                        call:
+                            function: DeleteFiles
+                            parameters:
+                                fileGlob: $HOME/.psql_history
+                    -
+                        name: Clear SQLite shell history
+                        docs: |-
+                            This script deletes the history file of the `sqlite3` command-line shell, which saves the statements you ran.
+
+                            The shell uses `~/.local/state/sqlite_history` if that file exists, and `~/.sqlite_history` otherwise [1].
+                            This script deletes both.
+
+                            [1]: https://web.archive.org/web/20251202133348/https://github.com/sqlite/sqlite/blob/master/src/shell.c.in "sqlite/src/shell.c.in at master · sqlite/sqlite | github.com"
+                        call:
+                            -
+                                function: DeleteFiles
+                                parameters:
+                                    fileGlob: $HOME/.sqlite_history
+                            -
+                                function: DeleteFiles
+                                parameters:
+                                    fileGlob: $HOME/.local/state/sqlite_history
+                    -
+                        name: Clear Ruby interactive shell (irb) history
+                        docs: |-
+                            This script deletes the history file of `irb`, the interactive Ruby shell.
+
+                            By default, `irb` saves up to 1000 of the commands you typed to `.irb_history`, in the same folder as its
+                            configuration file, or in your home folder when there is none [1].
+                            When the configuration file is `~/.config/irb/irbrc`, the history file is `~/.config/irb/irb_history` [2].
+                            This script deletes `~/.irb_history` and `~/.config/irb/irb_history`.
+
+                            [1]: https://github.com/ruby/irb/blob/master/doc/Index.md "irb/doc/Index.md at master · ruby/irb | github.com"
+                            [2]: https://web.archive.org/web/20240105175842/https://github.com/ruby/irb/blob/master/lib/irb/init.rb "irb/lib/irb/init.rb at master · ruby/irb | github.com"
+                        call:
+                            -
+                                function: DeleteFiles
+                                parameters:
+                                    fileGlob: $HOME/.irb_history
+                            -
+                                function: DeleteFiles
+                                parameters:
+                                    fileGlob: $HOME/.config/irb/irb_history
+                    -
+                        name: Clear wget HSTS host list
+                        docs: |-
+                            This script deletes `~/.wget-hsts`, the file in which `wget` records the websites that told it to use only
+                            secure (HTTPS) connections [1].
+
+                            Each line names a website you downloaded from with `wget` [1], so the file is a partial record of the
+                            websites you visited from the command line.
+
+                            > **Caution:** This file is also a security feature. Until `wget` connects to those websites again over HTTPS,
+                            > a plain `http://` download from them is no longer upgraded to HTTPS, which an attacker on your network could
+                            > use to tamper with the download. The `wget` manual discourages modifying this file [1].
+
+                            [1]: https://web.archive.org/web/20261030184801/https://www.gnu.org/software/wget/manual/wget.html "GNU Wget Manual | gnu.org"
+                        call:
+                            function: DeleteFiles
+                            parameters:
+                                fileGlob: $HOME/.wget-hsts
+            -
+                name: Clear saved application state
+                docs: |-
+                    This script deletes the window restoration data that macOS saves for applications.
+
+                    When you quit an app while *Close windows when quitting an application* is turned off, or restart with
+                    *Reopen windows when logging back in* selected, macOS saves the state of the app's windows so that they come
+                    back when the app opens again [1].
+                    Up to macOS Sonoma 14, this data is kept in `~/Library/Saved Application State`, in one `.savedState` folder per
+                    app [1].
+                    Its contents are encrypted, but the key is stored right next to the encrypted data [1], so anyone who can read
+                    your files can recover what your windows showed.
+
+                    > **Caution:** Apps that you open next no longer restore the windows, tabs and documents they had open.
+
+                    ### Technical details
+
+                    Starting with macOS Sequoia 15, macOS keeps this data inside a protected system container instead [1], which this
+                    script does not touch.
+                    On those versions, it removes only the data that earlier macOS versions left in `~/Library/Saved Application State`.
+                    Sandboxed apps keep their own copy inside their app container [1], which is not cleared either.
+
+                    [1]: https://web.archive.org/web/20260904054640/https://mothersruin.com/software/Archaeology/reverse/appstate.html "Archaeology | Saved Application State | mothersruin.com"
+                call:
+                    function: ClearDirectoryContents
+                    parameters:
+                        directoryGlob: $HOME/Library/Saved Application State
+                        # grantPermissions: 'false' # Home directory does not require `sudo` access.
+            -
+                name: Clear Quick Look thumbnail cache
+                docs: |-
+                    This script clears the cache of thumbnails that Quick Look creates for your files.
+
+                    Quick Look generates the previews and icons that Finder and other apps show for documents and images, and it keeps
+                    the thumbnails it creates in a cache [1].
+                    The cached pictures show what your files looked like, and they can still be recovered during forensic analysis [1].
+
+                    Since macOS Mojave, the cache is sealed in a protected location [1], so this script uses the `qlmanage -r cache`
+                    command, which resets it [1] [2].
+
+                    The command runs as your user account, because each user has a separate cache.
+
+                    [1]: https://web.archive.org/web/20261109164019/https://eclecticlight.co/2024/04/05/a-quick-look-at-quicklook-and-its-problems/ "A quick look at QuickLook and its problems | The Eclectic Light Company | eclecticlight.co"
+                    [2]: https://web.archive.org/web/20241108223928/https://keith.github.io/xcode-man-pages/qlmanage.1.html "qlmanage(1) | keith.github.io"
+                call:
+                    function: RunAsTargetUser
+                    parameters:
+                        code: |-
+                            if [ ! -x /usr/bin/qlmanage ]; then
+                                echo 'Skipping, "qlmanage" is not found.'
+                            elif run_as_target_user /usr/bin/qlmanage -r cache > /dev/null; then
+                                echo 'Cleared the Quick Look thumbnail cache.'
+                            else
+                                >&2 echo 'Failed to clear the Quick Look thumbnail cache.'
+                            fi
+            -
+                name: Clear recently used items lists
+                docs: |-
+                    This script clears the lists of recently used documents, applications and servers.
+
+                    macOS keeps these lists for the **Recent Items** submenu in the Apple menu and for the **Open Recent** menu of
+                    each app [1]. They are stored as shared file lists (files ending in `.sfl`, `.sfl2` or a later number) in
+                    `~/Library/Application Support/com.apple.sharedfilelist` [1] [2] [3].
+                    They contain the full path of each item [2], and the per-app lists can contain very old entries, because each is
+                    updated only when its app is open [2].
+
+                    > **Caution:** The Recent Items menu and the Open Recent menu of each app become empty.
+
+                    ### Technical details
+
+                    This script deletes:
+
+                    - The global lists of recent applications, documents, hosts and servers [2]:
+                      `com.apple.LSSharedFileList.RecentApplications`, `RecentDocuments`, `RecentHosts` and `RecentServers`.
+                    - Every per-app list in the `com.apple.LSSharedFileList.ApplicationRecentDocuments` folder [2] [3].
+
+                    Other lists in the same folder, such as the Finder sidebar favorites [1], are kept.
+                    It then restarts `sharedfilelistd`, the per-user service that manages these lists [1], so that it does not keep
+                    the old lists in memory. macOS starts it again on its own [2].
+
+                    [1]: https://web.archive.org/web/20241108224443/https://keith.github.io/xcode-man-pages/sharedfilelistd.8.html "sharedfilelistd(8) | keith.github.io"
+                    [2]: https://web.archive.org/web/20250215182332/https://eclecticlight.co/2017/08/10/recent-items-launch-services-and-sharedfilelists/ "Recent Items, Launch Services, and SharedFileLists | The Eclectic Light Company | eclecticlight.co"
+                    [3]: https://github.com/ydkhatri/mac_apt/blob/master/plugins/recentitems.py "mac_apt/plugins/recentitems.py at master · ydkhatri/mac_apt | github.com"
+                call:
+                    -
+                        function: DeleteFiles
+                        parameters:
+                            fileGlob: $HOME/Library/Application Support/com.apple.sharedfilelist/com.apple.LSSharedFileList.RecentApplications.sfl*
+                    -
+                        function: DeleteFiles
+                        parameters:
+                            fileGlob: $HOME/Library/Application Support/com.apple.sharedfilelist/com.apple.LSSharedFileList.RecentDocuments.sfl*
+                    -
+                        function: DeleteFiles
+                        parameters:
+                            fileGlob: $HOME/Library/Application Support/com.apple.sharedfilelist/com.apple.LSSharedFileList.RecentHosts.sfl*
+                    -
+                        function: DeleteFiles
+                        parameters:
+                            fileGlob: $HOME/Library/Application Support/com.apple.sharedfilelist/com.apple.LSSharedFileList.RecentServers.sfl*
+                    -
+                        function: DeleteFiles
+                        parameters:
+                            fileGlob: $HOME/Library/Application Support/com.apple.sharedfilelist/com.apple.LSSharedFileList.ApplicationRecentDocuments/*.sfl*
+                    -
+                        # As the invoking user: `sharedfilelistd` is a per-user agent, and as root `killall` would also
+                        # restart the agents of every other signed-in user.
+                        function: RunAsTargetUser
+                        parameters:
+                            code: |-
+                                if run_as_target_user killall sharedfilelistd 2>/dev/null; then
+                                    echo 'Restarted sharedfilelistd so that it reloads the cleared lists.'
+                                else
+                                    echo 'sharedfilelistd is not running; the cleared lists load the next time it starts.'
+                                fi
+            -
+                name: Clear Finder recent folders history
+                docs: |-
+                    This script clears the folders that Finder remembers you opening.
+
+                    Finder keeps the following in its preferences [1]:
+
+                    - `FXRecentFolders`: the folders listed in **Go > Recent Folders**.
+                    - `GoToField`: the last path you typed in **Go > Go to Folder**.
+                    - `GoToFieldHistory`: the earlier paths you typed there.
+
+                    These reveal folders you worked in, including on removable and network drives.
+
+                    The script removes these entries as your user account and then restarts Finder so that it does not keep showing
+                    the old entries. Finder windows close for a moment and Finder reopens on its own.
+
+                    [1]: https://github.com/ydkhatri/mac_apt/blob/master/plugins/recentitems.py "mac_apt/plugins/recentitems.py at master · ydkhatri/mac_apt | github.com"
+                call:
+                    function: RunAsTargetUser
+                    parameters:
+                        code: |-
+                            for finder_key in FXRecentFolders GoToField GoToFieldHistory; do
+                                if ! run_as_target_user defaults read com.apple.finder "$finder_key" &>/dev/null; then
+                                    echo "Skipping, Finder has no \"$finder_key\" entry."
+                                elif run_as_target_user defaults delete com.apple.finder "$finder_key"; then
+                                    echo "Cleared Finder \"$finder_key\"."
+                                else
+                                    >&2 echo "Failed to clear Finder \"$finder_key\"."
+                                fi
+                            done
+                            # As the invoking user, so only their own Finder restarts.
+                            if run_as_target_user killall Finder 2>/dev/null; then
+                                echo 'Restarted Finder to apply the change.'
+                            else
+                                echo 'Finder is not running; the change applies the next time it starts.'
+                            fi
             -
                 name: Clear CUPS printer job cache
                 code: |-
@@ -1301,18 +1642,342 @@ actions:
                                 valueType: bool
                                 value: 'false'
                                 defaultValue: 'true'
+                    -
+                        name: Enable full website address in Safari
+                        recommend: strict
+                        docs: |-
+                            This script makes the Safari address bar show the full address of the page you are on instead of only the
+                            website's domain name [1].
+
+                            By default, Safari shows only the domain, for example `apple.com` instead of `www.apple.com/safari/` [1].
+                            Seeing the full address makes it easier to notice a page that only pretends to belong to a website you
+                            trust, for example a phishing page placed under a misleading path or subdomain.
+                            U.S. government security baselines for macOS require this setting [2].
+
+                            If you do not run this script, Safari keeps showing only the domain name.
+
+                            [1]: https://web.archive.org/web/20261025145433/https://support.apple.com/guide/safari/advanced-ibrw1075/mac "Change Advanced settings in Safari on Mac | Apple Support | support.apple.com"
+                            [2]: https://github.com/usnistgov/macos_security/blob/tahoe/rules/os/os_safari_show_full_website_address_enable.yaml "macos_security/rules/os/os_safari_show_full_website_address_enable.yaml at tahoe · usnistgov/macos_security | github.com"
+                        call:
+                            function: SetUserPreference
+                            parameters:
+                                domain: com.apple.Safari
+                                key: ShowFullURLInSmartSearchField
+                                valueType: bool
+                                value: 'true'
+                                defaultValue: 'false'
             -
-                name: Disable Firefox telemetry
-                recommend: standard
-                docs: https://web.archive.org/web/20250313122606/https://github.com/privacysexy-forks/policy-templates/blob/master/README.md
-                code: |-
-                    # Enable Firefox policies so the telemetry can be configured.
-                    sudo defaults write /Library/Preferences/org.mozilla.firefox EnterprisePoliciesEnabled -bool TRUE
-                    # Disable sending usage data
-                    sudo defaults write /Library/Preferences/org.mozilla.firefox DisableTelemetry -bool TRUE
-                revertCode: |-
-                    sudo defaults delete /Library/Preferences/org.mozilla.firefox EnterprisePoliciesEnabled
-                    sudo defaults delete /Library/Preferences/org.mozilla.firefox DisableTelemetry
+                category: Configure Firefox
+                docs: |-
+                    Mozilla Firefox is a free and open-source web browser.
+
+                    These scripts stop Firefox from sending usage data to Mozilla and turn on its protections against tracking.
+                children:
+                    -
+                        name: Disable Firefox telemetry
+                        recommend: standard
+                        docs: https://web.archive.org/web/20250313122606/https://github.com/privacysexy-forks/policy-templates/blob/master/README.md
+                        code: |-
+                            # Enable Firefox policies so the telemetry can be configured.
+                            sudo defaults write /Library/Preferences/org.mozilla.firefox EnterprisePoliciesEnabled -bool TRUE
+                            # Disable sending usage data
+                            sudo defaults write /Library/Preferences/org.mozilla.firefox DisableTelemetry -bool TRUE
+                        revertCode: |-
+                            sudo defaults delete /Library/Preferences/org.mozilla.firefox EnterprisePoliciesEnabled
+                            sudo defaults delete /Library/Preferences/org.mozilla.firefox DisableTelemetry
+                    -
+                        category: Harden Firefox privacy
+                        docs: |-
+                            These scripts turn on Firefox protections against tracking and browser fingerprinting.
+
+                            Each script writes one preference to the `user.js` file of every Firefox profile of your user account, in
+                            `~/Library/Application Support/Firefox/Profiles` [1].
+                            Firefox reads `user.js` when it starts and applies its values over the ones in `prefs.js` [2], so the
+                            change takes effect the next time you open Firefox.
+
+                            Reverting restores the lines of `user.js` and `prefs.js` that existed before the script ran.
+                            Quit Firefox before reverting, because Firefox rewrites `prefs.js` when it quits [3].
+
+                            See also: [What is browser fingerprinting? | AmIUnique.org](https://web.archive.org/web/20221029223510/https://www.amiunique.org/faq)
+
+                            [1]: https://web.archive.org/web/20250103184029/https://support.mozilla.org/en-US/kb/profiles-where-firefox-stores-user-data "Profiles - Where Firefox stores your bookmarks, passwords and other user data | Firefox Help | support.mozilla.org"
+                            [2]: https://web.archive.org/web/20230811005205/https://kb.mozillazine.org/User.js_file "User.js file - MozillaZine Knowledge Base"
+                            [3]: https://web.archive.org/web/20221029211757/https://kb.mozillazine.org/Prefs.js_file "Prefs.js file - MozillaZine Knowledge Base"
+                        children:
+                            -
+                                category: Enable Firefox state partitioning (Total Cookie Protection)
+                                docs: |-
+                                    Websites can use data stored by your browser, such as cookies and caches, to recognize you as you move
+                                    between websites.
+
+                                    State partitioning, also called "Total Cookie Protection", gives every website you visit its own,
+                                    separate storage [1] [2]. When two websites embed content from the same third party, that third party
+                                    gets a separate copy of its data on each of them, so it cannot use that data to follow you from one
+                                    website to the other [1]. Firefox applies this to all third-party content, not only to known trackers
+                                    [1], and also partitions caches such as the HTTP, image and favicon caches [3].
+
+                                    [1]: https://web.archive.org/web/20230918171957/https://hacks.mozilla.org/2021/02/introducing-state-partitioning/ "Introducing State Partitioning - Mozilla Hacks - the Web developer blog"
+                                    [2]: https://web.archive.org/web/20230918172155/https://developer.mozilla.org/en-US/docs/Web/Privacy/State_Partitioning "State Partitioning - Privacy on the web | MDN"
+                                    [3]: https://web.archive.org/web/20230918172503/https://blog.mozilla.org/security/2021/01/26/supercookie-protections/ "Firefox 85 Cracks Down on Supercookies - Mozilla Security Blog"
+                                children:
+                                    -
+                                        name: Enable dynamic First-Party Isolation (dFPI)
+                                        recommend: standard
+                                        docs: |-
+                                            This script sets the Firefox preference `network.cookie.cookieBehavior` to `5` [1].
+
+                                            Dynamic First-Party Isolation (dFPI), also known as Total Cookie Protection [2], stops third-party
+                                            websites from reading or tracking your data across the websites you visit [1] [2].
+                                            The value `5` blocks known trackers and partitions the storage of all other third-party
+                                            content [1].
+
+                                            Firefox enables this by default for all desktop users [3]. This script keeps it on even if the
+                                            setting was changed, for example by an older configuration.
+
+                                            [1]: https://web.archive.org/web/20230918172155/https://developer.mozilla.org/en-US/docs/Web/Privacy/State_Partitioning#disable_dynamic_state_partitioning "State Partitioning - Privacy on the web | MDN"
+                                            [2]: https://web.archive.org/web/20231003094145/https://support.mozilla.org/en-US/kb/total-cookie-protection-and-website-breakage-faq "Total Cookie Protection and website breakage FAQ | Firefox Help"
+                                            [3]: https://web.archive.org/web/20231207105610/https://blog.mozilla.org/en/products/firefox/firefox-rolls-out-total-cookie-protection-by-default-to-all-users-worldwide/ "Firefox Rolls Out Total Cookie Protection By Default"
+                                        call:
+                                            function: AddFirefoxPrefs
+                                            parameters:
+                                                prefName: network.cookie.cookieBehavior
+                                                jsonValue: '5'
+                                    -
+                                        name: Enable Firefox network partitioning
+                                        recommend: standard
+                                        docs: |-
+                                            This script sets the Firefox preference `privacy.partition.network_state` to `true` [1].
+
+                                            Network partitioning keeps network-related data, such as caches and connection pools, separate
+                                            for each website you visit [1], so one website cannot use it to learn about your visits to another.
+                                            It was formerly called cache partitioning [2].
+
+                                            Firefox has enabled network partitioning by default since version 85 [1].
+
+                                            [1]: https://web.archive.org/web/20230918172155/https://developer.mozilla.org/en-US/docs/Web/Privacy/State_Partitioning "State Partitioning - Privacy on the web | MDN"
+                                            [2]: https://web.archive.org/web/20231003094417/https://bugzilla.mozilla.org/show_bug.cgi?id=1687569 "1687569 - cache partitioning causes web page saving extensions to waste more time and data | bugzilla.mozilla.org"
+                                        call:
+                                            function: AddFirefoxPrefs
+                                            parameters:
+                                                prefName: privacy.partition.network_state
+                                                jsonValue: 'true'
+                                    -
+                                        name: Disable outdated Firefox First-Party Isolation (FPI)
+                                        recommend: strict
+                                        docs: |-
+                                            This script sets the Firefox preference `privacy.firstparty.isolate` to `false` [1].
+
+                                            First-Party Isolation (FPI) is an older technique against cross-site tracking [1]. It is turned
+                                            off in favor of dynamic First-Party Isolation (dFPI) because:
+
+                                            1. FPI and dFPI cannot work at the same time [2] [3], and Mozilla does not plan to make them
+                                               compatible [4].
+                                            2. FPI is deprecated, and dFPI is set to become the standard [2] [5].
+                                            3. dFPI together with network partitioning protects more broadly than FPI [2] [6].
+
+                                            [1]: https://web.archive.org/web/20221025162743/https://wiki.archlinux.org/title/Firefox/Privacy#First_party_isolation "Firefox/Privacy - ArchWiki | wiki.archlinux.org"
+                                            [2]: https://web.archive.org/web/20231003094207/https://bugzilla.mozilla.org/show_bug.cgi?id=1649876#c0 "1649876 - Migrate FPI users to dFPI | bugzilla.mozilla.org"
+                                            [3]: https://web.archive.org/web/20231003094350/https://bugzilla.mozilla.org/show_bug.cgi?id=1631676#c25 "1631676 - Disable dfpi when privacy.firstparty.isolate=true | bugzilla.mozilla.org"
+                                            [4]: https://web.archive.org/web/20231003094207/https://bugzilla.mozilla.org/show_bug.cgi?id=1649876#c3 "1649876 - Migrate FPI users to dFPI | bugzilla.mozilla.org"
+                                            [5]: https://web.archive.org/web/20231003094207/https://bugzilla.mozilla.org/show_bug.cgi?id=1649876#c5 "1649876 - Migrate FPI users to dFPI | bugzilla.mozilla.org"
+                                            [6]: https://web.archive.org/web/20231003094358/https://bugzilla.mozilla.org/show_bug.cgi?id=1637344#c2 "1637344 - Add message to show dFPI is incompatible with FPI | bugzilla.mozilla.org"
+                                        call:
+                                            function: AddFirefoxPrefs
+                                            parameters:
+                                                prefName: privacy.firstparty.isolate
+                                                jsonValue: 'false'
+                            -
+                                name: Enable Firefox tracking protection
+                                recommend: standard
+                                docs: |-
+                                    This script sets the Firefox preference `privacy.trackingprotection.enabled` to `true` [1] [2].
+
+                                    Enhanced Tracking Protection blocks trackers that collect information about your browsing, without
+                                    breaking the websites you visit [1].
+
+                                    If you already use a content blocker with suitable filter lists, this protection may be redundant.
+
+                                    [1]: https://web.archive.org/web/20221025195851/https://support.mozilla.org/en-US/kb/enhanced-tracking-protection-firefox-desktop "Enhanced Tracking Protection in Firefox for desktop | Firefox Help | support.mozilla.org"
+                                    [2]: https://web.archive.org/web/20221025195843/https://wiki.mozilla.org/Security/Tracking_protection#Prefs "Security/Tracking protection - MozillaWiki | wiki.mozilla.org"
+                                call:
+                                    function: AddFirefoxPrefs
+                                    parameters:
+                                        prefName: privacy.trackingprotection.enabled
+                                        jsonValue: 'true'
+                            -
+                                name: Enable Firefox anti-fingerprinting (may break some websites)
+                                recommend: strict
+                                docs: |-
+                                    This script sets the Firefox preference `privacy.resistFingerprinting` to `true` [1] [2].
+
+                                    Websites can identify your browser from details such as its screen size, fonts and time zone, even
+                                    without cookies. This protection comes from a Mozilla project to bring Tor Browser features to
+                                    Firefox [2] and makes Firefox harder to tell apart from other browsers [1].
+
+                                    > **Caution:** Some websites may break [2], for example web speech features [3] and some favicons [4].
+
+                                    [1]: https://web.archive.org/web/20221025201025/https://support.mozilla.org/en-US/kb/firefox-protection-against-fingerprinting "Firefox's protection against fingerprinting | Firefox Help | support.mozilla.org"
+                                    [2]: https://web.archive.org/web/20221025162743/https://wiki.archlinux.org/title/Firefox/Privacy#Anti-fingerprinting "Firefox/Privacy - ArchWiki | wiki.archlinux.org"
+                                    [3]: https://web.archive.org/web/20221025201301/https://bugzilla.mozilla.org/show_bug.cgi?id=1636707 "1636707 - Web speech functionality disabled if privacy.resistFingerprinting is set to true | bugzilla.mozilla.org"
+                                    [4]: https://web.archive.org/web/20221025201422/https://bugzilla.mozilla.org/show_bug.cgi?id=1452391#c5 "1452391 - PNG favicons show up as white square when privacy.resistFingerprinting is enabled | bugzilla.mozilla.org"
+                                call:
+                                    function: AddFirefoxPrefs
+                                    parameters:
+                                        prefName: privacy.resistFingerprinting
+                                        jsonValue: 'true'
+                            -
+                                name: Disable WebRTC exposure of your private IP address in Firefox
+                                recommend: standard
+                                docs: |-
+                                    This script sets the Firefox preference `media.peerconnection.ice.default_address_only` to `true` [1].
+
+                                    WebRTC lets web pages make audio and video calls directly between browsers [2]. Websites can use it,
+                                    through JavaScript, to read the IP address of your device on your local network [1].
+
+                                    [1]: https://web.archive.org/web/20221025162743/https://wiki.archlinux.org/title/Firefox/Privacy#WebRTC_exposes_LAN_IP_address "WebRTC exposes LAN IP address | Firefox/Privacy - ArchWiki | wiki.archlinux.org"
+                                    [2]: https://web.archive.org/web/20221029173118/https://en.wikipedia.org/wiki/WebRTC "WebRTC - Wikipedia | en.wikipedia.org"
+                                call:
+                                    function: AddFirefoxPrefs
+                                    parameters:
+                                        prefName: media.peerconnection.ice.default_address_only
+                                        jsonValue: 'true'
+            -
+                category: Configure Brave
+                docs: |-
+                    Brave is a web browser built on Chromium [1].
+
+                    These scripts turn off Brave features that send data to Brave or that add services you may not want, using the
+                    policies that Brave documents for administrators [1] [2].
+
+                    Brave on macOS reads these policies from `/Library/Managed Preferences/com.brave.Browser.plist` [1].
+                    The scripts create the folder and the file when they do not exist, add one policy each, and then restart the
+                    preference service (`cfprefsd`) so that Brave sees the change after you restart Brave [1].
+                    Reverting removes only the policy the script added, and removes the file again once it is empty if privacy.sexy
+                    created it.
+
+                    If a configuration profile from your organization (MDM) already manages Brave, the scripts change nothing and
+                    report it, so that they never interfere with policies set by an administrator.
+
+                    > **Note:** While any of these policies is set, Brave shows **Managed by your organization** in its menu and
+                    > on `brave://management` [1]. This does not share your data with anyone; it only means that a policy is in
+                    > effect. You can see the active policies on `brave://policy` [1].
+
+                    [1]: https://web.archive.org/web/20261028190136/https://support.brave.app/hc/en-us/articles/360039248271-Group-Policy "Group Policy | Brave Help Center | support.brave.app"
+                    [2]: https://web.archive.org/web/20260831034728/https://github.com/brave/brave-core/blob/master/browser/policy/brave_simple_policy_map.h "brave-core/browser/policy/brave_simple_policy_map.h at master · brave/brave-core | github.com"
+                children:
+                    -
+                        name: Disable Brave product analytics
+                        recommend: standard
+                        docs: |-
+                            This script turns off Brave's Privacy-Preserving Product Analytics (P3A) with the `BraveP3AEnabled` policy [1].
+
+                            P3A sends Brave anonymous usage data to help it improve the product [1].
+
+                            If you do not run this script, Brave sends this data whenever P3A is turned on in its settings.
+
+                            [1]: https://web.archive.org/web/20261028190136/https://support.brave.app/hc/en-us/articles/360039248271-Group-Policy "Group Policy | Brave Help Center | support.brave.app"
+                        call:
+                            function: SetBravePolicy
+                            parameters:
+                                policyName: BraveP3AEnabled
+                                value: 'false'
+                    -
+                        name: Disable Brave usage ping
+                        recommend: standard
+                        docs: |-
+                            This script turns off Brave's usage ping with the `BraveStatsPingEnabled` policy [1].
+
+                            The usage ping is a small, regular signal that Brave uses to count its daily and monthly active users [1].
+                            Turning it off stops the browser from announcing its presence to Brave's update servers [1].
+
+                            If you do not run this script, Brave keeps sending the usage ping, which is on by default [1].
+
+                            [1]: https://web.archive.org/web/20261028190136/https://support.brave.app/hc/en-us/articles/360039248271-Group-Policy "Group Policy | Brave Help Center | support.brave.app"
+                        call:
+                            function: SetBravePolicy
+                            parameters:
+                                policyName: BraveStatsPingEnabled
+                                value: 'false'
+                    -
+                        name: Disable Brave Web Discovery Project
+                        recommend: standard
+                        docs: |-
+                            This script turns off the Brave Web Discovery Project with the `BraveWebDiscoveryEnabled` policy [1].
+
+                            When it is on, Brave anonymously contributes data to help build the Brave Search index [1].
+                            It is off by default [1]; the policy keeps it off so that it cannot be turned on in the browser's settings.
+
+                            [1]: https://web.archive.org/web/20261028190136/https://support.brave.app/hc/en-us/articles/360039248271-Group-Policy "Group Policy | Brave Help Center | support.brave.app"
+                        call:
+                            function: SetBravePolicy
+                            parameters:
+                                policyName: BraveWebDiscoveryEnabled
+                                value: 'false'
+                    -
+                        name: Disable Brave Rewards
+                        recommend: strict
+                        docs: |-
+                            This script turns off Brave Rewards with the `BraveRewardsDisabled` policy [1].
+
+                            Brave Rewards shows privacy-preserving advertisements and lets you earn the BAT cryptocurrency for viewing
+                            them [1]. With the policy set, the Rewards icon is hidden and you cannot opt into these ads [1].
+
+                            > **Caution:** If you use Brave Rewards, you can no longer earn rewards in this browser.
+
+                            [1]: https://web.archive.org/web/20261028190136/https://support.brave.app/hc/en-us/articles/360039248271-Group-Policy "Group Policy | Brave Help Center | support.brave.app"
+                        call:
+                            function: SetBravePolicy
+                            parameters:
+                                policyName: BraveRewardsDisabled
+                                value: 'true'
+                    -
+                        name: Disable Brave Wallet
+                        recommend: strict
+                        docs: |-
+                            This script turns off the built-in Brave cryptocurrency wallet with the `BraveWalletDisabled` policy [1].
+
+                            With the policy set, the wallet is removed from the browser, together with web3 features and decentralized
+                            DNS settings [1].
+
+                            > **Caution:** If you keep cryptocurrency in Brave Wallet, make sure you have its recovery phrase before
+                            > running this script, because the wallet cannot be opened in the browser while the policy is set.
+
+                            [1]: https://web.archive.org/web/20261028190136/https://support.brave.app/hc/en-us/articles/360039248271-Group-Policy "Group Policy | Brave Help Center | support.brave.app"
+                        call:
+                            function: SetBravePolicy
+                            parameters:
+                                policyName: BraveWalletDisabled
+                                value: 'true'
+                    -
+                        name: Disable Brave VPN
+                        recommend: strict
+                        docs: |-
+                            This script removes the paid Brave VPN service from the browser with the `BraveVPNDisabled` policy [1].
+
+                            With the policy set, the VPN button and the subscription options are removed from the browser [1].
+
+                            > **Caution:** If you pay for Brave VPN, you can no longer use it from this browser.
+
+                            [1]: https://web.archive.org/web/20261028190136/https://support.brave.app/hc/en-us/articles/360039248271-Group-Policy "Group Policy | Brave Help Center | support.brave.app"
+                        call:
+                            function: SetBravePolicy
+                            parameters:
+                                policyName: BraveVPNDisabled
+                                value: 'true'
+                    -
+                        name: Disable Brave Leo AI assistant
+                        recommend: strict
+                        docs: |-
+                            This script turns off Leo, the AI assistant built into Brave, with the `BraveAIChatEnabled` policy [1].
+
+                            With the policy set, the Leo button in the sidebar and its address bar integration are removed [1].
+
+                            [1]: https://web.archive.org/web/20261028190136/https://support.brave.app/hc/en-us/articles/360039248271-Group-Policy "Group Policy | Brave Help Center | support.brave.app"
+                        call:
+                            function: SetBravePolicy
+                            parameters:
+                                policyName: BraveAIChatEnabled
+                                value: 'false'
             -
                 name: Disable Microsoft Office telemetry
                 recommend: standard
@@ -1373,6 +2038,245 @@ actions:
                         function: PersistUserEnvironmentConfiguration
                         parameters:
                             configuration: export POWERSHELL_TELEMETRY_OPTOUT=1
+            -
+                category: Disable development tool telemetry
+                docs: |-
+                    Many development tools and frameworks send usage data (telemetry) to their makers when you run them, such as
+                    the commands you use, your operating system, and details about your projects.
+
+                    Each script here adds one documented opt-out environment variable to your shell login files (`~/.zprofile`,
+                    and `~/.bash_profile` or the bash login file you already use), so the setting applies to every terminal you
+                    open afterwards. Reverting removes only the line the script added.
+
+                    Programs started outside a terminal, for example by an editor launched from the Dock, do not read these files
+                    and may still send data.
+
+                    If you do not run these scripts, these tools keep sending usage data whenever you use them, unless you opted
+                    out in another way.
+                children:
+                    -
+                        name: Disable Next.js telemetry
+                        recommend: standard
+                        docs: |-
+                            This script opts out of the anonymous usage data that Next.js collects, by setting `NEXT_TELEMETRY_DISABLED=1` [1].
+
+                            [1]: https://web.archive.org/web/20261029083429/https://nextjs.org/telemetry "Telemetry | Next.js | nextjs.org"
+                        call:
+                            function: PersistUserEnvironmentConfiguration
+                            parameters:
+                                configuration: export NEXT_TELEMETRY_DISABLED=1
+                    -
+                        name: Disable Nuxt telemetry
+                        recommend: standard
+                        docs: |-
+                            This script opts out of the anonymous usage data that Nuxt collects, by setting `NUXT_TELEMETRY_DISABLED=1` [1].
+
+                            [1]: https://web.archive.org/web/20260711180841/https://github.com/nuxt/telemetry "nuxt/telemetry: Nuxt Telemetry | github.com"
+                        call:
+                            function: PersistUserEnvironmentConfiguration
+                            parameters:
+                                configuration: export NUXT_TELEMETRY_DISABLED=1
+                    -
+                        name: Disable Astro telemetry
+                        recommend: standard
+                        docs: |-
+                            This script opts out of the anonymous usage data that the Astro command-line tool collects, by setting the
+                            `ASTRO_TELEMETRY_DISABLED` environment variable [1].
+
+                            [1]: https://web.archive.org/web/20261029075936/https://docs.astro.build/en/reference/cli-reference/ "CLI Commands | Docs | docs.astro.build"
+                        call:
+                            function: PersistUserEnvironmentConfiguration
+                            parameters:
+                                configuration: export ASTRO_TELEMETRY_DISABLED=1
+                    -
+                        name: Disable Angular CLI analytics
+                        recommend: standard
+                        docs: |-
+                            This script turns off the usage analytics of the Angular command-line tool (`ng`), by setting
+                            `NG_CLI_ANALYTICS=false` [1] [2].
+
+                            The variable overrides the choice saved in the global Angular configuration [1].
+
+                            [1]: https://web.archive.org/web/20260510120040/https://github.com/angular/angular-cli/blob/main/docs/design/analytics.md "angular-cli/docs/design/analytics.md at main · angular/angular-cli | github.com"
+                            [2]: https://github.com/angular/angular-cli/blob/main/packages/angular/cli/src/utilities/environment-options.ts "angular-cli/packages/angular/cli/src/utilities/environment-options.ts at main · angular/angular-cli | github.com"
+                        call:
+                            function: PersistUserEnvironmentConfiguration
+                            parameters:
+                                configuration: export NG_CLI_ANALYTICS=false
+                    -
+                        name: Disable Storybook telemetry
+                        recommend: standard
+                        docs: |-
+                            This script opts out of the usage data that Storybook collects, by setting `STORYBOOK_DISABLE_TELEMETRY=1` [1].
+
+                            Unlike the `disableTelemetry` option of the Storybook configuration, the variable also stops the `boot`
+                            event that Storybook sends before it reads its configuration [1].
+
+                            [1]: https://web.archive.org/web/20261027020712/https://storybook.js.org/docs/configure/telemetry "Telemetry | Storybook docs | storybook.js.org"
+                        call:
+                            function: PersistUserEnvironmentConfiguration
+                            parameters:
+                                configuration: export STORYBOOK_DISABLE_TELEMETRY=1
+                    -
+                        name: Disable Turborepo telemetry
+                        recommend: standard
+                        docs: |-
+                            This script opts out of the anonymous usage data that Turborepo collects, by setting `TURBO_TELEMETRY_DISABLED=1` [1].
+
+                            [1]: https://web.archive.org/web/20251219235141/https://turborepo.com/docs/telemetry "Telemetry | Turborepo | turborepo.com"
+                        call:
+                            function: PersistUserEnvironmentConfiguration
+                            parameters:
+                                configuration: export TURBO_TELEMETRY_DISABLED=1
+                    -
+                        name: Disable HashiCorp Checkpoint data collection
+                        recommend: strict # Also stops upgrade and security bulletin notices
+                        docs: |-
+                            This script turns off Checkpoint, the service that HashiCorp tools such as Terraform contact to check for new
+                            versions and security bulletins, by setting `CHECKPOINT_DISABLE=1` [1].
+
+                            Only anonymous information is sent to Checkpoint, including an anonymous ID [1]. The variable turns
+                            Checkpoint off for all HashiCorp products [1].
+
+                            > **Caution:** You no longer see notices about new versions or security bulletins when you run these tools.
+                            > Check for updates yourself.
+
+                            [1]: https://web.archive.org/web/20261022104607/https://developer.hashicorp.com/terraform/cli/commands "Basic CLI Features | Terraform | HashiCorp Developer | developer.hashicorp.com"
+                        call:
+                            function: PersistUserEnvironmentConfiguration
+                            parameters:
+                                configuration: export CHECKPOINT_DISABLE=1
+                    -
+                        name: Disable Azure CLI telemetry
+                        recommend: standard
+                        docs: |-
+                            This script stops the Azure command-line tool (`az`) from sending usage data to Microsoft, by setting
+                            `AZURE_CORE_COLLECT_TELEMETRY=false` [1].
+
+                            The variable sets the `collect_telemetry` option of the `core` section, which controls whether Microsoft
+                            collects anonymous data on the use of the tool [1].
+
+                            [1]: https://web.archive.org/web/20250404111413/https://learn.microsoft.com/en-us/cli/azure/azure-cli-configuration "Azure CLI configuration options | Microsoft Learn | learn.microsoft.com"
+                        call:
+                            function: PersistUserEnvironmentConfiguration
+                            parameters:
+                                configuration: export AZURE_CORE_COLLECT_TELEMETRY=false
+                    -
+                        name: Disable Google Cloud CLI usage statistics
+                        recommend: standard
+                        docs: |-
+                            This script stops the Google Cloud command-line tool (`gcloud`) from sending usage statistics to Google, by
+                            setting `CLOUDSDK_CORE_DISABLE_USAGE_REPORTING=true` [1] [2].
+
+                            The variable sets the `core/disable_usage_reporting` property [1] [2] and takes precedence over a value set
+                            with `gcloud config set` [2].
+
+                            [1]: https://web.archive.org/web/20250823232452/https://cloud.google.com/sdk/docs/usage-statistics "Usage statistics | Google Cloud SDK | cloud.google.com"
+                            [2]: https://web.archive.org/web/20251113203430/https://cloud.google.com/sdk/docs/properties "Managing gcloud CLI properties | Google Cloud SDK | cloud.google.com"
+                        call:
+                            function: PersistUserEnvironmentConfiguration
+                            parameters:
+                                configuration: export CLOUDSDK_CORE_DISABLE_USAGE_REPORTING=true
+                    -
+                        name: Disable Hugging Face Hub telemetry
+                        recommend: standard
+                        docs: |-
+                            This script stops Hugging Face libraries, such as `transformers` and `datasets`, from collecting usage data,
+                            by setting `HF_HUB_DISABLE_TELEMETRY=1` [1].
+
+                            [1]: https://web.archive.org/web/20261030023729/https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables "Environment variables | Hugging Face Hub | huggingface.co"
+                        call:
+                            function: PersistUserEnvironmentConfiguration
+                            parameters:
+                                configuration: export HF_HUB_DISABLE_TELEMETRY=1
+                    -
+                        name: Disable vcpkg telemetry
+                        recommend: standard
+                        docs: |-
+                            This script stops the vcpkg C and C++ package manager from sending usage data to Microsoft, by setting the
+                            `VCPKG_DISABLE_METRICS` environment variable [1].
+
+                            [1]: https://web.archive.org/web/20261017221806/https://learn.microsoft.com/en-us/vcpkg/about/privacy "vcpkg telemetry | Microsoft Learn | learn.microsoft.com"
+                        call:
+                            function: PersistUserEnvironmentConfiguration
+                            parameters:
+                                configuration: export VCPKG_DISABLE_METRICS=1
+            -
+                category: Disable command-line tool history
+                docs: |-
+                    These scripts stop command-line tools from saving what you type to history files in your home folder.
+
+                    Each script adds one documented environment variable to your shell login files (`~/.zprofile`, and
+                    `~/.bash_profile` or the bash login file you already use), so it applies to every terminal you open afterwards.
+                    Reverting removes only the line the script added.
+
+                    These scripts do not delete history that already exists. To delete it, see *Clear terminal history* and
+                    *Clear command-line tool history* under *Privacy cleanup*.
+
+                    If you do not run these scripts, these tools keep saving what you type to your home folder.
+
+                    > **Caution:** You can no longer recall commands from earlier sessions with the arrow keys or history search in
+                    > these tools.
+                children:
+                    -
+                        name: Disable zsh session history
+                        docs: |-
+                            This script stops Terminal from saving a separate command history and state for each window in
+                            `~/.zsh_sessions`.
+
+                            When you use zsh in Terminal, macOS loads `/etc/zshrc_Apple_Terminal` [1] [2], which saves the state of each
+                            window, including its command history, so that Terminal can restore it [2].
+                            That file documents the `SHELL_SESSIONS_DISABLE=1` environment variable to turn this off as a whole [2].
+
+                            Your regular history in `~/.zsh_history` is not affected.
+
+                            ### Technical details
+
+                            The variable has to be set before `/etc/zshrc` loads that file [1]. zsh reads `~/.zprofile` before
+                            `/etc/zshrc` in a login shell [3], and Terminal starts every new window as a login shell [4], so the script
+                            adds the variable to `~/.zprofile`.
+
+                            [1]: https://web.archive.org/web/20241214075352/https://github.com/apple-oss-distributions/zsh/blob/main/zshrc "zsh/zshrc at main · apple-oss-distributions/zsh | github.com"
+                            [2]: https://github.com/yoro-gh/default-dotfiles/blob/main/macOS/etc/zshrc_Apple_Terminal "default-dotfiles/macOS/etc/zshrc_Apple_Terminal at main · yoro-gh/default-dotfiles | github.com"
+                            [3]: https://web.archive.org/web/20261024165218/https://zsh.sourceforge.io/Doc/Release/Files.html "Files | zsh | zsh.sourceforge.io"
+                            [4]: https://web.archive.org/web/20261020113823/https://ghostty.org/docs/help/macos-login-shells "macOS Login Shells | Ghostty | ghostty.org"
+                        call:
+                            function: PersistUserEnvironmentConfiguration
+                            parameters:
+                                configuration: export SHELL_SESSIONS_DISABLE=1
+                    -
+                        name: Disable less history
+                        docs: |-
+                            This script stops `less` from saving the search terms and shell commands you enter in it, by setting
+                            `LESSHISTFILE=-` [1].
+
+                            [1]: https://web.archive.org/web/20260507193930/https://github.com/gwsw/less/blob/master/less.nro.VER "less/less.nro.VER at master · gwsw/less | github.com"
+                        call:
+                            function: PersistUserEnvironmentConfiguration
+                            parameters:
+                                configuration: export LESSHISTFILE=-
+                    -
+                        name: Disable Node.js REPL history
+                        docs: |-
+                            This script stops the interactive Node.js shell (REPL) from saving the lines you type, by setting
+                            `NODE_REPL_HISTORY` to an empty value [1].
+
+                            [1]: https://web.archive.org/web/20261029130002/https://nodejs.org/api/repl.html "REPL | Node.js Documentation | nodejs.org"
+                        call:
+                            function: PersistUserEnvironmentConfiguration
+                            parameters:
+                                configuration: export NODE_REPL_HISTORY=""
+                    -
+                        name: Disable MySQL client history
+                        docs: |-
+                            This script stops the `mysql` command-line client from saving the statements you run, by setting
+                            `MYSQL_HISTFILE=/dev/null`, as the MySQL manual recommends [1].
+
+                            [1]: https://web.archive.org/web/20260520200608/https://dev.mysql.com/doc/refman/8.4/en/mysql-logging.html "MySQL :: MySQL 8.4 Reference Manual :: 6.5.1.3 mysql Client Logging | dev.mysql.com"
+                        call:
+                            function: PersistUserEnvironmentConfiguration
+                            parameters:
+                                configuration: export MYSQL_HISTFILE=/dev/null
             -
                 category: Configure Parallels Desktop
                 docs: |-
@@ -2456,6 +3360,68 @@ actions:
                         code: sudo defaults write /Library/Preferences/com.apple.screensaver 'askForPasswordDelay' -int 5
                         revertCode: sudo defaults delete /Library/Preferences/com.apple.screensaver 'askForPasswordDelay'
             -
+                name: Disable password hints on the login window
+                recommend: strict
+                docs: |-
+                    This script stops the login window and the lock screen from showing your password hint after failed attempts.
+
+                    A password hint is text you chose to help you remember your password. It is shown to anyone who types a wrong
+                    password, so it can reveal the password itself or details that make it easy to guess [1].
+                    The Center for Internet Security (CIS) [1] and U.S. government security baselines [2] recommend turning hints off.
+
+                    If you do not run this script and the setting is on, anyone at your Mac can see your hint after a few wrong
+                    attempts.
+
+                    > **Caution:** If you forget your password, your hint is no longer shown to help you remember it.
+
+                    ### Technical details
+
+                    The script sets `RetriesUntilHint` to `0` in `/Library/Preferences/com.apple.loginwindow` [1], which is the
+                    number of failed attempts after which macOS shows the hint, `0` meaning never [3].
+                    This is the *Show password hints* setting under *Lock Screen* in System Settings [1].
+                    The script records the previous value and restores it on revert.
+                    A configuration profile from your organization (MDM) that sets this value takes precedence.
+
+                    [1]: https://web.archive.org/web/20261109165158/https://www.tenable.com/audits/items/CIS_Apple_macOS_14.0_Sonoma_v1.1.0_L1.audit:39d1d18054e28bd9960bacdb652560ee "2.10.5 Ensure Show Password Hints Is Disabled | CIS Apple macOS 14.0 Sonoma v1.1.0 L1 | Tenable® | tenable.com"
+                    [2]: https://github.com/usnistgov/macos_security/blob/tahoe/rules/system_settings/system_settings_password_hints_disable.yaml "macos_security/rules/system_settings/system_settings_password_hints_disable.yaml at tahoe · usnistgov/macos_security | github.com"
+                    [3]: https://github.com/apple/device-management/blob/release/mdm/profiles/com.apple.loginwindow.yaml "device-management/mdm/profiles/com.apple.loginwindow.yaml at release · apple/device-management | github.com"
+                call:
+                    function: SetSystemPreference
+                    parameters:
+                        plistPath: /Library/Preferences/com.apple.loginwindow
+                        key: RetriesUntilHint
+                        valueType: int
+                        value: '0'
+            -
+                name: Disable user list on the login window (show name and password fields)
+                docs: |-
+                    This script makes the login window ask for both a user name and a password instead of showing a list of the
+                    accounts on this Mac [1].
+
+                    The list tells anyone in front of your Mac which accounts exist and shows their names and pictures. Requiring
+                    the user name as well means that someone trying to get in has to know two things instead of one [2] [3].
+
+                    > **Caution:** You need to type your user name every time you log in.
+
+                    ### Technical details
+
+                    The script sets `SHOWFULLNAME` to `true` in `/Library/Preferences/com.apple.loginwindow` [1] [2].
+                    This is the *Login window shows: Name and password* setting under *Lock Screen* in System Settings [2], which
+                    may keep showing the old choice until you log out [2].
+                    The script records the previous value and restores it on revert.
+                    A configuration profile from your organization (MDM) that sets this value takes precedence.
+
+                    [1]: https://github.com/apple/device-management/blob/release/mdm/profiles/com.apple.loginwindow.yaml "device-management/mdm/profiles/com.apple.loginwindow.yaml at release · apple/device-management | github.com"
+                    [2]: https://web.archive.org/web/20250210220241/https://tenable.com/audits/items/CIS_Apple_macOS_14.0_Sonoma_v1.0.0_L1.audit:f296be434c48c23d719eeb64aef9c061 "2.10.4 Ensure Login Window Displays as Name and Password Is Enabled | CIS Apple macOS 14.0 Sonoma v1.0.0 L1 | Tenable® | tenable.com"
+                    [3]: https://github.com/usnistgov/macos_security/blob/tahoe/rules/system_settings/system_settings_loginwindow_prompt_username_password_enforce.yaml "macos_security/rules/system_settings/system_settings_loginwindow_prompt_username_password_enforce.yaml at tahoe · usnistgov/macos_security | github.com"
+                call:
+                    function: SetSystemPreference
+                    parameters:
+                        plistPath: /Library/Preferences/com.apple.loginwindow
+                        key: SHOWFULLNAME
+                        valueType: bool
+                        value: 'true'
+            -
                 category: Disable guest accounts
                 docs: |-
                     These scripts control guest access on macOS to protect your system's security and privacy.
@@ -2806,6 +3772,91 @@ actions:
                             - https://web.archive.org/web/20241125030109/https://www.stigviewer.com/stig/apple_os_x_10.10_yosemite_workstation/2017-04-06/finding/V-59671
                         code: sudo launchctl disable system/com.apple.telnetd
                         revertCode: sudo launchctl enable system/com.apple.telnetd
+                    -
+                        name: Disable Screen Sharing
+                        recommend: strict
+                        docs: |-
+                            This script turns off Screen Sharing, which lets other computers see and control the screen of this Mac [1].
+
+                            While it is on, someone who connects to it from the network can watch and control your Mac without you
+                            necessarily noticing, and it can use the insecure VNC protocol [1].
+                            The Center for Internet Security (CIS) [1] and U.S. government security baselines [2] recommend turning it off.
+
+                            The script first checks whether Screen Sharing is on, and does nothing if it is not. It records that it was
+                            on, and reverting turns it back on only if this script turned it off.
+
+                            > **Caution:** You can no longer share this Mac's screen or control it remotely. Apple Remote Desktop can no
+                            > longer control it either, because U.S. government baselines use this same change to turn off both [2].
+
+                            ### Technical details
+
+                            The script disables and stops the `com.apple.screensharing` system service using `launchctl disable` and
+                            `launchctl bootout` [1] [2] [3].
+
+                            [1]: https://web.archive.org/web/20261109170528/https://www.tenable.com/audits/items/CIS_Apple_macOS_15.0_Sequoia_v1.0.0_L1.audit:71566b9ef6cd90d3dcbd4f39a47fab9f "2.3.3.2 Ensure Screen Sharing Is Disabled | CIS Apple macOS 15.0 Sequoia v1.0.0 L1 | Tenable® | tenable.com"
+                            [2]: https://github.com/usnistgov/macos_security/blob/tahoe/rules/system_settings/system_settings_screen_sharing_disable.yaml "macos_security/rules/system_settings/system_settings_screen_sharing_disable.yaml at tahoe · usnistgov/macos_security | github.com"
+                            [3]: https://web.archive.org/web/20251013065503/https://keith.github.io/xcode-man-pages/launchctl.1.html "launchctl(1) | keith.github.io"
+                        call:
+                            function: DisableLaunchDaemon
+                            parameters:
+                                label: com.apple.screensharing
+                    -
+                        name: Disable file sharing over SMB
+                        recommend: strict
+                        docs: |-
+                            This script turns off File Sharing, which shares folders of this Mac with other computers on the network over
+                            the SMB protocol [1].
+
+                            While it is on, it opens network ports that can be probed and attacked, and it increases the risk of
+                            unauthorized access to the files on this Mac [1].
+                            The Center for Internet Security (CIS) [1] and U.S. government security baselines [2] recommend turning it off.
+
+                            The script first checks whether File Sharing is on, and does nothing if it is not. It records that it was on,
+                            and reverting turns it back on only if this script turned it off.
+
+                            > **Caution:** Other computers can no longer open the folders this Mac shares.
+
+                            ### Technical details
+
+                            The script disables and stops the `com.apple.smbd` system service using `launchctl disable` and
+                            `launchctl bootout` [1] [2] [3]. A restart may be needed for the change to take full effect [2].
+                            It does not change the guest access setting of *Disable guest file sharing over SMB*.
+
+                            [1]: https://web.archive.org/web/20261109170429/https://www.tenable.com/audits/items/CIS_Apple_macOS_15.0_Sequoia_v2.1.0_L1.audit:bcbe4320521e17e5cad7ffe176f21323 "2.3.3.2 Ensure File Sharing Is Disabled | CIS Apple macOS 15.0 Sequoia v2.1.0 L1 | Tenable® | tenable.com"
+                            [2]: https://github.com/usnistgov/macos_security/blob/tahoe/rules/system_settings/system_settings_smbd_disable.yaml "macos_security/rules/system_settings/system_settings_smbd_disable.yaml at tahoe · usnistgov/macos_security | github.com"
+                            [3]: https://web.archive.org/web/20251013065503/https://keith.github.io/xcode-man-pages/launchctl.1.html "launchctl(1) | keith.github.io"
+                        call:
+                            function: DisableLaunchDaemon
+                            parameters:
+                                label: com.apple.smbd
+                    -
+                        name: Disable Bluetooth file sharing
+                        recommend: strict
+                        docs: |-
+                            This script turns off Bluetooth Sharing, which lets this Mac exchange files with nearby Bluetooth devices,
+                            such as phones and tablets [1].
+
+                            A nearby device, such as a phone, could use Bluetooth Sharing to place malware on this Mac or to copy files
+                            from it [1]. U.S. government security baselines require turning it off [1].
+
+                            The setting is stored for your user account, so it applies to you and not to other accounts on this Mac [1].
+                            The script records the previous value and restores it on revert.
+
+                            > **Caution:** You can no longer exchange files with other devices through Bluetooth Sharing.
+
+                            ### Technical details
+
+                            The script sets `PrefKeyServicesEnabled` to `false` in the host-specific `com.apple.Bluetooth` preferences of
+                            your user account (`defaults -currentHost`) [1].
+
+                            [1]: https://github.com/usnistgov/macos_security/blob/tahoe/rules/system_settings/system_settings_bluetooth_sharing_disable.yaml "macos_security/rules/system_settings/system_settings_bluetooth_sharing_disable.yaml at tahoe · usnistgov/macos_security | github.com"
+                        call:
+                            function: SetUserHostPreference
+                            parameters:
+                                domain: com.apple.Bluetooth
+                                key: PrefKeyServicesEnabled
+                                valueType: bool
+                                value: 'false'
             -
                 category: Disable printer sharing (IPP, LDP, SMB and Bonjour protocols)
                 # Used typically for servers
@@ -3827,3 +4878,535 @@ functions:
                         fi
                         rm -f "$current_type_file" "$current_value_file"
                     fi
+    -
+        name: SetUserHostPreference
+        # 💡 Purpose:
+        #   Same as `SetUserPreference`, for a preference that macOS stores per user and per computer
+        #   (`~/Library/Preferences/ByHost`), which `defaults` reaches with `-currentHost`.
+        #   It runs as the invoking user, records the original value and restores it on revert.
+        #   Kept separate from `SetUserPreference` so that the code of the many scripts using that function stays
+        #   unchanged. The state lives in its own folder, so the same domain and key never share a record.
+        parameters:
+            - name: domain          # Preference domain, such as `com.apple.Bluetooth`.
+            - name: key             # Name of the preference key to write.
+            - name: valueType       # Type flag for `defaults` without the leading dash: `bool`, `int`, `float` or `string`.
+            - name: value           # Value to write when the script runs.
+        call:
+            function: RunAsTargetUser
+            parameters:
+                code: |-
+                    preference_domain='{{ $domain }}'
+                    preference_key='{{ $key }}'
+                    preference_state_id="$(printf '%s\0%s' "$preference_domain" "$preference_key" | shasum -a 256 | awk '{ print $1 }')"
+                    preference_state_dir="$target_home/.local/state/privacy.sexy/defaults-current-host/$preference_state_id"
+                    preference_unsupported='false'
+                    preference_state_created='false'
+                    if [ ! -d "$preference_state_dir" ]; then
+                        original_type="$(run_as_target_user defaults -currentHost read-type "$preference_domain" "$preference_key" 2>/dev/null \
+                            | sed 's/^Type is //')"
+                        if [[ ! "$original_type" =~ ^(boolean|integer|float|string)?$ ]]; then
+                            >&2 echo "Skipping \"$preference_domain\" preference \"$preference_key\": cannot safely preserve its \"$original_type\" value."
+                            preference_unsupported='true'
+                        elif ! run_as_target_user install -d -m 700 "$preference_state_dir"; then
+                            >&2 echo "Skipping \"$preference_domain\" preference \"$preference_key\": cannot record its original value."
+                            preference_unsupported='true'
+                        else
+                            preference_state_created='true'
+                            if [ -n "$original_type" ]; then
+                                printf '%s\n' "$original_type" | run_as_target_user tee "$preference_state_dir/original-type" > /dev/null
+                                run_as_target_user defaults -currentHost read "$preference_domain" "$preference_key" \
+                                    | run_as_target_user tee "$preference_state_dir/original-value" > /dev/null
+                            else
+                                printf 'absent\n' | run_as_target_user tee "$preference_state_dir/original-type" > /dev/null
+                                printf '' | run_as_target_user tee "$preference_state_dir/original-value" > /dev/null
+                            fi
+                        fi
+                    fi
+                    if [ "$preference_unsupported" = 'true' ]; then
+                        : # Reported above; the preference is left as it is.
+                    elif run_as_target_user defaults -currentHost write "$preference_domain" "$preference_key" -{{ $valueType }} '{{ $value }}'; then
+                        run_as_target_user defaults -currentHost read-type "$preference_domain" "$preference_key" \
+                            | sed 's/^Type is //' | run_as_target_user tee "$preference_state_dir/applied-type" > /dev/null
+                        run_as_target_user defaults -currentHost read "$preference_domain" "$preference_key" \
+                            | run_as_target_user tee "$preference_state_dir/applied-value" > /dev/null
+                        echo "Successfully set \"$preference_domain\" preference \"$preference_key\" for this Mac to \"{{ $value }}\"."
+                    else
+                        if [ "$preference_state_created" = 'true' ]; then
+                            run_as_target_user rm -rf "$preference_state_dir"
+                        fi
+                        >&2 echo "Failed to set \"$preference_domain\" preference \"$preference_key\" for this Mac."
+                    fi
+                revertCode: |-
+                    preference_domain='{{ $domain }}'
+                    preference_key='{{ $key }}'
+                    preference_state_id="$(printf '%s\0%s' "$preference_domain" "$preference_key" | shasum -a 256 | awk '{ print $1 }')"
+                    preference_state_dir="$target_home/.local/state/privacy.sexy/defaults-current-host/$preference_state_id"
+                    if [ ! -d "$preference_state_dir" ]; then
+                        echo "Skipping, no original state for \"$preference_domain\" preference \"$preference_key\" was found."
+                    else
+                        current_type="$(run_as_target_user defaults -currentHost read-type "$preference_domain" "$preference_key" 2>/dev/null \
+                            | sed 's/^Type is //')"
+                        current_value="$(run_as_target_user defaults -currentHost read "$preference_domain" "$preference_key" 2>/dev/null)"
+                        if [ "$current_type" != "$(run_as_target_user cat "$preference_state_dir/applied-type" 2>/dev/null)" ] \
+                            || [ "$current_value" != "$(run_as_target_user cat "$preference_state_dir/applied-value" 2>/dev/null)" ]; then
+                            >&2 echo "Skipping revert because \"$preference_domain\" preference \"$preference_key\" changed after privacy.sexy applied it."
+                        else
+                            original_type="$(run_as_target_user cat "$preference_state_dir/original-type")"
+                            original_value="$(run_as_target_user cat "$preference_state_dir/original-value")"
+                            restore_succeeded='false'
+                            case "$original_type" in
+                                absent) # The key was originally absent.
+                                    run_as_target_user defaults -currentHost delete "$preference_domain" "$preference_key" 2>/dev/null \
+                                        && restore_succeeded='true' ;;
+                                boolean)
+                                    run_as_target_user defaults -currentHost write "$preference_domain" "$preference_key" -bool "$original_value" \
+                                        && restore_succeeded='true' ;;
+                                integer)
+                                    run_as_target_user defaults -currentHost write "$preference_domain" "$preference_key" -int "$original_value" \
+                                        && restore_succeeded='true' ;;
+                                float)
+                                    run_as_target_user defaults -currentHost write "$preference_domain" "$preference_key" -float "$original_value" \
+                                        && restore_succeeded='true' ;;
+                                string)
+                                    run_as_target_user defaults -currentHost write "$preference_domain" "$preference_key" -string "$original_value" \
+                                        && restore_succeeded='true' ;;
+                            esac
+                            if [ "$restore_succeeded" = 'true' ]; then
+                                run_as_target_user rm -rf "$preference_state_dir"
+                                echo "Successfully restored \"$preference_domain\" preference \"$preference_key\" for this Mac."
+                            else
+                                >&2 echo "Failed to restore \"$preference_domain\" preference \"$preference_key\" for this Mac."
+                            fi
+                        fi
+                    fi
+    -
+        name: SetSystemPreference
+        # 💡 Purpose:
+        #   Writes a system-wide preference to a property list in `/Library/Preferences` and records the original
+        #   value, so revert restores exactly what was there (including "not set") instead of guessing a default.
+        #   The file is given as an absolute path, which `defaults` writes directly, so running as root is correct here,
+        #   unlike for per-user domains (see `SetUserPreference`).
+        #   The state lives in `/var/db`, like the other system-wide state in this collection, because it describes a
+        #   system file rather than anything in the invoking user's home.
+        parameters:
+            - name: plistPath       # Absolute path of the property list without `.plist`, such as `/Library/Preferences/com.apple.loginwindow`.
+            - name: key             # Name of the preference key to write.
+            - name: valueType       # Type flag for `defaults` without the leading dash: `bool`, `int`, `float` or `string`.
+            - name: value           # Value to write when the script runs.
+        code: |-
+            preference_file='{{ $plistPath }}'
+            preference_key='{{ $key }}'
+            preference_state_id="$(printf '%s\0%s' "$preference_file" "$preference_key" | shasum -a 256 | awk '{ print $1 }')"
+            preference_state_dir="/var/db/privacy.sexy-system-preferences/$preference_state_id"
+            preference_unsupported='false'
+            preference_state_created='false'
+            if [ ! -d "$preference_state_dir" ]; then
+                original_type="$(defaults read-type "$preference_file" "$preference_key" 2>/dev/null | sed 's/^Type is //')"
+                if [[ ! "$original_type" =~ ^(boolean|integer|float|string)?$ ]]; then
+                    preference_unsupported="cannot safely preserve its \"$original_type\" value"
+                elif ! mkdir -p -m 700 "$preference_state_dir"; then
+                    preference_unsupported='cannot record its original value'
+                else
+                    preference_state_created='true'
+                    if [ -n "$original_type" ]; then
+                        printf '%s\n' "$original_type" > "$preference_state_dir/original-type"
+                        defaults read "$preference_file" "$preference_key" > "$preference_state_dir/original-value"
+                    else
+                        printf 'absent\n' > "$preference_state_dir/original-type"
+                        : > "$preference_state_dir/original-value"
+                    fi
+                fi
+            fi
+            if [ "$preference_unsupported" != 'false' ]; then
+                >&2 echo "Skipping \"$preference_key\" in \"$preference_file\": $preference_unsupported."
+            elif defaults write "$preference_file" "$preference_key" -{{ $valueType }} '{{ $value }}'; then
+                defaults read-type "$preference_file" "$preference_key" | sed 's/^Type is //' > "$preference_state_dir/applied-type"
+                defaults read "$preference_file" "$preference_key" > "$preference_state_dir/applied-value"
+                echo "Successfully set \"$preference_key\" in \"$preference_file\" to \"{{ $value }}\"."
+            else
+                if [ "$preference_state_created" = 'true' ]; then
+                    rm -rf "$preference_state_dir"
+                fi
+                >&2 echo "Failed to set \"$preference_key\" in \"$preference_file\"."
+            fi
+        revertCode: |-
+            preference_file='{{ $plistPath }}'
+            preference_key='{{ $key }}'
+            preference_state_id="$(printf '%s\0%s' "$preference_file" "$preference_key" | shasum -a 256 | awk '{ print $1 }')"
+            preference_state_dir="/var/db/privacy.sexy-system-preferences/$preference_state_id"
+            if [ ! -d "$preference_state_dir" ]; then
+                echo "Skipping, no original state for \"$preference_key\" in \"$preference_file\" was found."
+            else
+                current_type="$(defaults read-type "$preference_file" "$preference_key" 2>/dev/null | sed 's/^Type is //')"
+                current_value="$(defaults read "$preference_file" "$preference_key" 2>/dev/null)"
+                if [ "$current_type" != "$(cat "$preference_state_dir/applied-type" 2>/dev/null)" ] \
+                    || [ "$current_value" != "$(cat "$preference_state_dir/applied-value" 2>/dev/null)" ]; then
+                    >&2 echo "Skipping revert because \"$preference_key\" in \"$preference_file\" changed after privacy.sexy applied it."
+                else
+                    original_type="$(cat "$preference_state_dir/original-type")"
+                    original_value="$(cat "$preference_state_dir/original-value")"
+                    restore_succeeded='false'
+                    case "$original_type" in
+                        absent) # The key was originally absent.
+                            defaults delete "$preference_file" "$preference_key" 2>/dev/null && restore_succeeded='true' ;;
+                        boolean)
+                            defaults write "$preference_file" "$preference_key" -bool "$original_value" && restore_succeeded='true' ;;
+                        integer)
+                            defaults write "$preference_file" "$preference_key" -int "$original_value" && restore_succeeded='true' ;;
+                        float)
+                            defaults write "$preference_file" "$preference_key" -float "$original_value" && restore_succeeded='true' ;;
+                        string)
+                            defaults write "$preference_file" "$preference_key" -string "$original_value" && restore_succeeded='true' ;;
+                    esac
+                    if [ "$restore_succeeded" = 'true' ]; then
+                        rm -rf "$preference_state_dir"
+                        echo "Successfully restored \"$preference_key\" in \"$preference_file\"."
+                    else
+                        >&2 echo "Failed to restore \"$preference_key\" in \"$preference_file\"."
+                    fi
+                fi
+            fi
+    -
+        name: DisableLaunchDaemon
+        # 💡 Purpose:
+        #   Turns off a system service that macOS ships in `/System/Library/LaunchDaemons` (such as a sharing service)
+        #   with `launchctl disable` and `launchctl bootout`, and turns it back on during revert only if this function
+        #   turned it off, so revert never starts a service that was off before privacy.sexy ran.
+        #   `launchctl print-disabled system` lists the override as `"<label>" => enabled` or `=> disabled`
+        #   (`=> false` or `=> true` on older releases), and `launchctl print system/<label>` succeeds only while the
+        #   service is loaded. As in the mSCP check for Screen Sharing, the service counts as on when either says so.
+        # References:
+        #   - https://web.archive.org/web/20251013065503/https://keith.github.io/xcode-man-pages/launchctl.1.html
+        #   - https://github.com/usnistgov/macos_security/blob/tahoe/rules/system_settings/system_settings_screen_sharing_disable.yaml
+        parameters:
+            - name: label # Label of the launchd service, such as `com.apple.smbd`.
+        code: |-
+            daemon_label='{{ $label }}'
+            daemon_state_file="/var/db/privacy.sexy-launchd-$daemon_label-state"
+            daemon_override="$(launchctl print-disabled system 2>/dev/null \
+                | awk -v label="\"$daemon_label\"" '$1 == label { print $3; exit }')"
+            case "$daemon_override" in
+                enabled|false) daemon_override='enabled' ;;
+                disabled|true) daemon_override='disabled' ;;
+                *) daemon_override='unset' ;;
+            esac
+            if launchctl print "system/$daemon_label" > /dev/null 2>&1; then
+                daemon_loaded='loaded'
+            else
+                daemon_loaded='not-loaded'
+            fi
+            if [ "$daemon_override" != 'enabled' ] && [ "$daemon_loaded" = 'not-loaded' ]; then
+                echo "Skipping, \"$daemon_label\" is already off."
+            else
+                daemon_state_created='false'
+                # A record left by an earlier run that could not stop the service already holds the original state.
+                if [ ! -e "$daemon_state_file" ]; then
+                    printf '%s\n%s\n' "$daemon_override" "$daemon_loaded" > "$daemon_state_file"
+                    chmod 600 "$daemon_state_file"
+                    daemon_state_created='true'
+                fi
+                if ! launchctl disable "system/$daemon_label"; then
+                    if [ "$daemon_state_created" = 'true' ]; then
+                        rm -f "$daemon_state_file"
+                    fi
+                    >&2 echo "Failed to disable \"$daemon_label\"."
+                elif [ "$daemon_loaded" = 'loaded' ] && ! launchctl bootout "system/$daemon_label" 2>/dev/null; then
+                    >&2 echo "Disabled \"$daemon_label\", but it keeps running until this Mac restarts."
+                else
+                    echo "Disabled \"$daemon_label\"."
+                fi
+            fi
+        revertCode: |-
+            daemon_label='{{ $label }}'
+            daemon_state_file="/var/db/privacy.sexy-launchd-$daemon_label-state"
+            daemon_plist="/System/Library/LaunchDaemons/$daemon_label.plist"
+            if [ ! -e "$daemon_state_file" ]; then
+                echo "Skipping, no \"$daemon_label\" state recorded by privacy.sexy was found."
+            else
+                original_override="$(sed -n '1p' "$daemon_state_file")"
+                original_loaded="$(sed -n '2p' "$daemon_state_file")"
+                daemon_override="$(launchctl print-disabled system 2>/dev/null \
+                    | awk -v label="\"$daemon_label\"" '$1 == label { print $3; exit }')"
+                if launchctl print "system/$daemon_label" > /dev/null 2>&1 \
+                    || [[ ! "$daemon_override" =~ ^(disabled|true)$ ]]; then
+                    >&2 echo "Skipping revert because \"$daemon_label\" changed after privacy.sexy disabled it."
+                elif [ "$original_override" != 'disabled' ] && ! launchctl enable "system/$daemon_label"; then
+                    >&2 echo "Failed to re-enable \"$daemon_label\"."
+                else
+                    rm -f "$daemon_state_file"
+                    if [ "$original_loaded" != 'loaded' ]; then
+                        echo "Restored \"$daemon_label\" to its original state."
+                    elif launchctl bootstrap system "$daemon_plist" 2>/dev/null; then
+                        echo "Restored \"$daemon_label\" to its original state and started it."
+                    elif [ "$original_override" != 'disabled' ]; then
+                        echo "Re-enabled \"$daemon_label\"; it starts again when this Mac restarts."
+                    else
+                        >&2 echo "Could not start \"$daemon_label\" again."
+                    fi
+                fi
+            fi
+    -
+        name: AddFirefoxPrefs
+        # 💡 Purpose:
+        #   macOS version of the Linux function of the same name: sets one preference in the `user.js` of every
+        #   Firefox profile of the invoking user, and restores the earlier `user.js` and `prefs.js` lines on revert.
+        #   Firefox applies `user.js` over `prefs.js` at startup and keeps the value in `prefs.js`, so revert restores
+        #   both files, but only when neither changed after privacy.sexy applied the preference.
+        # ❗ Every read and write of a profile file and of the state goes through `run_as_target_user`, so files stay
+        #   owned by the user and a `user.js` that is a symbolic link can only reach files the user could change anyway.
+        # ❗ Plain bash and `awk` rather than Python as on Linux: `/usr/bin/python3` is only a stub that asks to install
+        #   the Command Line Tools on Macs that do not have them.
+        # ❗ Lines are matched with `index()`, a literal prefix comparison, because preference names contain `.`, which a
+        #   regular expression would treat as "any character".
+        # References:
+        #   - https://web.archive.org/web/20250103184029/https://support.mozilla.org/en-US/kb/profiles-where-firefox-stores-user-data
+        #   - https://web.archive.org/web/20230811005205/https://kb.mozillazine.org/User.js_file
+        parameters:
+            - name: prefName
+            - name: jsonValue # JSON literal written as the value, such as `true`, `false` or `5`.
+        call:
+            function: RunAsTargetUser
+            parameters:
+                code: |-
+                    firefox_pref_name='{{ $prefName }}'
+                    firefox_pref_prefix="user_pref(\"$firefox_pref_name\","
+                    firefox_pref_line="user_pref(\"$firefox_pref_name\", {{ $jsonValue }});"
+                    firefox_profiles_dir="$target_home/Library/Application Support/Firefox/Profiles"
+                    read_firefox_pref_lines() {
+                        if [ -f "$1" ]; then
+                            run_as_target_user cat "$1" 2>/dev/null \
+                                | firefox_pref_prefix="$firefox_pref_prefix" awk '
+                                    { sub(/\r$/, "") }
+                                    index($0, ENVIRON["firefox_pref_prefix"]) == 1 { print }'
+                        fi
+                    }
+                    firefox_profile_found='false'
+                    for firefox_profile in "$firefox_profiles_dir"/*/; do
+                        firefox_profile="${firefox_profile%/}"
+                        firefox_profile_name="${firefox_profile##*/}"
+                        if [ ! -d "$firefox_profile" ] || [ -L "$firefox_profile" ] \
+                            || [[ ! "$firefox_profile_name" =~ ^[a-z0-9]{8}\..+ ]]; then
+                            continue
+                        fi
+                        firefox_profile_found='true'
+                        firefox_user_js="$firefox_profile/user.js"
+                        if [ "$(read_firefox_pref_lines "$firefox_user_js")" = "$firefox_pref_line" ]; then
+                            echo "Skipping, \"$firefox_pref_name\" is already set in \"$firefox_user_js\"."
+                            continue
+                        fi
+                        firefox_state_id="$(printf '%s\0%s' "$firefox_profile" "$firefox_pref_name" | shasum -a 256 | awk '{ print $1 }')"
+                        firefox_state_dir="$target_home/.local/state/privacy.sexy/firefox/$firefox_state_id"
+                        if [ ! -d "$firefox_state_dir" ]; then
+                            if ! run_as_target_user install -d -m 700 "$firefox_state_dir"; then
+                                >&2 echo "Skipping \"$firefox_profile\", could not record its original state."
+                                continue
+                            fi
+                            for firefox_file_name in user.js prefs.js; do
+                                firefox_file_existed='false'
+                                if [ -e "$firefox_profile/$firefox_file_name" ]; then
+                                    firefox_file_existed='true'
+                                fi
+                                printf '%s\n' "$firefox_file_existed" \
+                                    | run_as_target_user tee "$firefox_state_dir/$firefox_file_name.existed" > /dev/null
+                                read_firefox_pref_lines "$firefox_profile/$firefox_file_name" \
+                                    | run_as_target_user tee "$firefox_state_dir/$firefox_file_name.lines" > /dev/null
+                            done
+                        fi
+                        firefox_old_content="$(mktemp)"
+                        firefox_new_content="$(mktemp)"
+                        if [ -f "$firefox_user_js" ]; then
+                            run_as_target_user cat "$firefox_user_js" > "$firefox_old_content"
+                        fi
+                        if firefox_pref_prefix="$firefox_pref_prefix" firefox_pref_line="$firefox_pref_line" awk '
+                                index($0, ENVIRON["firefox_pref_prefix"]) != 1 { print }
+                                END { print ENVIRON["firefox_pref_line"] }' "$firefox_old_content" > "$firefox_new_content" \
+                            && run_as_target_user tee "$firefox_user_js" < "$firefox_new_content" > /dev/null; then
+                            echo "Set \"$firefox_pref_name\" in \"$firefox_user_js\". It applies the next time Firefox starts."
+                        else
+                            >&2 echo "Failed to set \"$firefox_pref_name\" in \"$firefox_user_js\"."
+                        fi
+                        rm -f "$firefox_old_content" "$firefox_new_content"
+                    done
+                    if [ "$firefox_profile_found" = 'false' ]; then
+                        echo 'Skipping, no Firefox profile was found for this user.'
+                    fi
+                revertCode: |-
+                    firefox_pref_name='{{ $prefName }}'
+                    firefox_pref_prefix="user_pref(\"$firefox_pref_name\","
+                    firefox_pref_line="user_pref(\"$firefox_pref_name\", {{ $jsonValue }});"
+                    firefox_profiles_dir="$target_home/Library/Application Support/Firefox/Profiles"
+                    read_firefox_pref_lines() {
+                        if [ -f "$1" ]; then
+                            run_as_target_user cat "$1" 2>/dev/null \
+                                | firefox_pref_prefix="$firefox_pref_prefix" awk '
+                                    { sub(/\r$/, "") }
+                                    index($0, ENVIRON["firefox_pref_prefix"]) == 1 { print }'
+                        fi
+                    }
+                    if pgrep -x firefox > /dev/null 2>&1; then
+                        >&2 echo 'Warning: Quit Firefox before reverting, otherwise it can write the changed preference back when it quits.'
+                    fi
+                    for firefox_profile in "$firefox_profiles_dir"/*/; do
+                        firefox_profile="${firefox_profile%/}"
+                        firefox_profile_name="${firefox_profile##*/}"
+                        if [ ! -d "$firefox_profile" ] || [ -L "$firefox_profile" ] \
+                            || [[ ! "$firefox_profile_name" =~ ^[a-z0-9]{8}\..+ ]]; then
+                            continue
+                        fi
+                        firefox_state_id="$(printf '%s\0%s' "$firefox_profile" "$firefox_pref_name" | shasum -a 256 | awk '{ print $1 }')"
+                        firefox_state_dir="$target_home/.local/state/privacy.sexy/firefox/$firefox_state_id"
+                        if [ ! -d "$firefox_state_dir" ]; then
+                            continue
+                        fi
+                        firefox_can_restore='true'
+                        for firefox_file_name in user.js prefs.js; do
+                            firefox_current_lines="$(read_firefox_pref_lines "$firefox_profile/$firefox_file_name")"
+                            firefox_original_lines="$(run_as_target_user cat "$firefox_state_dir/$firefox_file_name.lines" 2>/dev/null)"
+                            if [ "$firefox_current_lines" != "$firefox_original_lines" ] \
+                                && [ "$firefox_current_lines" != "$firefox_pref_line" ]; then
+                                >&2 echo "Skipping \"$firefox_profile\": \"$firefox_pref_name\" changed in $firefox_file_name after privacy.sexy set it."
+                                firefox_can_restore='false'
+                            fi
+                        done
+                        if [ "$firefox_can_restore" = 'false' ]; then
+                            continue
+                        fi
+                        firefox_restore_failed='false'
+                        for firefox_file_name in user.js prefs.js; do
+                            firefox_file="$firefox_profile/$firefox_file_name"
+                            firefox_current_lines="$(read_firefox_pref_lines "$firefox_file")"
+                            firefox_original_lines="$(run_as_target_user cat "$firefox_state_dir/$firefox_file_name.lines" 2>/dev/null)"
+                            if [ "$firefox_current_lines" = "$firefox_original_lines" ]; then
+                                continue
+                            fi
+                            firefox_old_content="$(mktemp)"
+                            firefox_new_content="$(mktemp)"
+                            if [ -f "$firefox_file" ]; then
+                                run_as_target_user cat "$firefox_file" > "$firefox_old_content"
+                            fi
+                            firefox_pref_prefix="$firefox_pref_prefix" awk 'index($0, ENVIRON["firefox_pref_prefix"]) != 1' \
+                                "$firefox_old_content" > "$firefox_new_content"
+                            run_as_target_user cat "$firefox_state_dir/$firefox_file_name.lines" >> "$firefox_new_content" 2>/dev/null
+                            if [ "$(run_as_target_user cat "$firefox_state_dir/$firefox_file_name.existed" 2>/dev/null)" = 'false' ] \
+                                && [ ! -s "$firefox_new_content" ]; then
+                                run_as_target_user rm -f "$firefox_file" || firefox_restore_failed='true'
+                            elif ! run_as_target_user tee "$firefox_file" < "$firefox_new_content" > /dev/null; then
+                                firefox_restore_failed='true'
+                            fi
+                            rm -f "$firefox_old_content" "$firefox_new_content"
+                        done
+                        if [ "$firefox_restore_failed" = 'false' ]; then
+                            run_as_target_user rm -rf "$firefox_state_dir"
+                            echo "Restored the original \"$firefox_pref_name\" state in \"$firefox_profile\"."
+                        else
+                            >&2 echo "Failed to restore the original \"$firefox_pref_name\" state in \"$firefox_profile\"."
+                        fi
+                    done
+    -
+        name: SetBravePolicy
+        # 💡 Purpose:
+        #   Sets one Brave browser policy in `/Library/Managed Preferences/com.brave.Browser.plist`, with the commands
+        #   that Brave documents for Macs that are not managed through MDM, and on revert removes only that policy.
+        #   The file is removed again once it is empty, but only if privacy.sexy created it.
+        # ❗ It never edits a policy file that privacy.sexy did not create. When the file exists without the marker
+        #   below, a configuration profile (MDM) or an administrator manages Brave, and changing the file could
+        #   override their policies or be overwritten by them. A per-user managed file means the same.
+        # ❗ The marker and the per-policy state live in `/var/db`, like the other system-wide state, because
+        #   `/Library/Managed Preferences` belongs to the system rather than to the invoking user.
+        # References:
+        #   - https://web.archive.org/web/20261028190136/https://support.brave.app/hc/en-us/articles/360039248271-Group-Policy
+        parameters:
+            - name: policyName  # Boolean Brave policy, such as `BraveP3AEnabled`.
+            - name: value       # `true` or `false`.
+        code: |-
+            brave_policy_name='{{ $policyName }}'
+            brave_policy_value='{{ $value }}'
+            brave_policy_dir='/Library/Managed Preferences'
+            brave_policy_file="$brave_policy_dir/com.brave.Browser.plist"
+            brave_state_dir='/var/db/privacy.sexy-brave-policies'
+            brave_created_marker="$brave_state_dir/created-policy-file"
+            brave_policy_state="$brave_state_dir/$brave_policy_name"
+            if [ -e "$brave_policy_file" ] && [ ! -e "$brave_created_marker" ]; then
+                echo "Skipping, \"$brave_policy_file\" was not created by privacy.sexy, so a configuration profile (MDM) or an administrator manages Brave on this Mac."
+            elif [ -e "$brave_policy_dir/$target_user/com.brave.Browser.plist" ]; then
+                echo "Skipping, a configuration profile (MDM) manages Brave for \"$target_user\"."
+            elif [ -e "$brave_policy_state" ] \
+                && [ "$(/usr/libexec/PlistBuddy -c "Print :$brave_policy_name" "$brave_policy_file" 2>/dev/null)" = "$brave_policy_value" ]; then
+                echo "Skipping, Brave policy \"$brave_policy_name\" is already set to \"$brave_policy_value\"."
+            elif ! mkdir -p -m 700 "$brave_state_dir"; then
+                >&2 echo "Failed to prepare \"$brave_state_dir\" to record the change."
+            else
+                brave_file_created='false'
+                brave_state_created='false'
+                if [ ! -d "$brave_policy_dir" ]; then
+                    # As Brave documents for Macs that are not managed through MDM.
+                    mkdir -p "$brave_policy_dir" && chown root:wheel "$brave_policy_dir" && chmod 755 "$brave_policy_dir"
+                fi
+                if [ ! -e "$brave_policy_file" ]; then
+                    : > "$brave_created_marker"
+                    brave_file_created='true'
+                fi
+                if [ ! -e "$brave_policy_state" ]; then
+                    brave_original_value="$(/usr/libexec/PlistBuddy -c "Print :$brave_policy_name" "$brave_policy_file" 2>/dev/null)"
+                    printf '%s\n' "${brave_original_value:-absent}" > "$brave_policy_state"
+                    chmod 600 "$brave_policy_state"
+                    brave_state_created='true'
+                fi
+                if /usr/libexec/PlistBuddy -c "Print :$brave_policy_name" "$brave_policy_file" > /dev/null 2>&1; then
+                    brave_policy_command="Set :$brave_policy_name $brave_policy_value"
+                else
+                    brave_policy_command="Add :$brave_policy_name bool $brave_policy_value"
+                fi
+                if /usr/libexec/PlistBuddy -c "$brave_policy_command" "$brave_policy_file" > /dev/null; then
+                    chown root:wheel "$brave_policy_file"
+                    chmod 644 "$brave_policy_file"
+                    # Brave documents restarting the preference service so that the new value is read.
+                    killall cfprefsd 2>/dev/null
+                    echo "Set Brave policy \"$brave_policy_name\" to \"$brave_policy_value\". Restart Brave to apply it."
+                else
+                    if [ "$brave_state_created" = 'true' ]; then
+                        rm -f "$brave_policy_state"
+                    fi
+                    if [ "$brave_file_created" = 'true' ] && [ ! -e "$brave_policy_file" ]; then
+                        rm -f "$brave_created_marker"
+                    fi
+                    >&2 echo "Failed to set Brave policy \"$brave_policy_name\"."
+                fi
+            fi
+        revertCode: |-
+            brave_policy_name='{{ $policyName }}'
+            brave_policy_value='{{ $value }}'
+            brave_policy_dir='/Library/Managed Preferences'
+            brave_policy_file="$brave_policy_dir/com.brave.Browser.plist"
+            brave_state_dir='/var/db/privacy.sexy-brave-policies'
+            brave_created_marker="$brave_state_dir/created-policy-file"
+            brave_policy_state="$brave_state_dir/$brave_policy_name"
+            if [ ! -e "$brave_policy_state" ]; then
+                echo "Skipping, privacy.sexy has no record of setting Brave policy \"$brave_policy_name\"."
+            elif [ ! -e "$brave_policy_file" ]; then
+                rm -f "$brave_policy_state" "$brave_created_marker"
+                rmdir "$brave_state_dir" 2>/dev/null
+                echo "Skipping, \"$brave_policy_file\" no longer exists."
+            elif [ "$(/usr/libexec/PlistBuddy -c "Print :$brave_policy_name" "$brave_policy_file" 2>/dev/null)" != "$brave_policy_value" ]; then
+                >&2 echo "Skipping revert because Brave policy \"$brave_policy_name\" changed after privacy.sexy set it."
+            else
+                brave_original_value="$(cat "$brave_policy_state")"
+                if [ "$brave_original_value" = 'absent' ]; then
+                    brave_policy_command="Delete :$brave_policy_name"
+                else
+                    brave_policy_command="Set :$brave_policy_name $brave_original_value"
+                fi
+                if /usr/libexec/PlistBuddy -c "$brave_policy_command" "$brave_policy_file" > /dev/null; then
+                    rm -f "$brave_policy_state"
+                    if [ -e "$brave_created_marker" ] \
+                        && [ "$(plutil -convert json -o - "$brave_policy_file" 2>/dev/null)" = '{}' ]; then
+                        rm -f "$brave_policy_file" "$brave_created_marker"
+                        echo "Removed \"$brave_policy_file\", which privacy.sexy had created."
+                    fi
+                    rmdir "$brave_state_dir" 2>/dev/null
+                    killall cfprefsd 2>/dev/null
+                    echo "Restored Brave policy \"$brave_policy_name\". Restart Brave to apply it."
+                else
+                    >&2 echo "Failed to restore Brave policy \"$brave_policy_name\"."
+                fi
+            fi
