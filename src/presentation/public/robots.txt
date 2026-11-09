@@ -4,3 +4,7 @@ User-agent: *
 Allow: /
 
 Sitemap: https://privacy.turtlecute.org/sitemap.xml
+
+# Plain-text summary and full tweak index for language models (https://llmstxt.org/):
+#   https://privacy.turtlecute.org/llms.txt
+#   https://privacy.turtlecute.org/llms-full.txt

@@ -1,5 +1,6 @@
 /*
- * Build-time generation of the static catalog and article pages, plus the sitemap.
+ * Build-time generation of the static catalog and article pages, the sitemap, and the
+ * `llms.txt` / `llms-full.txt` summaries for AI answer engines (see llms.mjs).
  *
  * Why static HTML written into `dist-web` rather than routes in the SPA: GitHub Pages has no
  * rewrite rules, so client-side routing needs the `404.html` trick, and that serves an HTTP 404
@@ -18,6 +19,7 @@ import distDirs from '../../dist-dirs.json' with { type: 'json' };
 import { OPERATING_SYSTEMS, readCollection } from './collection-reader.mjs';
 import { renderAlternativesPage, renderCollectionPage } from './pages.mjs';
 import { SITE_ORIGIN } from './layout.mjs';
+import { renderLlmsFullTxt, renderLlmsTxt } from './llms.mjs';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
 const DIST_DIR = resolve(ROOT, distDirs.web);
@@ -51,6 +53,11 @@ async function writePage(path, html) {
   return Buffer.byteLength(html);
 }
 
+async function writeTextFile(fileName, text) {
+  await writeFile(join(DIST_DIR, fileName), text, 'utf8');
+  console.log(`Wrote /${fileName.padEnd(29)} ${(Buffer.byteLength(text) / 1024).toFixed(0)} KB`);
+}
+
 async function generate() {
   if (!existsSync(join(DIST_DIR, 'index.html'))) {
     throw new Error(`Build output not found in ${DIST_DIR}. Run \`npm run build\` first.`);
@@ -70,6 +77,8 @@ async function generate() {
   const sitemapPaths = ['/', ...pages.map((page) => page.path)];
   await writeFile(join(DIST_DIR, 'sitemap.xml'), renderSitemap(sitemapPaths, today()), 'utf8');
   console.log(`Wrote /sitemap.xml with ${sitemapPaths.length} URLs.`);
+  await writeTextFile('llms.txt', renderLlmsTxt(collections, pages));
+  await writeTextFile('llms-full.txt', renderLlmsFullTxt(collections, today()));
   const totalScripts = collections.reduce((sum, collection) => sum + collection.totalScripts, 0);
   console.log(
     `Indexed ${totalScripts} scripts: `

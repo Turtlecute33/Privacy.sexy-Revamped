@@ -146,6 +146,8 @@ export function renderCollectionPage(collection) {
     ${groups.map((group) => renderGroup(group)).join('')}`;
   return {
     path,
+    title: copy.title,
+    description: copy.description,
     html: renderPage({
       path,
       title: copy.metaTitle,
@@ -205,7 +207,7 @@ function renderSection({ path, scripts }) {
  * produces a wall of indentation nobody reads, so the hierarchy becomes a breadcrumb above a flat
  * list instead.
  */
-function flattenCategory(category, ancestors) {
+export function flattenCategory(category, ancestors) {
   const sections = [];
   if (category.scripts.length > 0) {
     sections.push({ path: ancestors, scripts: category.scripts });
@@ -216,10 +218,15 @@ function flattenCategory(category, ancestors) {
   return sections;
 }
 
-function countScripts(category) {
+export function countScripts(category) {
   return category.scripts.length
     + category.subCategories.reduce((sum, sub) => sum + countScripts(sub), 0);
 }
+
+const ALTERNATIVES_TITLE = 'privacy.sexy alternatives and forks';
+const ALTERNATIVES_DESCRIPTION = 'An honest comparison of privacy.sexy, this maintained fork, '
+  + 'PrivacyLearn, O&O ShutUp10++, Win11Debloat, WinUtil, WinScript and Sophia Script, including '
+  + 'where each one loses.';
 
 export function renderAlternativesPage(collections) {
   const path = '/privacy-sexy-alternatives/';
@@ -334,14 +341,13 @@ export function renderAlternativesPage(collections) {
     <a class="cta" href="/">Build a script &rarr;</a>`;
   return {
     path,
+    title: ALTERNATIVES_TITLE,
+    description: ALTERNATIVES_DESCRIPTION,
     html: renderPage({
       path,
       title: 'privacy.sexy alternatives and forks, compared honestly | privacy.sexy Revamped',
-      description:
-        'An honest comparison of privacy.sexy, this maintained fork, PrivacyLearn, '
-        + 'O&O ShutUp10++, Win11Debloat, WinUtil, WinScript and Sophia Script, including where '
-        + 'each one loses.',
-      h1: 'privacy.sexy alternatives and forks',
+      description: ALTERNATIVES_DESCRIPTION,
+      h1: ALTERNATIVES_TITLE,
       breadcrumb: [
         { name: 'privacy.sexy Revamped', path: '/' },
         { name: 'Alternatives', path },
