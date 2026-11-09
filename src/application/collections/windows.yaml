@@ -36004,7 +36004,7 @@ actions:
                     [1]: https://web.archive.org/web/20250313113448/https://en.wikipedia.org/wiki/OneDrive "OneDrive | Wikipedia"
                     [2]: https://en.wikipedia.org/w/index.php?title=OneDrive&oldid=1111615560#Privacy_concerns "OneDrive | Privacy concerns | Wikipedia"
                     [3]: https://web.archive.org/web/20191002180755/https://www.intralinks.com/blog/2014/04/microsoft-onedrive-business-can-alter-files-syncs   "Microsoft OneDrive for Business can Alter Your Files as It Syncs | Intralinks"
-                    [4]: https://thehackernews.com/2014/04/microsoft-onedrive-secretly-modifies.html "Microsoft OneDrive Secretly Modifies your BackUp Files | thehackernews.com"
+                    [4]: https://web.archive.org/web/20260510165945/https://thehackernews.com/2014/04/microsoft-onedrive-secretly-modifies.html "Microsoft OneDrive Secretly Modifies your BackUp Files | thehackernews.com"
                     [5]: https://web.archive.org/web/20231002162808/https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/rds_vdi-recommendations-1909#remove-onedrive-components "Optimizing Windows 10, version 1909, for a Virtual Desktop Infrastructure (VDI) role | Microsoft Learn"
                 children:
                     -
@@ -38636,7 +38636,7 @@ actions:
                             This registry key does not exist in Windows 11 installations by default.
 
                             [1]: https://web.archive.org/web/20231206213443/https://www.elevenforum.com/t/add-or-remove-widgets-button-on-taskbar-in-windows-11.32/ " Add or Remove Widgets Button on Taskbar in Windows 11 | Windows Eleven Forum"
-                            [2]: https://www.bleepingcomputer.com/news/microsoft/new-windows-11-registry-hacks-to-customize-your-device/ "New Windows 11 registry hacks to customize your device | Bleeping Computer"
+                            [2]: https://web.archive.org/web/20261021112707/https://www.bleepingcomputer.com/news/microsoft/new-windows-11-registry-hacks-to-customize-your-device/ "New Windows 11 registry hacks to customize your device | Bleeping Computer"
                         call:
                             -
                                 function: SetRegistryValue
@@ -39770,7 +39770,7 @@ actions:
                             - 0 - Disable policy (toggle is shown) [3] [4] [5]
                             - 1 - Enable policy (toggle is hidden) [3] [4] [5]
 
-                            [1]: https://www.windowslatest.com/2025/02/17/remove-try-the-new-outlook-toggle-in-outlook-classic-for-windows/ "Remove \"Try the new Outlook\" toggle in Outlook classic for Windows | www.windowslatest.com"
+                            [1]: https://web.archive.org/web/20260626101348/https://www.windowslatest.com/2025/02/17/remove-try-the-new-outlook-toggle-in-outlook-classic-for-windows/ "Remove \"Try the new Outlook\" toggle in Outlook classic for Windows | www.windowslatest.com"
                             [2]: https://web.archive.org/web/20250414223834/https://www.msxfaq.de/exchange/clients/new_outlook.htm "Das neue Outlook | www.msxfaq.de"
                             [3]: https://web.archive.org/web/20250407141317/https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/outlook-on-the-web/enable-disable-employee-access-new-outlook "Enable or disable access to Outlook for Windows | Microsoft Learn | learn.microsoft.com"
                             [4]: https://web.archive.org/web/20250414200942/https://learn.microsoft.com/en-us/microsoft-365-apps/outlook/troubleshoot/troubleshoot-deployment-new-outlook "Troubleshoot deployment issues in new Outlook - Microsoft 365 Apps | Microsoft Learn"
