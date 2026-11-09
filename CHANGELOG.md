@@ -8,7 +8,11 @@ milestones; `git log` remains the complete history of changes.
 Release history up to and including `0.13.8`, the point this project forked, belongs to upstream and is
 kept there: <https://github.com/undergroundwires/privacy.sexy/blob/master/CHANGELOG.md>.
 
-## Unreleased
+## 0.15.0 (2026-11-09)
+
+140 new scripts across Windows, macOS and Linux, reviewed after they were written: the generated code of
+every script was compiled and syntax-checked, and the Firefox, ufw and other shared functions were run
+against simulated systems.
 
 ### New scripts
 
@@ -56,6 +60,17 @@ Ideas that could not be verified or reverted safely are recorded under "Rejected
   create them on a new installation.
 - Linux: "Enable Firefox network partitioning" is no longer recommended, because Firefox 141 removed its
   preference and always partitions network state.
+
+### Known limitations
+
+- macOS: the Brave scripts write `/Library/Managed Preferences/com.brave.Browser.plist`, the only place
+  Brave reads these policies from on a Mac without device management. It has not been confirmed whether
+  macOS keeps a file there across restarts when no configuration profile installed it.
+- Firefox on macOS and Linux: reverting while Firefox is open only prints a warning. Firefox can then
+  write the changed preference back when it quits, so quit Firefox before reverting.
+- Windows: reverting a development tool telemetry script also removes the variable if you had set the
+  same value yourself before running the script.
+- The limitations listed for 0.14.0 still apply.
 
 ## 0.14.0 (2026-11-09)
 
