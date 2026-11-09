@@ -37,6 +37,10 @@ function main() {
       // The whole Stack Exchange network sits behind the same edge, so scoping this to
       // `stackoverflow.com` only moved the failure to the next cited site.
       /^https:\/\/(?:[a-z]+\.)?(?:stackoverflow|stackexchange|serverfault|superuser|askubuntu)\.com(?=[/?#]|$)/,
+      // KDE's GitLab answers `501` to the browser-like requests this check sends, while the
+      // same commit and raw file pages respond `200` to plain HTTP clients. A failure here
+      // reports on how the request looks, not on a dead page.
+      /^https:\/\/invent\.kde\.org(?=[/?#]|$)/,
     ],
     application: app,
   });
