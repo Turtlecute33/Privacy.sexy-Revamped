@@ -341,7 +341,7 @@ function dismissOnEscape(
   to frosted glass at the end. The frosted layers and the text fade side by side instead.
 */
 .tooltip__display {
-  @include glass-surface($radius: 16px, $tint: var(--glass-tint-strong));
+  @include glass-surface($radius: 16px, $tint: var(--glass-tint-strong), $frosted: true);
   transition: box-shadow 160ms $motion-ease-standard;
 
   &::before,

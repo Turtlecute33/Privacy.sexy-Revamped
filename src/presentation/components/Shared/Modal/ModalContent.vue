@@ -98,7 +98,7 @@ $modal-content-offset-upward: $spacing-absolute-large;
   that moment from reading as a flash of clear glass.
 */
 .modal-content-content {
-  @include glass-surface($radius: 26px, $tint: var(--glass-tint-strong));
+  @include glass-surface($radius: 26px, $tint: var(--glass-tint-strong), $frosted: true);
   overflow: hidden;
   box-sizing: border-box;
 

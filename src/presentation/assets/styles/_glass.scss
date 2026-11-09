@@ -16,11 +16,19 @@
   ancestor between a surface and that context must not paint a background of its own.
 
   Two layers, both behind the content:
-    ::before  the frosted body: tint, backdrop blur and a hairline edge.
+    ::before  the body: tint, a hairline edge and, when `$frosted`, the backdrop blur.
     ::after   the specular rim: a 1px ring lit at the top-left and, faintly, the bottom-right,
               which is what reads as a thick, curved pane rather than a flat translucent box.
+
+  Only floating layers are frosted (`$frosted: true`): tooltips and the modal, which pass over
+  text and controls that the blur has to soften. The bar and the panels sit on the page backdrop
+  alone, and that backdrop is a few wide radial gradients that do not move, so a 30px blur of it
+  is the same smooth gradient again: the blur changed nothing a visitor could see. It still cost
+  a full re-blur of the panel every frame anything inside it repainted, which is every frame of
+  scrolling the list and every hover: about 9x the CPU per scrolled frame with software
+  compositing (17 ms against 1.9 ms) and about a third more with GPU compositing.
 */
-@mixin glass-surface($radius: 22px, $tint: var(--glass-tint)) {
+@mixin glass-surface($radius: 22px, $tint: var(--glass-tint), $frosted: false) {
   position: relative;
   border-radius: $radius;
   box-shadow: var(--glass-shadow);
@@ -37,8 +45,10 @@
 
   &::before {
     background: $tint;
-    -webkit-backdrop-filter: var(--glass-filter);
-    backdrop-filter: var(--glass-filter);
+    @if $frosted {
+      -webkit-backdrop-filter: var(--glass-filter);
+      backdrop-filter: var(--glass-filter);
+    }
     box-shadow:
       inset 0 0 0 1px var(--glass-edge),
       0 0 0 0.5px var(--glass-edge-outer);
