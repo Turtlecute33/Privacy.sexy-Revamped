@@ -13,7 +13,18 @@
       Debloat Windows 11, disable telemetry, and harden macOS and Linux. Every command is
       shown before you run it.
     </p>
-    <div class="footer__links">
+    <!--
+      The static catalog and comparison pages (scripts/generate-catalog-pages) are reachable from
+      here and not only from the sitemap. Plain links from the home page are how crawlers find and
+      weigh them, and how an AI scraper that reads one page learns the full index exists.
+    -->
+    <nav class="footer__links" aria-label="Script catalogs and project links">
+      <a
+        v-for="page in catalogPages"
+        :key="page.path"
+        :href="page.href"
+      >{{ page.label }}</a>
+      <span class="footer__divider" aria-hidden="true" />
       <a :href="feedbackUrl" target="_blank" rel="noopener noreferrer">
         <AppIcon class="icon" icon="face-smile" />
         <span>Feedback</span>
@@ -22,7 +33,7 @@
         <AppIcon class="icon" icon="github" />
         <span>Source code</span>
       </a>
-    </div>
+    </nav>
   </footer>
 </template>
 
@@ -30,6 +41,14 @@
 import { defineComponent, computed } from 'vue';
 import AppIcon from '@/presentation/components/Shared/Icon/AppIcon.vue';
 import { injectKey } from '@/presentation/injectionSymbols';
+
+/* Paths are relative to the deploy base, matching what `generate-catalog-pages` writes. */
+const CATALOG_PAGES: readonly { readonly path: string, readonly label: string }[] = [
+  { path: 'windows/', label: 'Windows scripts' },
+  { path: 'macos/', label: 'macOS scripts' },
+  { path: 'linux/', label: 'Linux scripts' },
+  { path: 'privacy-sexy-alternatives/', label: 'Alternatives' },
+];
 
 export default defineComponent({
   components: {
@@ -44,10 +63,16 @@ export default defineComponent({
 
     const slogan = computed<string>(() => projectDetails.slogan);
 
+    const catalogPages = CATALOG_PAGES.map((page) => ({
+      ...page,
+      href: `${import.meta.env.BASE_URL}${page.path}`,
+    }));
+
     return {
       repositoryUrl,
       feedbackUrl,
       slogan,
+      catalogPages,
     };
   },
 });
@@ -91,6 +116,8 @@ export default defineComponent({
   &__links {
     display: flex;
     flex: 0 0 auto;
+    flex-wrap: wrap;
+    align-items: center;
     gap: 2px;
     margin-right: -8px;
 
@@ -123,6 +150,13 @@ export default defineComponent({
       }
     }
   }
+}
+
+.footer__divider {
+  width: 1px;
+  height: 12px;
+  margin: 0 6px;
+  background: var(--hairline);
 }
 
 // Touch targets stay comfortable where the pointer is imprecise.
