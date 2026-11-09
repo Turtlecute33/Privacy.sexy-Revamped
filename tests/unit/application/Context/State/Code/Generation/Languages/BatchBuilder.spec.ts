@@ -14,7 +14,22 @@ describe('BatchBuilder', () => {
     public getNewLineTerminator(): string {
       return super.getNewLineTerminator();
     }
+
+    public escapeCommentText(text: string): string {
+      return super.escapeCommentText(text);
+    }
   }
+  describe('escapeCommentText', () => {
+    it('doubles percent signs, which cmd expands even on comment lines', () => {
+      // arrange
+      const expected = 'Disable 100%%~ of it';
+      const sut = new BatchBuilderRevealer();
+      // act
+      const actual = sut.escapeCommentText('Disable 100%~ of it');
+      // assert
+      expect(actual).to.equal(expected);
+    });
+  });
   describe('getCommentDelimiter', () => {
     it('returns expected', () => {
       // arrange
@@ -47,6 +62,21 @@ describe('BatchBuilder', () => {
         name: 'text with multiple ampersands and percent signs',
         text: 'Me&you in % ? You & me = 0%',
         expected: 'echo Me^&you in %% ? You ^& me = 0%%',
+      },
+      {
+        name: 'operators inside double quotes, which cmd prints as they are',
+        text: 'Remove "Movies & TV" app',
+        expected: 'echo Remove "Movies & TV" app',
+      },
+      {
+        name: 'redirection, pipe and caret outside double quotes',
+        text: 'a < b > c | d ^ e',
+        expected: 'echo a ^< b ^> c ^| d ^^ e',
+      },
+      {
+        name: 'percent sign inside double quotes, which cmd still expands',
+        text: 'Use "100%" of it',
+        expected: 'echo Use "100%%" of it',
       },
     ];
     for (const test of testData) {

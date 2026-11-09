@@ -36,10 +36,16 @@ implements Repository<TEntity> {
   }
 
   public addOrUpdateItem(item: TEntity): void {
-    if (this.exists(item.id)) {
-      this.removeItem(item.id);
+    /*
+      Updates in place: removing and re-adding moved the item to the end, so toggling revert on a
+      script moved its code to the bottom of the generated file.
+    */
+    const index = this.items.findIndex((existing) => existing.id === item.id);
+    if (index === -1) {
+      this.items.push(item);
+      return;
     }
-    this.items.push(item);
+    this.items[index] = item;
   }
 
   public removeItem(id: RepositoryEntityId): void {

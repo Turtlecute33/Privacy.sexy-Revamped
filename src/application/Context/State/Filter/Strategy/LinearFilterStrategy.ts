@@ -9,7 +9,11 @@ import type { FilterResult } from '../Result/FilterResult';
 
 export class LinearFilterStrategy implements FilterStrategy {
   applyFilter(filter: string, collection: CategoryCollection): FilterResult {
-    const filterLowercase = filter.toLocaleLowerCase();
+    /*
+      Locale-independent on both sides: under a Turkish locale `toLocaleLowerCase` turns "I" into a
+      dotless "ı", so a query such as "IPv6" would never match text lowered with `toLowerCase`.
+    */
+    const filterLowercase = filter.toLowerCase();
     const filteredScripts = collection.getAllScripts().filter(
       (script) => matchesScript(script, filterLowercase),
     );
@@ -40,8 +44,9 @@ function matchesScript(
 ): boolean {
   return matchesAny(
     () => matchName(script.name, filterLowercase),
-    () => matchCode(script.code, filterLowercase),
+    // Documentation is already in memory, while reading the code compiles it on first access.
     () => matchDocumentation(script, filterLowercase),
+    () => matchCode(script.code, filterLowercase),
   );
 }
 
@@ -76,6 +81,6 @@ function matchDocumentation(
   filterLowercase: string,
 ): boolean {
   return documentable.docs.some(
-    (doc) => doc.toLocaleLowerCase().includes(filterLowercase),
+    (doc) => doc.toLowerCase().includes(filterLowercase),
   );
 }

@@ -30,7 +30,7 @@ export abstract class CodeBuilder implements ICodeBuilder {
   }
 
   public appendCommentLine(commentLine?: string): CodeBuilder {
-    this.lines.push(`${this.getCommentDelimiter()} ${commentLine}`);
+    this.lines.push(`${this.getCommentDelimiter()} ${this.escapeCommentText(commentLine ?? '')}`);
     return this;
   }
 
@@ -65,6 +65,12 @@ export abstract class CodeBuilder implements ICodeBuilder {
   }
 
   protected abstract getCommentDelimiter(): string;
+
+  /** Makes text safe to place after the comment delimiter; only needed by some languages. */
+  // eslint-disable-next-line class-methods-use-this
+  protected escapeCommentText(text: string): string {
+    return text;
+  }
 
   protected abstract writeStandardOut(text: string): string;
 
