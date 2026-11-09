@@ -13,14 +13,43 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  # A deploy that already started is allowed to finish; queued runs still collapse to the latest.
+  # Cancelling mid-deploy can leave the site half-published.
+  cancel-in-progress: false
 
 env:
   DEPLOY_BASE_URL: /
 
 jobs:
-  build:
+  # Every push to `master` goes straight to production, so the site is only built once the tests pass.
+  # Without this gate a commit that broke the tests was live minutes later, with the red check beside it.
+  verify:
     runs-on: ubuntu-latest
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: 'true' # No browser is needed to run the tests
+      CYPRESS_INSTALL_BINARY: '0'
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v6
+      -
+        name: Set-up node
+        uses: ./.github/actions/setup-node
+      -
+        name: Install dependencies
+        uses: ./.github/actions/npm-install-dependencies
+      -
+        name: Run unit tests
+        run: npm run test:unit
+      -
+        name: Run integration tests
+        run: npm run test:integration
+
+  build:
+    needs: verify
+    runs-on: ubuntu-latest
+    env:
+      CYPRESS_INSTALL_BINARY: '0' # Only Puppeteer's browser is needed, for the prerender
     steps:
       -
         name: Checkout
@@ -32,6 +61,13 @@ jobs:
           node-version: 22.x
           cache: npm
       -
+        # Restored before `npm ci` so Puppeteer's install step finds the browser instead of downloading it.
+        name: Cache Puppeteer browser
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/puppeteer
+          key: puppeteer-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      -
         name: Install dependencies
         run: npm ci
       -
@@ -42,12 +78,6 @@ jobs:
         # sitemap.xml, which is generated rather than committed so its `lastmod` tracks the deploy.
         name: Generate static catalog pages
         run: npm run generate:pages
-      -
-        name: Cache Puppeteer browser
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/puppeteer
-          key: puppeteer-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
       -
         name: Install Chromium for prerendering
         run: npx puppeteer browsers install chrome
