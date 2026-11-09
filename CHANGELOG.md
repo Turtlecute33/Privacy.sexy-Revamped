@@ -8,6 +8,15 @@ milestones; `git log` remains the complete history of changes.
 Release history up to and including `0.13.8`, the point this project forked, belongs to upstream and is
 kept there: <https://github.com/undergroundwires/privacy.sexy/blob/master/CHANGELOG.md>.
 
+## 0.16.1 (2026-11-09)
+
+### Fixes
+
+- Desktop: on screens wider than the workbench, making the window shorter than 620px moved the whole
+  workbench sideways by half a scrollbar when the page started to scroll. It now stays in place.
+- The external link check no longer fails on GNOME's GitLab, which rejects its requests on some runs
+  while the pages are reachable.
+
 ## 0.16.0 (2026-11-09)
 
 A redesigned interface that uses less CPU, plus pages and files that make the catalog easier for search
