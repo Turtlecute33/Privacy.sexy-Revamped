@@ -1,6 +1,6 @@
 {
-  "name": "privacy.sexy Revamped",
-  "short_name": "privacy.sexy",
+  "name": "privacy.turtlecute.org",
+  "short_name": "Privacy scripts",
   "description": "Build scripts to debloat, harden, and disable telemetry on Windows, macOS, and Linux.",
   "start_url": "/",
   "scope": "/",

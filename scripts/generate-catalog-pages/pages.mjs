@@ -12,14 +12,16 @@
  *    recommendation tier and upgraded none, which is editorial work that exists nowhere else. The
  *    per-script tag and the counts in the summary are that work, made visible.
  */
-import { escapeHtml, renderPage, slugify } from './layout.mjs';
+import {
+  escapeHtml, renderPage, slugify, SITE_NAME,
+} from './layout.mjs';
 
 const OS_COPY = {
   windows: {
     title: 'Windows privacy and debloat script catalog',
-    metaTitle: 'Windows privacy & debloat scripts: full catalog | privacy.sexy Revamped',
+    metaTitle: 'Windows privacy & debloat scripts: full catalog | privacy.turtlecute.org',
     description:
-      'Every Windows tweak in privacy.sexy Revamped, with this fork\'s recommendation for each '
+      'Every Windows tweak in the maintained privacy.sexy fork, with its recommendation for each '
       + 'one. Remove preinstalled apps, disable telemetry and Recall, and harden Windows 11 and 10.',
     lede: `
       <p class="lede">
@@ -48,9 +50,9 @@ const OS_COPY = {
   },
   macos: {
     title: 'macOS privacy and hardening script catalog',
-    metaTitle: 'macOS privacy & hardening scripts: full catalog | privacy.sexy Revamped',
+    metaTitle: 'macOS privacy & hardening scripts: full catalog | privacy.turtlecute.org',
     description:
-      'Every macOS tweak in privacy.sexy Revamped, with this fork\'s recommendation for each one. '
+      'Every macOS tweak in the maintained privacy.sexy fork, with its recommendation for each one. '
       + 'Reduce Apple data collection, configure Siri and Safari, and harden the firewall.',
     lede: `
       <p class="lede">
@@ -76,9 +78,9 @@ const OS_COPY = {
   },
   linux: {
     title: 'Linux privacy and hardening script catalog',
-    metaTitle: 'Linux privacy & hardening scripts: full catalog | privacy.sexy Revamped',
+    metaTitle: 'Linux privacy & hardening scripts: full catalog | privacy.turtlecute.org',
     description:
-      'Every Linux tweak in privacy.sexy Revamped, with this fork\'s recommendation for each one. '
+      'Every Linux tweak in the maintained privacy.sexy fork, with its recommendation for each one. '
       + 'Clear shell and package history, disable distro telemetry, and harden the kernel.',
     lede: `
       <p class="lede">
@@ -154,7 +156,7 @@ export function renderCollectionPage(collection) {
       description: copy.description,
       h1: copy.title,
       breadcrumb: [
-        { name: 'privacy.sexy Revamped', path: '/' },
+        { name: SITE_NAME, path: '/' },
         { name: collection.name, path },
       ],
       extraJsonLd: [{
@@ -240,9 +242,10 @@ export function renderAlternativesPage(collections) {
 
     <h2>What this fork is</h2>
     <p>
-      privacy.sexy Revamped is an independently maintained fork of
-      <a href="https://github.com/undergroundwires/privacy.sexy" rel="noopener nofollow">undergroundwires/privacy.sexy</a>,
-      running at <a href="/">privacy.turtlecute.org</a>. It keeps the original idea: pick the
+      <a href="/">privacy.turtlecute.org</a>, also called privacy.sexy Revamped, is an
+      independently maintained fork of
+      <a href="https://github.com/undergroundwires/privacy.sexy" rel="noopener nofollow">undergroundwires/privacy.sexy</a>.
+      It keeps the original idea: pick the
       changes you want, read the exact commands, run the script yourself. On top of that it
       updates the catalog against current vendor documentation. It carries ${total} tweaks across
       ${collections.map((collection) => `${collection.totalScripts} ${collection.name}`).join(', ')}.
@@ -345,11 +348,11 @@ export function renderAlternativesPage(collections) {
     description: ALTERNATIVES_DESCRIPTION,
     html: renderPage({
       path,
-      title: 'privacy.sexy alternatives and forks, compared honestly | privacy.sexy Revamped',
+      title: 'privacy.sexy alternatives and forks, compared honestly | privacy.turtlecute.org',
       description: ALTERNATIVES_DESCRIPTION,
       h1: ALTERNATIVES_TITLE,
       breadcrumb: [
-        { name: 'privacy.sexy Revamped', path: '/' },
+        { name: SITE_NAME, path: '/' },
         { name: 'Alternatives', path },
       ],
       body,

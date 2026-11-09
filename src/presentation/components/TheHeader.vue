@@ -9,8 +9,12 @@
       <span class="topbar__logo" aria-hidden="true">
         <AppIcon icon="logo" />
       </span>
+      <!--
+        The site's own address, not "privacy.sexy": that is the upstream project's domain, and
+        leading with it taught visitors to type the original's address (see SiteIdentity.ts).
+      -->
       <h1 class="brand">
-        {{ title }} <span class="brand__suffix">Revamped</span>
+        {{ siteName }}
       </h1>
       <!--
         The release this page is running, so a visitor (or a bug report) can tell whether a cached
@@ -36,6 +40,7 @@ import { injectKey } from '@/presentation/injectionSymbols';
 import AppIcon from '@/presentation/components/Shared/Icon/AppIcon.vue';
 import TheScriptsMenu from '@/presentation/components/Scripts/Menu/TheScriptsMenu.vue';
 import TheSearchBar from '@/presentation/components/TheSearchBar.vue';
+import { SITE_DOMAIN } from '@/presentation/components/Shared/SiteIdentity';
 
 export default defineComponent({
   components: {
@@ -46,14 +51,12 @@ export default defineComponent({
   setup() {
     const { projectDetails } = injectKey((keys) => keys.useApplication);
 
-    const title = computed(() => projectDetails.name);
-
     const version = computed(() => projectDetails.version.toString());
 
     const releaseNotesUrl = computed(() => `${projectDetails.repositoryWebUrl}/releases/tag/v${version.value}`);
 
     return {
-      title,
+      siteName: SITE_DOMAIN,
       version,
       releaseNotesUrl,
     };
@@ -103,9 +106,6 @@ export default defineComponent({
 }
 
 .brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   margin: 0;
   color: var(--text);
   font-family: $font-family-display;
@@ -116,18 +116,7 @@ export default defineComponent({
   white-space: nowrap;
 }
 
-.brand__suffix {
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: var(--accent-soft);
-  color: var(--accent-text);
-  font-family: $font-family-main;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-}
-
-/* Quieter than the "Revamped" pill: reference information, not branding. */
+/* Quieter than the name: reference information, not branding. */
 .topbar__version {
   flex: 0 0 auto;
   margin-left: -5px;
@@ -167,18 +156,25 @@ export default defineComponent({
   min-width: 200px;
 }
 
+/*
+  On desktop the pickers keep their full width and the search field gives way instead. Letting the
+  menu shrink below its content ran the preset picker under the search field between 993px and
+  1035px once the bar carried the longer site name.
+*/
+@media screen and (min-width: $media-vertical-view-breakpoint + 1) {
+  .topbar__menu {
+    min-width: auto;
+  }
+}
+
 @media screen and (max-width: 1180px) {
   .topbar {
     gap: 14px;
   }
 
-  .brand__suffix {
-    display: none;
-  }
-
   .topbar__search {
     flex-basis: 240px;
-    min-width: 170px;
+    min-width: 160px;
   }
 }
 
@@ -190,10 +186,6 @@ export default defineComponent({
     padding: 10px;
   }
 
-  .brand__suffix {
-    display: inline-block;
-  }
-
   .topbar__search {
     flex: 1 1 220px;
   }
@@ -201,12 +193,6 @@ export default defineComponent({
   .topbar__menu {
     order: 3;
     flex-basis: 100%;
-  }
-}
-
-@media screen and (max-width: $media-screen-small-width) {
-  .brand__suffix {
-    display: none;
   }
 }
 </style>

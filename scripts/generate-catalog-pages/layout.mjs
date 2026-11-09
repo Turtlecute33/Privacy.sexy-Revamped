@@ -12,9 +12,10 @@
  * second place to update.
  */
 export const SITE_ORIGIN = 'https://privacy.turtlecute.org';
-export const SITE_NAME = 'privacy.sexy Revamped';
+/* The site's own domain; see src/presentation/components/Shared/SiteIdentity.ts for why. */
+export const SITE_NAME = 'privacy.turtlecute.org';
 /* The `?v=` revision changes with the image so cached link previews fetch it again. */
-const OG_IMAGE_URL = `${SITE_ORIGIN}/og-image.png?v=2`;
+const OG_IMAGE_URL = `${SITE_ORIGIN}/og-image.png?v=3`;
 
 /*
  * Comments live out here rather than inside the string, because the string is inlined into every
@@ -46,8 +47,6 @@ a:hover{color:var(--primary)}
 .masthead__inner{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 20px;
 width:min(1180px,calc(100% - 40px));margin:0 auto;padding:14px 0}
 .masthead__brand{color:var(--primary-darkest);font-size:23px;font-weight:600;letter-spacing:-.02em;text-decoration:none}
-.masthead__brand span{color:var(--accent);font-size:.62em;font-weight:700;margin-left:.3em;
-text-transform:uppercase;letter-spacing:.08em}
 .masthead__links{display:flex;flex-wrap:wrap;gap:18px;margin-left:auto;font-size:15px}
 .wrap{display:grid;grid-template-columns:232px minmax(0,1fr);gap:44px;
 width:min(1180px,calc(100% - 40px));margin:0 auto;padding:32px 0 72px;align-items:start}
@@ -189,7 +188,7 @@ export function renderPage({
 <body>
 <header class="masthead">
   <div class="masthead__inner">
-    <a class="masthead__brand" href="/">privacy.sexy<span>Revamped</span></a>
+    <a class="masthead__brand" href="/">${SITE_NAME}</a>
     <nav class="masthead__links" aria-label="Site">
       <a href="/">Script builder</a>
       <a href="/windows/">Windows</a>

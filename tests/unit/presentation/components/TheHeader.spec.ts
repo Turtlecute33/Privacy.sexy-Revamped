@@ -6,10 +6,23 @@ import { UseApplicationStub } from '@tests/unit/shared/Stubs/UseApplicationStub'
 import { ApplicationStub } from '@tests/unit/shared/Stubs/ApplicationStub';
 import { ProjectDetailsStub } from '@tests/unit/shared/Stubs/ProjectDetailsStub';
 import { VersionStub } from '@tests/unit/shared/Stubs/VersionStub';
+import { SITE_DOMAIN } from '@/presentation/components/Shared/SiteIdentity';
 
 const DOM_SELECTOR_VERSION = '.topbar__version';
 
 describe('TheHeader', () => {
+  it('names the site by its own domain', () => {
+    // arrange
+    const expectedName = SITE_DOMAIN;
+
+    // act
+    const wrapper = mountComponent(new ProjectDetailsStub());
+
+    // assert
+    const headingText = wrapper.find('h1').text();
+    expect(headingText).to.equal(expectedName);
+  });
+
   it('shows the running version', () => {
     // arrange
     const version = '1.2.3';
