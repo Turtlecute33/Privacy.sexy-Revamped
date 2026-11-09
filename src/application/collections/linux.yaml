@@ -4924,7 +4924,7 @@ actions:
 
               If you do not run this script, notifications appear on the lock screen.
 
-              [1]: https://gitlab.gnome.org/GNOME/gsettings-desktop-schemas/-/raw/51.0/schemas/org.gnome.desktop.notifications.gschema.xml.in "org.gnome.desktop.notifications.gschema.xml.in (tag 51.0) | gitlab.gnome.org"
+              [1]: https://gitlab.gnome.org/GNOME/gsettings-desktop-schemas/-/blob/51.0/schemas/org.gnome.desktop.notifications.gschema.xml.in "org.gnome.desktop.notifications.gschema.xml.in (tag 51.0) | gitlab.gnome.org"
             call:
               function: SetGnomeSetting
               parameters:
