@@ -13,6 +13,8 @@
  */
 export const SITE_ORIGIN = 'https://privacy.turtlecute.org';
 export const SITE_NAME = 'privacy.sexy Revamped';
+/* The `?v=` revision changes with the image so cached link previews fetch it again. */
+const OG_IMAGE_URL = `${SITE_ORIGIN}/og-image.png?v=2`;
 
 /*
  * Comments live out here rather than inside the string, because the string is inlined into every
@@ -178,7 +180,7 @@ export function renderPage({
 <meta property="og:title" content="${escapeHtml(title)}">
 <meta property="og:description" content="${escapeHtml(description)}">
 <meta property="og:url" content="${canonical}">
-<meta property="og:image" content="${SITE_ORIGIN}/og-image.png">
+<meta property="og:image" content="${OG_IMAGE_URL}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="referrer" content="no-referrer">
 <style>${STYLES}</style>
