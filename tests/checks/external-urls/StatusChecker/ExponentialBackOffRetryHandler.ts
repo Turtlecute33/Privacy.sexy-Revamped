@@ -22,7 +22,11 @@ export async function retryWithExponentialBackOff(
       await sleep(exponentialBackOffInMs);
       return retryWithExponentialBackOff(action, baseRetryIntervalInMs, currentRetry + 1);
     }
-    console.warn('💀 All retry attempts failed. Final failure to retrieve URL:', indentText(formatUrlStatus(status)));
+    /*
+      Logged, not warned: the check itself decides whether this status means a dead page, and a
+      warning failed the run on its own even for statuses it reports without failing.
+    */
+    console.log('💀 All retry attempts failed. Final failure to retrieve URL:', indentText(formatUrlStatus(status)));
   }
   return status;
 }
@@ -39,7 +43,9 @@ function shouldRetry(status: UrlStatus): boolean {
 }
 
 function isTransientError(statusCode: number): boolean {
-  return statusCode >= 500 && statusCode <= 599;
+  // `501 Not Implemented` is a server's fixed answer to a request it will not serve, so retrying it
+  // only delays the result.
+  return statusCode >= 500 && statusCode <= 599 && statusCode !== 501;
 }
 
 function getRetryTimeoutInMs(

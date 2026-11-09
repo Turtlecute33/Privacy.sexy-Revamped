@@ -81,7 +81,15 @@ function main() {
     // act
     const results = await getUrlStatusesInParallel(urls, requestOptions);
     // assert
-    const deadUrls = results.filter((r) => r.code === undefined || !isOkStatusCode(r.code));
+    const refusedUrls = results.filter((r) => r.code !== undefined && isRefusedByServer(r.code));
+    if (refusedUrls.length > 0) {
+      Logger.logLabeledInformation(
+        `Unverified, the server refused the check (${refusedUrls.length})`,
+        createReportForDeadUrlStatuses(refusedUrls),
+      );
+    }
+    const deadUrls = results.filter((r) => r.code === undefined
+      || (!isOkStatusCode(r.code) && !isRefusedByServer(r.code)));
     expect(deadUrls).to.have.lengthOf(
       0,
       formatAssertionMessage([createReportForDeadUrlStatuses(deadUrls)]),
@@ -91,6 +99,19 @@ function main() {
 
 function isOkStatusCode(statusCode: number): boolean {
   return statusCode >= 200 && statusCode < 300;
+}
+
+/*
+  Codes a server sends when it refuses an automated client from a datacenter address, not when the
+  page is gone. Every failure of this check with one of them was a page that loads in a browser:
+  BleepingComputer, Windows Latest, The Hacker News and Microsoft Answers (`403`), GNOME's GitLab
+  (`406`), KDE's GitLab (`501`), archive.org book pages (`401`), rate limits (`429`). Each site's
+  bot filter picked a different run to block, so the check failed on most pushes for pages that
+  were fine. A removed page answers `404` or `410`, a dead host fails to resolve or connect, and
+  those still fail the check; refusals are listed in the log for a human to look at.
+*/
+function isRefusedByServer(statusCode: number): boolean {
+  return [401, 403, 406, 429, 501].includes(statusCode);
 }
 
 function createReportForDeadUrlStatuses(deadUrlStatuses: readonly UrlStatus[]): string {
