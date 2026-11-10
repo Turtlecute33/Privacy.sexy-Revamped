@@ -1,81 +1,65 @@
 # Contributing
 
-Love your input ❤️! Contributing to this project should be as easy and transparent as possible, whether it's:
+Thanks for helping improve debloat.net. Bug reports, script research, documentation fixes, and
+pull requests are all welcome. This is a small project, so replies can take a while.
 
-- reporting a bug,
-- discussing the current state of the code,
-- submitting a fix,
-- proposing new features,
-- or becoming a maintainer.
+## Ways to help
 
-As a small open source project with small community, it can sometimes take a long time to address the issues so please be patient.
+- **Report a bug.** If a tweak fails, breaks something, or its documentation is wrong,
+  [open an issue](https://github.com/Turtlecute33/Privacy.sexy-Revamped/issues/new/choose).
+  Include your OS version and, if you can, the generated script.
+- **Suggest a script.** Use the *New script* issue template and link vendor documentation.
+- **Send a pull request.** The fastest way to get a fix or a new script in.
+
+## Adding or changing scripts
+
+1. Read the [script guidelines](./docs/script-guidelines.md).
+2. Edit the collection for your OS in [`src/application/collections/`](./src/application/collections/).
+   The syntax is described in [collection-files.md](./docs/collection-files.md).
+3. Cite high-quality sources, ideally vendor documentation, and say what the tweak may break.
+4. Provide revert code whenever the change can be undone.
 
 ## Pull request process
 
-Your pull requests are actively welcomed. We collaborate using [GitHub flow](https://web.archive.org/web/20250317121135/https://docs.github.com/en/get-started/using-github/github-flow).
+The project uses [GitHub flow](https://web.archive.org/web/20250317121135/https://docs.github.com/en/get-started/using-github/github-flow).
 
-The steps:
+1. Fork the repository and branch from `master`.
+2. Add tests for code changes. See [tests.md](./docs/tests.md).
+3. Update the [documentation](./docs/) for major changes.
+4. Make sure tests and linters pass. See [development.md](./docs/development.md#testing).
+5. Open the pull request and explain **why** the change is needed, not only what it does.
 
-1. Fork the repository and create your branch from `master`.
-2. If you've added code that requires testing, add tests. See [tests.md](./docs/tests.md).
-3. If you've done a major change, update the documentation. See [docs/](./docs/).
-4. Ensure the test suite passes. See [development.md | Testing](./docs/development.md#testing) for commands.
-5. Make sure your code lints.See [development.md | Linting](./docs/development.md#linting) for commands.
-6. Issue that pull request!
+Do not change the version in `package.json`; the maintainer sets it when releasing.
 
-**🙏 DO:**
-
-- Document why (what you're trying to solve) rather than what in the pull request.
-
-**❗ DON'T:**
-
-- Do not update the version in `package.json`; the maintainer sets it.
-
-Automated pipelines will run to control your PR and they will publish your code once the maintainer merges your PR.
-
-📖 You can read more in [ci-cd.md](./docs/ci-cd.md).
-
-## Extend scripts
-
-If you're interested in adding new scripts to privacy.sexy:
-
-1. Read [guidelines for a good script](./docs/script-guidelines.md)
-2. Choose one of two ways to contribute:
-   1. [Create an issue](https://github.com/Turtlecute33/Privacy.sexy-Revamped/issues/new/choose) requesting the addition of a new script. This allows other contributors to develop and add it for you. This will take longer time.
-   2. Submit a pull request with your script. This is the faster route to seeing your script included in the project. Add your scripts to the appropriate OS directory in the [collections](src/application/collections/) (for syntax guidance, see [collection-files.md](docs/collection-files.md)) folder, and follow the [pull request process](#pull-request-process).
+Automated checks run on every pull request. After a merge, `master` is tested, built, and
+deployed to [debloat.net](https://debloat.net) automatically. See [ci-cd.md](./docs/ci-cd.md).
 
 ## Commit conventions
 
-- Adhere to the 50/72 rule:
-  - Commit titles should not exceed 50 characters.
-  - Limit description lines to 72 characters, except for code blocks or inline codes.
-- Avoid including delta (such as `git diff` information) or a list of changed files in the commit message. This information is redundant as it's already part of the commit.
-- Focus on explaining the WHY and HOW of the changes, rather than WHAT changes are.
-- Begin the commit message with a concise summary of what the commit accomplishes.
-- Use imperative language in the commit title. For example, use "add" instead of "added".
-- Commit prefixes:
-  - Prefix bug fixes with `fix:` or `Fix ...`.
-  - For commits affecting scripts of specific operating systems:
-    - Prefix the commit title with an OS-specific tag such as `win:` for Windows scripts, `mac:` for macOS scripts, and `linux:` for Linux scripts.
-    - Combine prefixes for commits affecting more than one operating system, e.g., `win, mac: ...`.
+- Follow the 50/72 rule: titles up to 50 characters, body lines up to 72, except code.
+- Write the title in the imperative mood ("add", not "added") and summarize what the commit does.
+- Explain why and how in the body. Do not list changed files or paste diffs.
+- Prefix bug fixes with `fix:`.
+- Prefix script changes with the OS they affect: `win:`, `mac:`, or `linux:`. Combine them for
+  several systems, for example `win, mac: ...`.
 
 ## Versioning
 
-We base versioning on the release's content rather than strictly following semantic versioning.
+Versions follow the content of a release rather than strict semantic versioning:
 
-There are two main types of releases:
+- **Patch** (`0.0.x`): bug fixes, small UI improvements, refactoring, dependency and
+  documentation updates, recommendation-level changes, and splitting or improving scripts.
+- **Minor** (`0.x.0`): changes to how people use the site, such as major UI work, new scripts, or
+  new features.
 
-1. **Patch Releases:** These focus on minor UI improvements, bug fixes, refactorings, dependency updates, and documentation updates. For scripts, they involve adjusting recommendation levels, enhancing functionality, and dividing scripts for more precise control. Patch releases may ship minor feature additions if they are essential for fixing a bug. For these updates, we increment the patch number in the `MAJOR.MINOR.PATCH`.
-
-2. **Feature Releases:** These releases bring significant updates that change how users interact with privacy.sexy. They include major UI enhancements, the introduction of new scripts, and features. For these updates, we increment the minor number in the `MAJOR.MINOR.PATCH`.
-
-There is no tagged release process: everything merged to `master` is built and deployed to the live site
-automatically. The version numbers above describe the *kind* of change a pull request makes, which is
-useful for writing its description, rather than a release it will ship in.
+The maintainer bumps the version, tags the release as `v<version>`, and publishes it on
+[GitHub Releases](https://github.com/Turtlecute33/Privacy.sexy-Revamped/releases), with notes in
+[CHANGELOG.md](./CHANGELOG.md).
 
 ## Refactoring
 
-Opportunistic refactoring is welcome. If you're adding a feature or fixing a bug, feel free to also clean up and optimize the related code. Your contributions should leave the code in a better state than when you found it.
+Opportunistic refactoring is welcome. When you fix a bug or add a feature, feel free to clean up
+the code around it, and leave it better than you found it.
 
 ## License
 

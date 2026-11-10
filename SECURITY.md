@@ -1,63 +1,40 @@
-# Security Policy
+# Security policy
 
-Security is a top priority at privacy.sexy.
-Please report any discovered vulnerabilities responsibly.
+debloat.net builds scripts that change system settings, so its own security matters as much as
+the scripts it generates. Thank you for reporting problems responsibly.
 
-## Reporting a Vulnerability
+## Reporting a vulnerability
 
-Efforts to responsibly disclose findings are greatly appreciated. To report a security vulnerability, follow these steps:
+- **Sensitive issues:** use
+  [private vulnerability reporting](https://github.com/Turtlecute33/Privacy.sexy-Revamped/security/advisories/new).
+  Only the maintainer can see the report. Please do not post details publicly until a fix ships.
+- **Everything else**, such as a script that weakens security by mistake:
+  [open an issue](https://github.com/Turtlecute33/Privacy.sexy-Revamped/issues/new/choose).
 
-- For general vulnerabilities, [open an issue](https://github.com/Turtlecute33/Privacy.sexy-Revamped/issues/new/choose) using the bug report template.
-- For sensitive matters, [contact Turtlecute](https://github.com/Turtlecute33) without posting details publicly.
+Only the latest version, the one live on [debloat.net](https://debloat.net), receives fixes.
 
-## Security Report Handling
+## What happens next
 
-Upon receiving a security report, the process involves:
+1. The report is confirmed and the affected parts are identified.
+2. Impact and severity are assessed.
+3. A fix is released, and you are kept informed along the way.
 
-- Confirming the report and identifying affected components.
-- Assessing the impact and severity of the issue.
-- Fixing the vulnerability and planning a release to address it.
-- Keeping the reporter informed about progress.
+## How the site protects you
 
-## Security Practices
+- **No backend.** debloat.net is a static site. Your selections and the scripts built from them
+  stay in your browser, and a script is saved through a normal browser download.
+- **No execution.** The site only generates script files. It never runs them and never asks for
+  elevated privileges. You review the script and decide whether to run it.
+- **Strict Content Security Policy.** Following OWASP guidance, the page can load scripts only
+  from its own origin and the analytics host below, which protects against cross-site scripting
+  and data injection.
+- **Safe links.** External links cannot access the page that opened them, and no referrer is
+  sent.
+- **Minimal third parties.** The only request beyond the site's own files is a cookie-free page
+  count to a self-hosted Umami instance. There are no ads, third-party trackers, or CDN scripts.
 
-### Application Security
+## Build and release integrity
 
-privacy.sexy adopts a defense in depth strategy to protect users on multiple layers:
-
-- **Link Protection:**
-  privacy.sexy ensures each external link has special attributes for your privacy and security.
-  These attributes block the new site from accessing the privacy.sexy page, increasing your online safety and privacy.
-- **Content Security Policies (CSP):**
-  privacy.sexy actively follows security guidelines from the Open Web Application Security Project (OWASP) at strictest level.
-  This approach protects against attacks like Cross Site Scripting (XSS) and data injection.
-- **Client-side only processing:**
-  This is a static site with no backend. Your selections and the scripts generated from them never leave your
-  browser: the script text is assembled locally and saved through a normal browser download.
-- **No script execution:**
-  The application only generates script files; it never runs them and never requests elevated privileges.
-  You review the generated script and choose to run it yourself, which keeps the decision and the audit trail with you.
-- **Minimal third-party surface:**
-  The only network request beyond the site's own static assets is to a self-hosted
-  [Umami](https://umami.is) instance for anonymous, cookie-free page counts. No third-party
-  advertising, tracking, or CDN scripts are loaded.
-
-### Update Security and Integrity
-
-privacy.sexy benefits from automated update processes including security tests. Every commit merged to
-`master` is built and deployed straight from source, so the served site always mirrors the published
-source code with no manual step in between. This aligns the deployed application with the expected source
-code, enhancing transparency and trust. For more details, see [CI/CD Documentation](./docs/ci-cd.md).
-
-### Testing
-
-privacy.sexy's testing approach includes a mix of automated and community-driven tests.
-Details on testing practices are available in the [Testing Documentation](./docs/tests.md).
-
-## Support
-
-For help or any questions, [submit a GitHub issue](https://github.com/Turtlecute33/Privacy.sexy-Revamped/issues/new/choose). Addressing security concerns is a priority, and we ensure the necessary support.
-
----
-
-Active contribution to the safety and security of privacy.sexy is thanked. This collaborative effort keeps the project resilient and trustworthy for all.
+Every commit merged to `master` is tested, built from source, and deployed by GitHub Actions,
+with no manual step in between. The site you use always matches the published source code.
+See the [CI/CD documentation](./docs/ci-cd.md) and the [testing documentation](./docs/tests.md).

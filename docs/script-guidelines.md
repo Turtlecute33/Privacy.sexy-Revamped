@@ -1,6 +1,6 @@
 # privacy.sexy Script Guidelines
 
-Create a script for privacy.sexy by submitting a PR or creating an issue (details in [Extend Scripts](./../CONTRIBUTING.md#extend-scripts)).
+Add a script to debloat.net by opening a pull request or an issue (see [Adding or changing scripts](./../CONTRIBUTING.md#adding-or-changing-scripts)).
 As scripts are central to privacy.sexy and reach a global audience, their design is critical.
 
 Key attributes of a good script:
