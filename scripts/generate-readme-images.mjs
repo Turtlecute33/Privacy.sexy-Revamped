@@ -39,7 +39,6 @@ const SCENES = [
     name: 'hero',
     os: 'windows',
     clicks: ['Standard', 'Disable OS data collection', 'Disable Click to Do', 'Disable Recall'],
-    hoverDocsOf: 'Disable Recall',
   },
   { name: 'macos', os: 'macos', clicks: ['Standard', 'Configure OS'] },
   { name: 'linux', os: 'linux', clicks: ['Standard', 'Disable OS data collection'] },
@@ -64,20 +63,17 @@ async function clickByText(page, text) {
   await delay(600);
 }
 
-async function hoverDocumentationOf(page, scriptName) {
-  await page.waitForFunction(
-    (name) => [...document.querySelectorAll('.row')]
-      .some((row) => row.textContent.includes(name) && row.querySelector('.documentation-tooltip__trigger')),
-    { timeout: 10_000 },
-    scriptName,
-  );
-  const center = await page.evaluate((name) => {
-    const row = [...document.querySelectorAll('.row')].find((r) => r.textContent.includes(name));
-    const box = row.querySelector('.documentation-tooltip__trigger').getBoundingClientRect();
-    return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-  }, scriptName);
-  await page.mouse.move(center.x, center.y);
-  await delay(900);
+/*
+ * The screenshot stops where the footer starts. Its one line of small text is unreadable at README
+ * size, and the gap the footer leaves below the panels matches the one above the top bar.
+ */
+async function getClipAboveFooter(page) {
+  return page.evaluate(() => ({
+    x: 0,
+    y: 0,
+    width: window.innerWidth,
+    height: Math.round(document.querySelector('.footer').getBoundingClientRect().top),
+  }));
 }
 
 async function captureScene(browser, url, scene, scheme) {
@@ -91,18 +87,17 @@ async function captureScene(browser, url, scene, scheme) {
     for (const text of scene.clicks) {
       await clickByText(page, text); // eslint-disable-line no-await-in-loop
     }
+    await page.mouse.move(700, 880); // Over the footer, outside the shot: no hover states
     await delay(800);
-    if (scene.hoverDocsOf) {
-      await hoverDocumentationOf(page, scene.hoverDocsOf);
-    } else {
-      await page.mouse.move(700, 880); // Away from anything with a hover state
-    }
+    const clip = await getClipAboveFooter(page);
     const path = resolve(OUTPUT_DIR, `${scene.name}-${scheme}.webp`);
-    await page.screenshot({ path, type: 'webp', quality: 88 });
+    await page.screenshot({
+      path, clip, type: 'webp', quality: 88,
+    });
     console.log(`Wrote ${path}`);
     // The social preview embeds the light hero. PNG keeps it sharp before the card is encoded.
     const png = scheme === 'light' && scene.name === 'hero'
-      ? await page.screenshot({ type: 'png' })
+      ? await page.screenshot({ clip, type: 'png' })
       : undefined;
     return png;
   } finally {

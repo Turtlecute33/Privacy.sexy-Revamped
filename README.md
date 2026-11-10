@@ -33,7 +33,7 @@
 <a href="https://debloat.net">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="img/readme/hero-dark.webp">
-    <img alt="debloat.net on Windows: the Disable Recall tweak is selected, its explanation and sources are open, and the generated script is shown on the right" src="img/readme/hero-light.webp">
+    <img alt="debloat.net on Windows: Disable Recall and other telemetry tweaks are selected, with the generated script on the right" src="img/readme/hero-light.webp">
   </picture>
 </a>
 
