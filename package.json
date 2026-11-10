@@ -12,6 +12,7 @@
     "prerender": "node scripts/prerender.mjs",
     "generate:pages": "node scripts/generate-catalog-pages/index.mjs",
     "generate:og-image": "node scripts/generate-og-image.mjs",
+    "generate:readme-images": "node scripts/generate-readme-images.mjs",
     "preview": "vite preview",
     "test:unit": "vitest run --dir tests/unit",
     "test:integration": "vitest run --dir tests/integration",

@@ -1,120 +1,189 @@
-# debloat.net
+<h1 align="center">
+  <a href="https://debloat.net"><img src="img/readme/icon.svg" width="80" height="80" alt="debloat.net logo"></a>
+  <br>
+  debloat.net
+</h1>
 
-> Free, open-source script builder that debloats and hardens Windows, macOS,
-> and Linux. Also known as privacy.sexy Revamped.
+<p align="center">
+  <strong>Debloat Windows 11, turn off telemetry, and harden macOS and Linux.</strong>
+  <br>
+  Pick the tweaks you want, read what each one does, then download a script and run it yourself.
+  <br>
+  Free and open source. No account, no install.
+</p>
 
-debloat.net builds privacy and security scripts for your operating
-system. Pick what you want changed: remove preinstalled Windows bloatware,
-disable telemetry and tracking, or tighten macOS and Linux privacy settings.
-Read the exact commands, then copy or download the script and run it yourself.
+<p align="center">
+  <a href="https://debloat.net"><strong>Open debloat.net</strong></a>
+  &nbsp;·&nbsp;
+  <a href="https://debloat.net/windows/">Windows</a>
+  &nbsp;·&nbsp;
+  <a href="https://debloat.net/macos/">macOS</a>
+  &nbsp;·&nbsp;
+  <a href="https://debloat.net/linux/">Linux</a>
+  &nbsp;·&nbsp;
+  <a href="CHANGELOG.md">Changelog</a>
+</p>
 
-You never create an account, and no script runs until you run it.
+<p align="center">
+  <a href="https://github.com/Turtlecute33/Privacy.sexy-Revamped/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Turtlecute33/Privacy.sexy-Revamped?style=flat-square&amp;label=release&amp;color=2f62e0"></a>
+  <a href="LICENSE"><img alt="License: AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-2f62e0?style=flat-square"></a>
+  <a href="https://github.com/undergroundwires/privacy.sexy"><img alt="Fork of privacy.sexy" src="https://img.shields.io/badge/fork%20of-privacy.sexy-2f62e0?style=flat-square"></a>
+</p>
 
-This is an actively maintained fork of
-[privacy.sexy](https://github.com/undergroundwires/privacy.sexy), updated for
-current versions of Windows, macOS, and Linux.
+<a href="https://debloat.net">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="img/readme/hero-dark.webp">
+    <img alt="debloat.net on Windows: the Disable Recall tweak is selected, its explanation and sources are open, and the generated script is shown on the right" src="img/readme/hero-light.webp">
+  </picture>
+</a>
 
-**[Open debloat.net](https://debloat.net)**
+## How it works
 
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](./LICENSE)
-[![Based on privacy.sexy](https://img.shields.io/badge/based_on-privacy.sexy-e91e63.svg)](https://github.com/undergroundwires/privacy.sexy)
+1. **Choose your system and a preset.** Start from *Standard*, which keeps every app and
+   service working, or *Strict* for more privacy. Then add or remove single tweaks.
+2. **Read before you run.** Each tweak explains what it changes and what it may break, with
+   links to vendor documentation. The script updates live as you choose.
+3. **Run it yourself.** Copy or download the script (`.bat` on Windows, `.sh` on macOS and
+   Linux) and run it. It asks for administrator rights when it needs them.
 
-[![debloat.net interface: build privacy and debloat scripts for Windows, macOS, and Linux](img/screenshot.png)](https://debloat.net)
+The website never runs anything on your computer. Scripts are built in your browser, and your
+choices are not sent anywhere.
 
-## Why I revived this
+## What you can change
 
-I'm [Turtlecute](https://github.com/Turtlecute33). I'm a privacy and security
-activist, and I love what privacy.sexy set out to do: make operating-system
-hardening understandable, inspectable, and available to everyone.
+More than 1,300 tweaks across three systems, each with documentation and sources.
 
-The [original privacy.sexy project](https://github.com/undergroundwires/privacy.sexy)
-was created by undergroundwires. It is now in an abandoned state, so I created
-this fork to update its scripts, remove outdated or risky advice, and keep it
-working as operating systems change.
+**Windows 11 and Windows 10**: 930+ tweaks
 
-I will maintain this fork and continue reviewing its scripts against current
-vendor documentation. This is an independent revival and is not affiliated with
-the original maintainer.
+- Turn off telemetry, diagnostic data, the advertising ID, and activity tracking
+- Disable Recall, Click to Do, Copilot in Edge, and generative AI in Paint; request removal of
+  the Microsoft Copilot app
+- Remove bloatware: preinstalled apps, Xbox, OneDrive, Edge, Widgets, and the new Outlook
+- Block tracking hosts and clear activity history, caches, and logs
+- Harden network protocols, UAC, AutoRun, and Microsoft Defender settings
 
-## The idea
+**macOS**: 190+ tweaks
 
-debloat.net lets you:
+- Limit Apple data collection, Siri, and personalized ads
+- Configure Safari, Firefox, and Brave for privacy
+- Tighten the firewall, guest access, sharing, and the login window
+- Clear logs, caches, and terminal and app history
 
-1. Pick your operating system and the changes you actually want.
-2. Read the documentation, privacy benefit, and possible side effects.
-3. Inspect the exact commands before anything runs.
-4. Copy or download the generated script.
-5. Run it on your computer.
+**Linux**: 170+ tweaks
 
-There is no account or application backend. Script generation stays in your
-browser, and the website does not execute system changes for you.
+- Turn off telemetry in Ubuntu, Debian, Arch Linux, Zorin OS, GNOME, and KDE
+- Configure Firefox, Chrome, Brave, and Thunderbird
+- Harden the kernel, enable a firewall, and use a private Wi-Fi MAC address per network
+- Clear history, caches, and package manager data
 
-## What I changed
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="img/readme/macos-dark.webp">
+    <img alt="debloat.net with macOS selected and the Standard preset applied" src="img/readme/macos-light.webp" width="49%">
+  </picture>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="img/readme/linux-dark.webp">
+    <img alt="debloat.net with Linux selected, showing GNOME and KDE telemetry tweaks" src="img/readme/linux-light.webp" width="49%">
+  </picture>
+</p>
 
-- **Web-only distribution:** I removed the abandoned Electron desktop app and
-  its updater, packaging, native runtime, and release machinery. One browser
-  build now works across platforms without installing the application.
-- **Current Windows AI controls:** I updated the catalog for modern Windows
-  policies, including Recall, Click to Do, the Microsoft Copilot app, and
-  Copilot features in Edge.
-- **Safer recommendations:** I removed tweaks that traded away important
-  protections by disabling browser and application updates, authentication,
-  recovery, antivirus integration, or other security-critical behavior.
-- **Obsolete-script cleanup:** I removed legacy policy paths and retired tools
-  such as `wmic`, then fixed stale commands and invalid filesystem paths across
-  Windows, macOS, and Linux.
-- **Safer elevated scripts:** User-scoped actions now resolve the real user's
-  home directory when a script is run with elevated privileges.
-- **Modern web stack:** The app now uses a leaner Vue and Vite toolchain with
-  updated dependencies.
-- **Regression tests:** New tests protect the web-only build,
-  current Windows AI policies, and the safety boundaries of the script catalog.
+## Why debloat.net
 
-## Features
+- **Nothing hidden.** Every command is on screen before you download it. The script is plain
+  text you can read, edit, and share.
+- **Explained.** Plain-language notes and source links for every tweak.
+- **Reversible.** Most tweaks have a revert option that restores the default.
+- **Safe presets.** Tweaks that weaken security, such as turning off Defender or automatic
+  updates, are left out of every preset and grouped under *Privacy over security*.
+- **Private.** No account, cookies, or ads. The only request beyond the site itself is a
+  cookie-free page count to a self-hosted Umami instance.
+- **Maintained.** Updated for current releases of Windows 11, macOS, and Linux.
 
-- **Windows, macOS, and Linux** privacy and security tweaks in one place
-- **Debloat Windows 10 and Windows 11**: remove preinstalled apps and bloatware
-- **Disable telemetry and tracking**, including modern Windows AI features such
-  as Recall, Click to Do, and Copilot
-- **Harden macOS and Linux** privacy and security settings
-- **Searchable catalog** with plain-language documentation and source links
-- **Standard and strict** recommendation presets
-- **Full visibility** into every generated command before you run it
-- **Revert commands** for supported changes
-- **Copy or download** scripts with no account and no install
-- **Fully open source**: code, scripts, tests, and build process
+## FAQ
 
-## A note on safety
+<details>
+<summary><strong>Is debloat.net the same as privacy.sexy?</strong></summary>
+<br>
 
-Privacy hardening changes system behavior. Read each script, understand its
-warnings, keep backups, and start with the standard recommendations. A setting
-that is right for one computer may break a feature another person needs.
+debloat.net is an actively maintained fork of
+[privacy.sexy](https://github.com/undergroundwires/privacy.sexy), also known as privacy.sexy
+Revamped. The original project is no longer maintained. Compared with it, this fork:
 
-No script can guarantee privacy, security, or anonymity. This project gives you
-transparent tools and better defaults; the final decision is yours.
+- runs only on the web, so there is nothing to install or update;
+- adds current Windows controls such as Recall, Click to Do, and Copilot;
+- removes outdated tweaks, retired tools such as `wmic`, and advice that traded away security;
+- applies per-user changes to your own home folder when a macOS or Linux script runs with `sudo`;
+- is covered by regression tests for the script catalog and its safety rules.
 
-For vulnerabilities in the application itself, read the
-[security policy](SECURITY.md).
+It is independent and not affiliated with the original maintainer.
 
-## On AI use
+</details>
 
-I use AI assistance to develop this fork, including code, script research, and
-documentation. I review what it produces before merging, checking changes against
-vendor documentation and the test suite. This matters most in the script catalog,
-where a wrong claim can break someone's computer.
+<details>
+<summary><strong>Is it safe to run these scripts?</strong></summary>
+<br>
 
-## Credits
+The scripts change system settings, so read the notes of each tweak, start with the *Standard*
+preset, and keep a backup or restore point. A setting that suits one computer can break a
+feature someone else needs. No script can guarantee privacy, security, or anonymity: the final
+decision is yours.
 
-This project is based on
-[undergroundwires/privacy.sexy](https://github.com/undergroundwires/privacy.sexy).
-The original author and contributors built the foundation, application
-architecture, and script library that made this revival possible.
+</details>
 
-If you want to help continue that work, bug reports, documentation fixes, script
-research, and pull requests are welcome. Start with
-[CONTRIBUTING.md](CONTRIBUTING.md).
+<details>
+<summary><strong>How do I debloat Windows 11?</strong></summary>
+<br>
 
-## License
+Open [debloat.net](https://debloat.net), select **Windows**, and apply the **Standard** preset.
+Add what you want from *Remove bloatware*, review the script, then download it and run it.
+It asks for administrator rights.
 
-[GNU Affero General Public License v3.0](LICENSE), following the license of the
-original project.
+</details>
+
+<details>
+<summary><strong>Can I undo the changes?</strong></summary>
+<br>
+
+Most tweaks have a revert option. Turn it on and the script restores the default setting
+instead of applying the tweak. Cleanup tweaks, such as clearing history or caches, cannot be
+undone.
+
+</details>
+
+## Why this fork exists
+
+I'm [Turtlecute](https://github.com/Turtlecute33), a privacy and security activist.
+privacy.sexy made operating-system hardening understandable and open to inspection, and it
+deserved to keep working. I revived it to keep its scripts current, remove risky advice, and
+check them against vendor documentation as Windows, macOS, and Linux change.
+
+I use AI assistance for code, script research, and documentation. I review its output against
+vendor documentation and the test suite before merging, most of all in the script catalog, where
+a wrong claim can break someone's computer.
+
+## Contributing
+
+Bug reports, script research, and pull requests are welcome.
+
+- Report a broken tweak or suggest a new one in
+  [issues](https://github.com/Turtlecute33/Privacy.sexy-Revamped/issues/new/choose).
+- Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [script guidelines](docs/script-guidelines.md)
+  before opening a pull request.
+- Report vulnerabilities privately, as described in the [security policy](SECURITY.md).
+
+To run the site locally, use Node.js:
+
+```sh
+npm install
+npm run dev
+```
+
+More commands are in [docs/development.md](docs/development.md).
+
+## Credits and license
+
+debloat.net is built on [privacy.sexy](https://github.com/undergroundwires/privacy.sexy) by
+undergroundwires and its contributors, who created the architecture and script library this
+project continues.
+
+Licensed under the [GNU Affero General Public License v3.0](LICENSE), like the original.
