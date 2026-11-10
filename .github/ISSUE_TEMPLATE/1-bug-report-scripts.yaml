@@ -1,5 +1,5 @@
-name: "Bug Report: Script Issues"
-description: 🐛 Report issues with generated scripts to enhance privacy.sexy
+name: "Bug report: script"
+description: A generated script failed, broke something, or does not do what its documentation says.
 labels: [ 'bug' ]
 title: '[Bug]: '
 body:
@@ -7,102 +7,52 @@ body:
     type: markdown
     attributes:
       value: |-
-        Thank you for contributing to privacy.sexy and guiding our direction! 🌟
-        Please complete as much of the form below as possible.
-        Your feedback is valuable, even if you can't provide all details.
+        Thanks for reporting this. Fill in what you can; a partial report still helps.
   -
     type: textarea
     attributes:
-      label: Description
-      description: A clear and concise description of what the bug is.
+      label: What happened?
+      description: Name the tweak and describe what went wrong.
       placeholder: >-
-        For example: "After running the cleanup script, music playback stopped functioning."
+        For example: "After running the cleanup script, music playback stopped working."
     validations:
       required: true
   -
     type: textarea
     attributes:
-      label: How can the bug be recreated?
+      label: Steps to reproduce
       description: |-
-        This is the most important information in the bug report.
-        Bugs that cannot be reproduced cannot be fixed or verified.
+        This is the most important part. A bug that cannot be reproduced cannot be fixed or verified.
       placeholder: |-
-        1. Go to '...'
-        2. Click on '....'
-        3. Scroll down to '....'
+        1. Select '...'
+        2. Download and run the script
+        3. Open '...'
         4. See error
     validations:
       required: true
   -
-    type: textarea
+    type: input
     attributes:
-      label: Operating system
+      label: Operating system and version
       description: |-
-        Please specify your operating system and its version.
-
-        - On Windows: Open "Start button" > "Settings" > "System" > "About".
-        - On macOS: Open "Apple menu (top left corner)" > "About This Mac".
-        - On Linux: Open terminal > type: lsb_release -a > copy paste the result.
-      placeholder: >-
-        For example: "Windows 11 Pro 23H2"
+        Windows: Settings > System > About. macOS: Apple menu > About This Mac. Linux: run `lsb_release -a`.
+      placeholder: For example "Windows 11 Pro 25H2 (build 26200)"
     validations:
       required: false
   -
     type: textarea
     attributes:
-      label: Script file
+      label: Script and output
       description: |-
-        If applicable, share the generated privacy.sexy file.
-
-        GitHub may restrict script file attachments.
-        Upload your script file to a service like [GitHub Gist](https://gist.github.com/) and share the link here.
-
-        > **💡 Tip:** You can attach script files by dragging them into this area.
-      placeholder: |-
-        Attach the script, or post GitHub Gist link.
-        For example: https://gist.github.com/privacysexy-forks/6d85ad8ca27acc8c6a5417d4af28c9b6.
+        If you can, attach the generated script and paste the terminal output.
+        GitHub may block script attachments; a [GitHub Gist](https://gist.github.com/) link works too.
+      placeholder: Attach the script or paste a Gist link, then paste the terminal output.
     validations:
       required: false
   -
     type: textarea
     attributes:
-      label: Screenshots
-      description: |-
-        If applicable, add screenshots to help explain your problem.
-
-        > **💡 Tip:** You can attach screenshots by clicking this area to highlight it and then pasting them or dragging files in.
-      placeholder: Attach screenshots here or link to image hosting.
+      label: Anything else?
+      description: Screenshots, a proposed fix, related issues, or other context.
     validations:
       required: false
-  -
-    type: textarea
-    attributes:
-      label: Additional information
-      description: |-
-        If applicable, add any other context about the problem here.
-
-        Helpful information includes:
-
-        - Terminal output
-        - Proposed solutions
-        - Other related context such as related issues, software behavior, etc.
-
-        > **💡 Tip:** You can attach log files by dragging them into this area.
-      placeholder: Add terminal output and any other relevant context.
-    validations:
-      required: false
-  -
-    type: markdown
-    attributes:
-      value: |-
-        ---
-
-        **✉️ A friendly note from the maintainer:**
-
-        > [!NOTE]
-        > We are a small open-source project with a small community.
-        > It can sometimes take a long time for issues to be addressed, so please be patient.
-        > But your issue will eventually get attention regardless.
-        > <p align="right">@Turtlecute33</p>
-
-        ---

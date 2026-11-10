@@ -1,2 +1,9 @@
 # This file must be named `config.yml`. GitHub does not recognize the file if it is named `config.yaml`.
 blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/Turtlecute33/Privacy.sexy-Revamped/security/advisories/new
+    about: Report it privately. Please do not open a public issue.
+  - name: Open debloat.net
+    url: https://debloat.net
+    about: Build your privacy and debloat script.

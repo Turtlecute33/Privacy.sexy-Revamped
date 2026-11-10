@@ -1,5 +1,5 @@
-name: "Bug Report: General"
-description: 🐛 Report general issues to enhance privacy.sexy
+name: "Bug report: website"
+description: Something on debloat.net does not work or looks wrong.
 labels: [ 'bug' ]
 title: '[Bug]: '
 body:
@@ -7,95 +7,47 @@ body:
     type: markdown
     attributes:
       value: |-
-        Thank you for contributing to privacy.sexy and guiding our direction! 🌟
-        Please complete as much of the form below as possible.
-        Your feedback is valuable, even if you can't provide all details.
+        Thanks for reporting this. Fill in what you can; a partial report still helps.
   -
     type: textarea
     attributes:
-      label: Description
-      description: Provide a clear and concise description of the issue.
+      label: What happened?
+      description: Describe the problem.
       placeholder: >-
-        For example: "I cannot select any scripts."
+        For example: "I cannot select any scripts after switching to Linux."
     validations:
       required: true
   -
     type: textarea
     attributes:
-      label: Reproduction steps
+      label: Steps to reproduce
       description: |-
-        This is the most important information in the bug report.
-        Bugs that cannot be reproduced cannot be fixed or verified.
+        This is the most important part. A bug that cannot be reproduced cannot be fixed or verified.
       placeholder: |-
         1. Go to '...'
-        2. Click on '....'
-        3. Scroll down to '....'
-        4. See error
+        2. Click '...'
+        3. See error
     validations:
       required: true
   -
     type: textarea
     attributes:
-      label: Expected behavior
-      description: Describe what you expected to happen when the error occurred.
+      label: What did you expect?
       placeholder: >-
-        For example: "I expected the settings menu to open smoothly without crashing.".
+        For example: "The Linux scripts should be selectable."
     validations:
       required: true
   -
-    type: textarea
+    type: input
     attributes:
-      label: Screenshots
-      description: |-
-        If applicable, add screenshots to help explain your problem.
-
-        > **💡 Tip:** You can attach screenshots by clicking this area to highlight it and then pasting them or dragging files in.
-      placeholder: >-
-        Attach screenshots here or link to image hosting.
+      label: Browser and operating system
+      placeholder: For example "Firefox 145 on Windows 11 25H2"
     validations:
       required: false
   -
     type: textarea
     attributes:
-      label: privacy.sexy environment details
-      description: |-
-        If applicable, mention how you were using privacy.sexy when the bug occurred:
-
-        - Operating system and version
-        - Browser and version
-      placeholder: >-
-        For example: "The web version on Edge browser on Windows 11 23H2."
+      label: Anything else?
+      description: Screenshots, browser console output, or other context.
     validations:
       required: false
-  -
-    type: textarea
-    attributes:
-      label: Additional context
-      description: |-
-        If applicable, add any other context about the problem here.
-
-        Helpful information includes:
-
-        - Browser console output
-        - Proposed solutions
-        - Other related context such as related issues, software behavior, etc.
-
-        > **💡 Tip:** You can attach log files by dragging them into this area.
-      placeholder: Add browser console output and any other relevant context.
-    validations:
-      required: false
-  -
-    type: markdown
-    attributes:
-      value: |-
-        ---
-
-        **✉️ A friendly note from the maintainer:**
-
-        > [!NOTE]
-        > We are a small open-source project with a small community.
-        > It can sometimes take a long time for issues to be addressed, so please be patient.
-        > But your issue will eventually get attention regardless.
-        > <p align="right">@Turtlecute33</p>
-
-        ---
