@@ -2,8 +2,8 @@
   "name": "debloat.net",
   "version": "0.17.1",
   "private": true,
-  "slogan": "Privacy is sexy",
-  "description": "Enforce privacy & security best-practices on Windows, macOS and Linux, because privacy is sexy.",
+  "slogan": "Debloat is sexy",
+  "description": "Enforce privacy & security best-practices on Windows, macOS and Linux, because debloat is sexy.",
   "author": "Turtlecute",
   "type": "module",
   "scripts": {
