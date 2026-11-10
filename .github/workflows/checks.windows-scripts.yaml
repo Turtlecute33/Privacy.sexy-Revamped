@@ -1,0 +1,81 @@
+# Runs every Windows script on real, disposable Windows machines: each one is applied twice and,
+# when it is reversible, reverted twice, while the registry keys it names, every service, every
+# scheduled task and the hosts file are recorded before and after (see `tests/checks/windows-scripts`).
+# On demand only: it takes about an hour on twenty runners, and its result is a report to read
+# (uploaded as the `results-*` artifacts, see `docs/tests.md`), not a pass or fail for a commit.
+name: checks.windows-scripts
+
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: Script numbers to run (comma-separated, from manifest.json). Empty runs all.
+        required: false
+        default: ''
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
+      CYPRESS_INSTALL_BINARY: '0'
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v6
+      -
+        name: Setup node
+        uses: ./.github/actions/setup-node
+      -
+        name: Install dependencies
+        uses: ./.github/actions/npm-install-dependencies
+      -
+        name: Generate script files
+        run: npm run check:windows-scripts:generate
+        env:
+          WINDOWS_SCRIPTS_DIR: dist-windows-scripts
+      -
+        name: Upload script files
+        uses: ./.github/actions/upload-artifact
+        with:
+          name: windows-scripts
+          path: dist-windows-scripts
+
+  run:
+    needs: generate
+    strategy:
+      fail-fast: false # A script that breaks one machine must not cancel the others
+      matrix:
+        # Server 2025 is the x64 build of Windows 11 24H2's code base; the ARM image is Windows 11 itself.
+        os: [ windows-2025, windows-11-arm ]
+        shard: [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v6
+      -
+        name: Download script files
+        uses: actions/download-artifact@v8
+        with:
+          name: windows-scripts
+          path: dist-windows-scripts
+      -
+        name: Run scripts
+        shell: powershell # Windows PowerShell 5.1, which the scripts themselves use
+        run: >-
+          ./tests/checks/windows-scripts/run.ps1
+          -InputDirectory dist-windows-scripts
+          -OutputDirectory windows-script-results
+          -ShardIndex ${{ matrix.shard }}
+          -ShardCount 10
+          -TimeoutSeconds 600
+          -Only '${{ inputs.only }}'
+      -
+        name: Upload results
+        if: ${{ !cancelled() }} # Keep what was recorded before a failure
+        uses: ./.github/actions/upload-artifact
+        with:
+          name: results-${{ matrix.os }}-${{ matrix.shard }}
+          path: windows-script-results

@@ -20,6 +20,7 @@ integration tests pass.
 | [`checks.external-urls`](./../.github/workflows/checks.external-urls.yaml) | Weekly, on demand | Links in the script documentation and Markdown files |
 | [`checks.cross-platform`](./../.github/workflows/checks.cross-platform.yaml) | Weekly, on demand, when Docker files change | Tests and builds on macOS and Windows, the Docker image |
 | [`checks.scripts`](./../.github/workflows/checks.scripts.yaml) | When the tooling scripts change, on demand | Developer tooling scripts on every OS (17 jobs) |
+| [`checks.windows-scripts`](./../.github/workflows/checks.windows-scripts.yaml) | On demand | Every Windows script, applied and reverted on Windows 11 and Windows Server 2025 (21 jobs, about an hour) |
 
 What runs on every push is kept fast and deterministic: one OS, and no check that depends on
 third-party websites. Link checks and cross-platform runs are weekly, where a site that is down or

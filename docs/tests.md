@@ -59,6 +59,37 @@ These checks validate various qualities like runtime execution, building process
 - Are automatically executed as [GitHub workflows](./../.github/workflows). See
   [ci-cd.md](./ci-cd.md#workflows) for which ones run on every push and which run weekly.
 
+### Windows script check
+
+[`checks.windows-scripts`](./../.github/workflows/checks.windows-scripts.yaml) runs every Windows script on real,
+disposable Windows machines: GitHub's Windows 11 (ARM64) and Windows Server 2025 (x64) runners. The unit tests can
+only parse the generated code; this check shows what the code does.
+
+- [`generate.spec.ts`](./../tests/checks/windows-scripts/generate.spec.ts) writes each script as the batch file the
+  site would hand to a visitor who selected only that script, once to apply it and once to revert it.
+- [`run.ps1`](./../tests/checks/windows-scripts/run.ps1) applies each script twice and reverts it twice. Before and
+  after every run it records the registry keys the script names, every service, every scheduled task and the hosts
+  file, and it keeps the output with the error stream marked.
+- [`summarize.mjs`](./../tests/checks/windows-scripts/summarize.mjs) turns the downloaded results into a report.
+
+Start it from the *Actions* tab or with `gh workflow run checks.windows-scripts.yaml`, then:
+
+```bash
+gh run download <run id> --dir results
+node tests/checks/windows-scripts/summarize.mjs results
+node tests/checks/windows-scripts/summarize.mjs results --show 467 # everything recorded for script 467
+```
+
+The report lists scripts that timed out, wrote to the error stream, changed nothing that is watched, changed
+something again on the second apply, or left the machine different after revert. Read it as leads, not verdicts:
+the runner images already set some of the values the scripts set, their Defender is protected against changes, and
+reinstalling removed Windows capabilities often runs into the time limit there. A finding that shows on both
+machines, or that the script's own output explains, is the one to act on.
+
+The check is not part of any push: it takes about an hour on twenty machines. Run it after changing a shared
+function in [`windows.yaml`](./../src/application/collections/windows.yaml), and before a release that changes
+Windows scripts.
+
 ### Security checks
 
 - [`checks.security.sast`](./../.github/workflows/checks.security.sast.yaml): Utilizes CodeQL to conduct Static Analysis Security Testing (SAST) to ensure the secure integrity of the codebase.

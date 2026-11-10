@@ -23,6 +23,7 @@
     "icons:build": "node ./scripts/logo-update",
     "check:external-urls": "vitest run --dir tests/checks/external-urls --environment node",
     "check:verify-build-artifacts": "node scripts/verify-build-artifacts",
+    "check:windows-scripts:generate": "vitest run --dir tests/checks/windows-scripts --environment node",
     "lint:eslint": "eslint . --max-warnings=0 --ignore-path .gitignore",
     "lint:md": "markdownlint **/*.md --ignore node_modules",
     "lint:md:consistency": "remark . --frail --use remark-preset-lint-consistent",
