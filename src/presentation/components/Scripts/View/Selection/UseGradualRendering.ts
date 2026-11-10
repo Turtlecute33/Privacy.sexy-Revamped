@@ -86,10 +86,31 @@ export function useGradualRendering(
 
 function createDefaultOptions(): GradualRenderingOptions {
   return {
-    initialBatchSize: 30,
+    initialBatchSize: estimateRowsFillingWindow(),
     subsequentBatchSize: 10,
     scheduleBatch: createAfterPaintScheduler(),
   };
+}
+
+/* The `min-height` of a row in `ScriptRow.vue`. */
+const MinimumRowHeightInPx = 46;
+
+const MinimumInitialBatchSize = 10;
+
+/*
+  The first batch is part of the task that mounts the whole page, which is the longest task of a
+  page load, so it holds no more rows than can be on screen. Rows are never shorter than their
+  `min-height` and no more of the list than the window's height can be visible at once, so this
+  many rows always cover what is on screen, with room to spare for the group headers and the rest
+  of the page. A fixed 30 rows covered a tall desktop window, but rendered 9 rows nobody could see
+  yet on a 940 px high window (the one Lighthouse uses on desktop) and about a dozen on a phone,
+  at about 3 ms per row with the CPU throttled 4x. They follow one batch per frame instead.
+*/
+function estimateRowsFillingWindow(): number {
+  return Math.max(
+    MinimumInitialBatchSize,
+    Math.ceil(window.innerHeight / MinimumRowHeightInPx),
+  );
 }
 
 /*

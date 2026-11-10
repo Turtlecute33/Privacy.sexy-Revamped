@@ -52,11 +52,20 @@ export function createScriptGroups(
   return groups;
 }
 
+/*
+  `isReversible` is read on demand rather than copied in. `canRevert()` compiles the script's code
+  the first time it is called, and groups are built for a whole category (or a whole search) before
+  the list renders its first rows, so copying it compiled scripts nobody had looked at yet in the
+  task that mounts the page. Read on demand, only the rows and group headers that are actually
+  rendered compile, and the background warm-up compiles the rest between frames.
+*/
 function convertToGroupItem(script: Script): ScriptGroupItem {
   return {
     scriptId: script.executableId,
     name: script.name,
     docs: script.docs,
-    isReversible: script.canRevert(),
+    get isReversible() {
+      return script.canRevert();
+    },
   };
 }

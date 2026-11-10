@@ -1,4 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import {
+  describe, it, expect, afterEach, vi,
+} from 'vitest';
 import { effectScope, nextTick, shallowRef } from 'vue';
 import {
   useGradualRendering, type BatchScheduler, type GradualRenderingOptions,
@@ -17,6 +19,43 @@ describe('useGradualRendering', () => {
 
     // assert
     expect(renderedCount.value).to.equal(expectedCount);
+  });
+
+  describe('default initial batch', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('renders as many rows as the window can show', () => {
+      // arrange
+      const rowMinimumHeightInPx = 46;
+      const expectedCount = 20;
+      vi.stubGlobal('innerHeight', expectedCount * rowMinimumHeightInPx);
+      // act
+      const renderedCount = useWithDefaultOptions(100);
+      // assert
+      expect(renderedCount).to.equal(expectedCount);
+    });
+
+    it('renders a minimum number of rows in a very short window', () => {
+      // arrange
+      const expectedCount = 10;
+      vi.stubGlobal('innerHeight', 50);
+      // act
+      const renderedCount = useWithDefaultOptions(100);
+      // assert
+      expect(renderedCount).to.equal(expectedCount);
+    });
+
+    function useWithDefaultOptions(totalCount: number): number {
+      const scope = effectScope();
+      const renderedCount = scope.run(() => useGradualRendering(
+        () => totalCount,
+        () => undefined,
+      ).renderedCount.value);
+      scope.stop(); // cancels the batches that would follow
+      return renderedCount ?? 0;
+    }
   });
 
   it('renders a short list at once without scheduling anything', () => {
