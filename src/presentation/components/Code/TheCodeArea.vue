@@ -166,6 +166,13 @@ export default defineComponent({
         }
         return;
       }
+      /*
+        The import resolves in a microtask of the task that evaluated the chunk, so evaluating Ace
+        and building the editor ran as one task of about 120 ms with the CPU throttled 4x, one of
+        the long tasks Lighthouse counts as Total Blocking Time. Building it in a fresh task splits
+        that in two, and lets a click or key press that arrives in between be handled first.
+      */
+      await waitForNextTask();
       if (!isMounted) {
         return;
       }
@@ -285,6 +292,12 @@ export default defineComponent({
     };
   },
 });
+
+function waitForNextTask(): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+}
 
 function getLanguage(language: ScriptLanguage): SupportedSyntaxLanguage {
   switch (language) {
