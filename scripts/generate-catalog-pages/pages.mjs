@@ -19,7 +19,7 @@ import {
 const OS_COPY = {
   windows: {
     title: 'Windows privacy and debloat script catalog',
-    metaTitle: 'Windows privacy & debloat scripts: full catalog | privacy.turtlecute.org',
+    metaTitle: 'Windows privacy & debloat scripts: full catalog | debloat.net',
     description:
       'Every Windows tweak in the maintained privacy.sexy fork, with its recommendation for each '
       + 'one. Remove preinstalled apps, disable telemetry and Recall, and harden Windows 11 and 10.',
@@ -50,7 +50,7 @@ const OS_COPY = {
   },
   macos: {
     title: 'macOS privacy and hardening script catalog',
-    metaTitle: 'macOS privacy & hardening scripts: full catalog | privacy.turtlecute.org',
+    metaTitle: 'macOS privacy & hardening scripts: full catalog | debloat.net',
     description:
       'Every macOS tweak in the maintained privacy.sexy fork, with its recommendation for each one. '
       + 'Reduce Apple data collection, configure Siri and Safari, and harden the firewall.',
@@ -78,7 +78,7 @@ const OS_COPY = {
   },
   linux: {
     title: 'Linux privacy and hardening script catalog',
-    metaTitle: 'Linux privacy & hardening scripts: full catalog | privacy.turtlecute.org',
+    metaTitle: 'Linux privacy & hardening scripts: full catalog | debloat.net',
     description:
       'Every Linux tweak in the maintained privacy.sexy fork, with its recommendation for each one. '
       + 'Clear shell and package history, disable distro telemetry, and harden the kernel.',
@@ -161,7 +161,7 @@ export function renderCollectionPage(collection) {
       ],
       extraJsonLd: [{
         '@type': 'ItemList',
-        '@id': `https://privacy.turtlecute.org${path}#categories`,
+        '@id': `https://debloat.net${path}#categories`,
         name: `${collection.name} script categories`,
         numberOfItems: groups.length,
         itemListElement: groups.map((group, index) => ({
@@ -242,7 +242,7 @@ export function renderAlternativesPage(collections) {
 
     <h2>What this fork is</h2>
     <p>
-      <a href="/">privacy.turtlecute.org</a>, also called privacy.sexy Revamped, is an
+      <a href="/">debloat.net</a>, also called privacy.sexy Revamped, is an
       independently maintained fork of
       <a href="https://github.com/undergroundwires/privacy.sexy" rel="noopener nofollow">undergroundwires/privacy.sexy</a>.
       It keeps the original idea: pick the
@@ -348,7 +348,7 @@ export function renderAlternativesPage(collections) {
     description: ALTERNATIVES_DESCRIPTION,
     html: renderPage({
       path,
-      title: 'privacy.sexy alternatives and forks, compared honestly | privacy.turtlecute.org',
+      title: 'privacy.sexy alternatives and forks, compared honestly | debloat.net',
       description: ALTERNATIVES_DESCRIPTION,
       h1: ALTERNATIVES_TITLE,
       breadcrumb: [

@@ -1,10 +1,10 @@
-# privacy.turtlecute.org (privacy.sexy Revamped), a maintained fork of privacy.sexy
+# debloat.net (privacy.sexy Revamped), a maintained fork of privacy.sexy
 # All crawlers welcome, including AI answer engines (GPTBot, ClaudeBot, PerplexityBot, etc.)
 User-agent: *
 Allow: /
 
-Sitemap: https://privacy.turtlecute.org/sitemap.xml
+Sitemap: https://debloat.net/sitemap.xml
 
 # Plain-text summary and full tweak index for language models (https://llmstxt.org/):
-#   https://privacy.turtlecute.org/llms.txt
-#   https://privacy.turtlecute.org/llms-full.txt
+#   https://debloat.net/llms.txt
+#   https://debloat.net/llms-full.txt

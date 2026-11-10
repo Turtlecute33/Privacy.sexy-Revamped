@@ -7,4 +7,4 @@
   what searches for it match. The static pages use the same value
   (`SITE_NAME` in scripts/generate-catalog-pages/layout.mjs).
 */
-export const SITE_DOMAIN = 'privacy.turtlecute.org';
+export const SITE_DOMAIN = 'debloat.net';

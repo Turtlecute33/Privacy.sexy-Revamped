@@ -57,7 +57,7 @@ function renderHtml(logoSvg) {
   h1 span { color: #2f62e0; }
   .note { position: absolute; left: 88px; bottom: 70px; font-size: 26px; color: #566174; }
 </style></head><body>
-  <div class="brand"><span class="logo">${logo}</span>privacy.turtlecute.org</div>
+  <div class="brand"><span class="logo">${logo}</span>debloat.net</div>
   <h1>Privacy scripts for<br><span>Windows, macOS &amp; Linux.</span></h1>
   <span class="note">The actively maintained fork of privacy.sexy</span>
 </body></html>`;

@@ -21,7 +21,7 @@
   <meta name="theme-color" content="#070a12" media="(prefers-color-scheme: dark)" />
   <meta name="color-scheme" content="light dark" />
   <meta name="robots" content="index,follow,max-image-preview:large" />
-  <link rel="canonical" href="https://privacy.turtlecute.org/" />
+  <link rel="canonical" href="https://debloat.net/" />
   <link rel="icon" href="%BASE_URL%favicon.ico" type="image/x-icon">
   <link rel="icon" href="%BASE_URL%icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="%BASE_URL%icon.svg">
@@ -29,15 +29,15 @@
 
   <!-- Open Graph (Facebook, LinkedIn, Slack, Discord, iMessage) -->
   <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="privacy.turtlecute.org" />
+  <meta property="og:site_name" content="debloat.net" />
   <meta property="og:title" content="Privacy &amp; Debloat Script Builder: the maintained privacy.sexy fork" />
   <meta property="og:description"
     content="Actively maintained fork of privacy.sexy. Build scripts to debloat, harden, and disable telemetry on Windows, macOS, and Linux. Free and open source." />
-  <meta property="og:url" content="https://privacy.turtlecute.org/" />
-  <meta property="og:image" content="https://privacy.turtlecute.org/og-image.png?v=3" />
+  <meta property="og:url" content="https://debloat.net/" />
+  <meta property="og:image" content="https://debloat.net/og-image.png?v=4" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Privacy scripts for Windows, macOS and Linux, at privacy.turtlecute.org: the actively maintained fork of privacy.sexy." />
+  <meta property="og:image:alt" content="Privacy scripts for Windows, macOS and Linux, at debloat.net: the actively maintained fork of privacy.sexy." />
   <meta property="og:locale" content="en_US" />
 
   <!-- Twitter / X -->
@@ -45,8 +45,8 @@
   <meta name="twitter:title" content="Privacy &amp; Debloat Script Builder: the maintained privacy.sexy fork" />
   <meta name="twitter:description"
     content="Actively maintained fork of privacy.sexy. Build scripts to debloat, harden, and disable telemetry on Windows, macOS, and Linux. Free and open source." />
-  <meta name="twitter:image" content="https://privacy.turtlecute.org/og-image.png?v=3" />
-  <meta name="twitter:image:alt" content="Privacy scripts for Windows, macOS and Linux, at privacy.turtlecute.org: the actively maintained fork of privacy.sexy." />
+  <meta name="twitter:image" content="https://debloat.net/og-image.png?v=4" />
+  <meta name="twitter:image:alt" content="Privacy scripts for Windows, macOS and Linux, at debloat.net: the actively maintained fork of privacy.sexy." />
 
   <!--
       Security meta tags based on OWASP recommendations.
@@ -110,7 +110,7 @@
           event.preventDefault();
           location.reload();
         });
-        notice.append('privacy.turtlecute.org could not start. ', reloadLink, ' to try again.');
+        notice.append('debloat.net could not start. ', reloadLink, ' to try again.');
         document.getElementById('splash-screen')?.remove();
         document.body.prepend(notice);
       };
@@ -166,10 +166,10 @@
     "@graph": [
       {
         "@type": "WebApplication",
-        "@id": "https://privacy.turtlecute.org/#app",
-        "name": "privacy.turtlecute.org",
-        "alternateName": ["privacy.sexy Revamped", "privacy.sexy fork"],
-        "url": "https://privacy.turtlecute.org/",
+        "@id": "https://debloat.net/#app",
+        "name": "debloat.net",
+        "alternateName": ["privacy.sexy Revamped", "privacy.sexy fork", "privacy.turtlecute.org"],
+        "url": "https://debloat.net/",
         "description": "Actively maintained fork of privacy.sexy. A free, open-source tool to build scripts that debloat, harden, and disable telemetry on Windows, macOS, and Linux.",
         "applicationCategory": "SecurityApplication",
         "operatingSystem": "Windows, macOS, Linux",
@@ -179,7 +179,7 @@
         "softwareVersion": "__PACKAGE_VERSION__",
         "sameAs": ["https://github.com/Turtlecute33/Privacy.sexy-Revamped"],
         "isBasedOn": "https://github.com/undergroundwires/privacy.sexy",
-        "screenshot": "https://privacy.turtlecute.org/og-image.png?v=3",
+        "screenshot": "https://debloat.net/og-image.png?v=4",
         "offers": {
           "@type": "Offer",
           "price": "0",
@@ -200,23 +200,23 @@
       },
       {
         "@type": "WebSite",
-        "@id": "https://privacy.turtlecute.org/#website",
-        "url": "https://privacy.turtlecute.org/",
-        "name": "privacy.turtlecute.org",
+        "@id": "https://debloat.net/#website",
+        "url": "https://debloat.net/",
+        "name": "debloat.net",
         "alternateName": "privacy.sexy Revamped",
         "description": "Build privacy and security scripts for Windows, macOS, and Linux.",
         "inLanguage": "en"
       },
       {
         "@type": "FAQPage",
-        "@id": "https://privacy.turtlecute.org/#faq",
+        "@id": "https://debloat.net/#faq",
         "mainEntity": [
           {
             "@type": "Question",
-            "name": "What is privacy.turtlecute.org?",
+            "name": "What is debloat.net?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "privacy.turtlecute.org, also called privacy.sexy Revamped, is a free, open-source tool that builds privacy and security scripts for Windows, macOS, and Linux. It is an actively maintained fork of the original privacy.sexy project. You pick the changes you want, inspect the exact commands, then copy or download a script to run on your computer."
+              "text": "debloat.net, also called privacy.sexy Revamped, is a free, open-source tool that builds privacy and security scripts for Windows, macOS, and Linux. It is an actively maintained fork of the original privacy.sexy project. You pick the changes you want, inspect the exact commands, then copy or download a script to run on your computer."
             }
           },
           {
@@ -232,7 +232,7 @@
             "name": "How do I debloat Windows 11?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Open privacy.turtlecute.org, select Windows, choose the debloat and privacy options you want (such as removing preinstalled apps and disabling telemetry), review the generated commands, then download and run the script as administrator."
+              "text": "Open debloat.net, select Windows, choose the debloat and privacy options you want (such as removing preinstalled apps and disabling telemetry), review the generated commands, then download and run the script as administrator."
             }
           },
           {
@@ -276,7 +276,7 @@
       <p><strong>JavaScript is disabled</strong></p>
       <p>
         You can still read the catalog below, but building a script needs JavaScript enabled.
-        privacy.turtlecute.org builds scripts entirely in your browser: it has no backend, your
+        debloat.net builds scripts entirely in your browser: it has no backend, your
         selection never leaves your device, and every command is shown to you before you run it.
       </p>
     </div>
@@ -287,7 +287,7 @@
     splash-screen
     splash-screen--js-only
   " role="status" aria-live="polite" aria-label="Application loading screen"
-    aria-description="Initial loading screen while privacy.turtlecute.org prepares its options. This typically takes a few seconds.">
+    aria-description="Initial loading screen while debloat.net prepares its options. This typically takes a few seconds.">
     <!-- This content will be removed once the application loads -->
     <style>
       /* Matches the app canvas (`_theme.scss`) in both appearances, so the hand-off is seamless. */
@@ -466,7 +466,7 @@
         the app has removed the splash. A `rel="preload" as="image"` therefore spent a high-priority
         pre-FCP request on an image production never draws; `rel="icon"` still fetches it lazily.
       -->
-      <img src="%BASE_URL%icon.svg" alt="privacy.turtlecute.org logo" class="splash-screen__logo" width="256" height="256" />
+      <img src="%BASE_URL%icon.svg" alt="debloat.net logo" class="splash-screen__logo" width="256" height="256" />
     </div>
     <p class="
           splash-screen__text

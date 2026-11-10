@@ -11,11 +11,11 @@
  * graph; the values below are the small subset these pages use. If the palette changes, this is the
  * second place to update.
  */
-export const SITE_ORIGIN = 'https://privacy.turtlecute.org';
+export const SITE_ORIGIN = 'https://debloat.net';
 /* The site's own domain; see src/presentation/components/Shared/SiteIdentity.ts for why. */
-export const SITE_NAME = 'privacy.turtlecute.org';
+export const SITE_NAME = 'debloat.net';
 /* The `?v=` revision changes with the image so cached link previews fetch it again. */
-const OG_IMAGE_URL = `${SITE_ORIGIN}/og-image.png?v=3`;
+const OG_IMAGE_URL = `${SITE_ORIGIN}/og-image.png?v=4`;
 
 /*
  * Comments live out here rather than inside the string, because the string is inlined into every

@@ -42,8 +42,9 @@ export function renderLlmsTxt(collections, pages) {
 - Data handling: there is no backend and no account. Scripts are built in the browser and the
   selection never leaves the device. No cookies, no advertising or third-party trackers; the only
   request beyond the site itself is an anonymous page-view count to a self-hosted analytics server.
-- Name: the site goes by its address, privacy.turtlecute.org; it is also called privacy.sexy
-  Revamped. It is not privacy.sexy, the upstream site.
+- Name: the site goes by its address, debloat.net; it is also called privacy.sexy
+  Revamped, and was at privacy.turtlecute.org until November 2026. It is not privacy.sexy, the
+  upstream site.
 - Relationship to upstream: an independent fork of undergroundwires/privacy.sexy, not affiliated
   with the original author. The upstream catalog's last release was 0.13.8 (March 2025); this fork
   keeps it current, has tightened which tweaks are recommended, and is web only.

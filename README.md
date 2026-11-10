@@ -1,9 +1,9 @@
-# privacy.sexy Revamped
+# debloat.net
 
 > Free, open-source script builder that debloats and hardens Windows, macOS,
-> and Linux.
+> and Linux. Also known as privacy.sexy Revamped.
 
-privacy.sexy Revamped builds privacy and security scripts for your operating
+debloat.net builds privacy and security scripts for your operating
 system. Pick what you want changed: remove preinstalled Windows bloatware,
 disable telemetry and tracking, or tighten macOS and Linux privacy settings.
 Read the exact commands, then copy or download the script and run it yourself.
@@ -14,12 +14,12 @@ This is an actively maintained fork of
 [privacy.sexy](https://github.com/undergroundwires/privacy.sexy), updated for
 current versions of Windows, macOS, and Linux.
 
-**[Open privacy.turtlecute.org](https://privacy.turtlecute.org)**
+**[Open debloat.net](https://debloat.net)**
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](./LICENSE)
 [![Based on privacy.sexy](https://img.shields.io/badge/based_on-privacy.sexy-e91e63.svg)](https://github.com/undergroundwires/privacy.sexy)
 
-[![privacy.sexy Revamped interface: build privacy and debloat scripts for Windows, macOS, and Linux](img/screenshot.png)](https://privacy.turtlecute.org)
+[![debloat.net interface: build privacy and debloat scripts for Windows, macOS, and Linux](img/screenshot.png)](https://debloat.net)
 
 ## Why I revived this
 
@@ -38,7 +38,7 @@ the original maintainer.
 
 ## The idea
 
-Privacy.sexy Revamped lets you:
+debloat.net lets you:
 
 1. Pick your operating system and the changes you actually want.
 2. Read the documentation, privacy benefit, and possible side effects.
