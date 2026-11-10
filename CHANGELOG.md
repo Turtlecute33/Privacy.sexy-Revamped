@@ -8,6 +8,16 @@ milestones; `git log` remains the complete history of changes.
 Release history up to and including `0.13.8`, the point this project forked, belongs to upstream and is
 kept there: <https://github.com/undergroundwires/privacy.sexy/blob/master/CHANGELOG.md>.
 
+## 0.18.2 (2026-11-11)
+
+One fix, found by running the "Strict" preset of 0.18.1 on an Italian Windows 11 Pro (x64): 295
+scripts, of which this one printed an error.
+
+- "Set NTP (time) server to `pool.ntp.org`" no longer prints "The Windows Time service is not
+  started" on a Windows that is not in English. It decided whether to stop the service by looking
+  for a word that Windows translates, so it tried to stop a service that was not running. The time
+  server was set correctly either way.
+
 ## 0.18.1 (2026-11-10)
 
 A review and test of the Windows scripts. Every one of them was applied twice and reverted twice on
