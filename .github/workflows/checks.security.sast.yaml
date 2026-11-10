@@ -2,6 +2,7 @@ name: checks.security.sast
 
 on:
   push:
+    branches: [ '**' ] # Not tags: a release tag points at a commit its branch push already analyzed.
   pull_request:
   schedule:
     - cron: '0 0 * * 0' # at 00:00 on every Sunday

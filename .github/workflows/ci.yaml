@@ -4,10 +4,13 @@
 #   jobs on the free plan, which used to queue each push for over an hour.
 # - Nothing that depends on third-party websites being reachable. Link checks live in
 #   `checks.external-urls`, weekly, where a slow or rate-limiting site cannot fail an unrelated commit.
+# - Branch pushes only, not tags: a release tag points at a commit that its branch push already
+#   tested, so a tag run repeated the whole suite for nothing.
 name: ci
 
 on:
   push:
+    branches: [ '**' ]
   pull_request:
 
 # A newer push to the same branch makes the older run's result irrelevant.

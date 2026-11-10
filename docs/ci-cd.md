@@ -13,18 +13,22 @@ integration tests pass.
 
 | Workflow | Runs | Checks |
 | --- | --- | --- |
-| [`ci`](./../.github/workflows/ci.yaml) | Every push and pull request, Ubuntu only | Linting, unit and integration tests, production build, E2E tests |
+| [`ci`](./../.github/workflows/ci.yaml) | Every branch push and pull request, Ubuntu only | Linting, unit and integration tests, production build, E2E tests |
 | [`deploy.pages`](./../.github/workflows/deploy.pages.yaml) | Every push to `master` | Tests again, then builds, prerenders, and publishes the site |
-| [`checks.security.sast`](./../.github/workflows/checks.security.sast.yaml) | Every push and pull request, weekly | CodeQL static analysis |
+| [`checks.security.sast`](./../.github/workflows/checks.security.sast.yaml) | Every branch push and pull request, weekly | CodeQL static analysis |
 | [`checks.security.dependencies`](./../.github/workflows/checks.security.dependencies.yaml) | When `package.json` or the lockfile changes, weekly | `npm audit` of production dependencies |
 | [`checks.external-urls`](./../.github/workflows/checks.external-urls.yaml) | Weekly, on demand | Links in the script documentation and Markdown files |
 | [`checks.cross-platform`](./../.github/workflows/checks.cross-platform.yaml) | Weekly, on demand, when Docker files change | Tests and builds on macOS and Windows, the Docker image |
-| [`checks.scripts`](./../.github/workflows/checks.scripts.yaml) | When the tooling scripts change, on demand | Developer tooling scripts on every OS |
+| [`checks.scripts`](./../.github/workflows/checks.scripts.yaml) | When the tooling scripts change, on demand | Developer tooling scripts on every OS (17 jobs) |
 
 What runs on every push is kept fast and deterministic: one OS, and no check that depends on
 third-party websites. Link checks and cross-platform runs are weekly, where a site that is down or
 rate-limits GitHub's runners cannot fail an unrelated commit. Run any of them on demand from the
 repository's *Actions* tab.
+
+Pushing a release tag starts nothing: the tag points at a commit its branch push already checked.
+Every push trigger is limited to branches for this reason, because GitHub ignores `paths` filters
+on tag pushes and would otherwise run the path-filtered checks on every release.
 
 [![CI/CD using GitHub Actions](./../img/architecture/gitops.png)](../.github/workflows/)
 

@@ -1,9 +1,13 @@
-# Checks the developer tooling scripts on every OS. They change rarely and the matrix is large
-# (about 40 jobs, a third of them on macOS), so it runs only when those scripts change, or on demand.
+# Checks the developer tooling scripts on every OS. They change rarely, so this runs only when those
+# scripts change, or on demand.
+#
+# Pushes are limited to branches (`'**'`): GitHub does not apply `paths` filters to tag pushes, so
+# without it every release tag ran the whole matrix even though no tooling file had changed.
 name: checks.scripts
 
 on:
   push:
+    branches: [ '**' ]
     paths:
       - scripts/npm-install.js
       - scripts/configure_vscode.py
@@ -21,9 +25,15 @@ on:
       - .github/workflows/checks.scripts.yaml
   workflow_dispatch:
 
+# A newer push to the same branch makes the older run's result irrelevant.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   icons-build:
     runs-on: ${{ matrix.os }}-latest
+    timeout-minutes: 15
     strategy:
       matrix:
         os: [macos, ubuntu, windows]
@@ -45,19 +55,35 @@ jobs:
         name: Create icons
         run: npm run icons:build
 
+  # Each option of scripts/npm-install.js is covered once, on the OSes where it can behave
+  # differently, instead of every option on every OS with and without node_modules (36 jobs, 12 on
+  # macOS, which the free plan runs 5 at a time):
+  # - The plain install, `--ci` and `--fresh` run on all three OSes: they install, and `--fresh`
+  #   removes an existing node_modules first, which is where Windows differs (long paths, locks).
+  # - `--no-errors` only changes npm's log level, so Ubuntu covers it.
+  # - `--non-deterministic` deletes package-lock.json and installs whatever npm serves at that
+  #   moment, so it fails when a just-published package has not reached every registry mirror yet
+  #   (on 2026-11-10: "No matching version found for @puppeteer/browsers@3.2.7" on macOS and
+  #   Windows, while Ubuntu passed). That says nothing about this repository, so the job reports
+  #   such a failure without failing the run.
   install-deps:
     runs-on: ${{ matrix.os }}-latest
+    timeout-minutes: 15
+    continue-on-error: ${{ matrix.registry-dependent }}
     strategy:
       matrix:
-        install-deps-before: [true, false]
-        install-command:
-          - npm run install-deps
-          - npm run install-deps -- --no-errors
-          - npm run install-deps -- --ci
-          - npm run install-deps -- --fresh --non-deterministic
-          - npm run install-deps -- --fresh
-          - npm run install-deps -- --non-deterministic
-        os: [ macos, ubuntu, windows ]
+        include:
+          - { os: macos, install-command: npm run install-deps, install-deps-before: false, registry-dependent: false }
+          - { os: ubuntu, install-command: npm run install-deps, install-deps-before: false, registry-dependent: false }
+          - { os: windows, install-command: npm run install-deps, install-deps-before: false, registry-dependent: false }
+          - { os: macos, install-command: npm run install-deps -- --ci, install-deps-before: false, registry-dependent: false }
+          - { os: ubuntu, install-command: npm run install-deps -- --ci, install-deps-before: false, registry-dependent: false }
+          - { os: windows, install-command: npm run install-deps -- --ci, install-deps-before: false, registry-dependent: false }
+          - { os: macos, install-command: npm run install-deps -- --fresh, install-deps-before: true, registry-dependent: false }
+          - { os: ubuntu, install-command: npm run install-deps -- --fresh, install-deps-before: true, registry-dependent: false }
+          - { os: windows, install-command: npm run install-deps -- --fresh, install-deps-before: true, registry-dependent: false }
+          - { os: ubuntu, install-command: npm run install-deps -- --no-errors, install-deps-before: false, registry-dependent: false }
+          - { os: ubuntu, install-command: npm run install-deps -- --fresh --non-deterministic, install-deps-before: true, registry-dependent: true }
       fail-fast: false # Still interested to see results from other combinations
     steps:
       -
@@ -77,13 +103,20 @@ jobs:
 
   configure-vscode:
     runs-on: ${{ matrix.os.name }}-latest
+    timeout-minutes: 20
     strategy:
       matrix:
         os:
           - name: macos
             install-vscode-command: brew install --cask visual-studio-code
+          # Not `snap install code`: snapd on the hosted runners can stall for hours (it hung a run
+          # on 2026-11-10 until it was cancelled). The .deb from Microsoft installs in seconds.
           - name: ubuntu
-            install-vscode-command: sudo snap install code --classic
+            install-vscode-command: >-
+              curl --fail --silent --show-error --location --retry 3
+              --output "$RUNNER_TEMP/code.deb"
+              'https://update.code.visualstudio.com/latest/linux-deb-x64/stable'
+              && sudo DEBIAN_FRONTEND=noninteractive apt-get install --yes "$RUNNER_TEMP/code.deb"
           - name: windows
             install-vscode-command: choco install vscode
       fail-fast: false # Still interested to see results from other combinations
@@ -97,10 +130,12 @@ jobs:
       -
         name: Install VSCode
         if: matrix.os.name != 'windows'
+        timeout-minutes: 10
         run: ${{ matrix.os.install-vscode-command }}
       -
         name: Install VSCode with retries
         if: matrix.os.name == 'windows'
+        timeout-minutes: 10
         shell: pwsh
         run: |
           # Chocolatey's community feed throttles shared CI addresses and reports the
@@ -117,4 +152,5 @@ jobs:
           exit 1
       -
         name: Configure VSCode
+        timeout-minutes: 10
         run: python3 ./scripts/configure_vscode.py

@@ -4,6 +4,7 @@ name: checks.security.dependencies
 # a new advisory would otherwise turn every unrelated commit red until the dependency is updated.
 on:
   push:
+    branches: [ '**' ] # GitHub ignores `paths` on tag pushes, so without this every tag ran it.
     paths: [ 'package.json', 'package-lock.json' ]
   pull_request:
     paths: [ 'package.json', 'package-lock.json' ]

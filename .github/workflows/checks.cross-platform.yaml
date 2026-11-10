@@ -9,6 +9,7 @@ on:
     - cron: '0 0 * * 0' # at 00:00 on every Sunday
   workflow_dispatch:
   push:
+    branches: [ '**' ] # GitHub ignores `paths` on tag pushes, so without this every tag ran it.
     paths:
       - Dockerfile
       - .dockerignore
