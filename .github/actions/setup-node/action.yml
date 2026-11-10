@@ -6,4 +6,5 @@ runs:
       uses: actions/setup-node@v6
       with:
         node-version: 22.x
+        cache: npm # Caches the npm download cache (keyed on package-lock.json), not node_modules
         # check-latest: true # Newest versions can potentially have undiscovered bugs or regressions

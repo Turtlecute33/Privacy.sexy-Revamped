@@ -6,6 +6,11 @@ on:
   schedule:
     - cron: '0 0 * * 0' # at 00:00 on every Sunday
 
+# A newer push to the same branch makes the older analysis irrelevant.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   analyze:
     name: Analyze

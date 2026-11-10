@@ -1,8 +1,25 @@
+# Checks the developer tooling scripts on every OS. They change rarely and the matrix is large
+# (about 40 jobs, a third of them on macOS), so it runs only when those scripts change, or on demand.
 name: checks.scripts
 
 on:
   push:
+    paths:
+      - scripts/npm-install.js
+      - scripts/configure_vscode.py
+      - scripts/logo-update/**
+      - img/logo.svg
+      - .github/actions/install-imagemagick/**
+      - .github/workflows/checks.scripts.yaml
   pull_request:
+    paths:
+      - scripts/npm-install.js
+      - scripts/configure_vscode.py
+      - scripts/logo-update/**
+      - img/logo.svg
+      - .github/actions/install-imagemagick/**
+      - .github/workflows/checks.scripts.yaml
+  workflow_dispatch:
 
 jobs:
   icons-build:

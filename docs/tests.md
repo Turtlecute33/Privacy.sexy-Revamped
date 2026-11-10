@@ -56,7 +56,8 @@ There are different types of tests executed:
 These checks validate various qualities like runtime execution, building process, security testing, etc.
 
 - Use [various tools](./../package.json) and [scripts](./../scripts).
-- Are automatically executed as [GitHub workflows](./../.github/workflows).
+- Are automatically executed as [GitHub workflows](./../.github/workflows). See
+  [ci-cd.md](./ci-cd.md#workflows) for which ones run on every push and which run weekly.
 
 ### Security checks
 

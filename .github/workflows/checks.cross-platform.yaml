@@ -1,0 +1,77 @@
+# Runs the tests and builds on macOS and Windows, and checks the Docker image.
+# Weekly rather than per push: the site is built and deployed from Ubuntu (see `ci`), so these
+# catch tooling problems on contributors' machines, which do not need an answer within minutes.
+# Also runs when the Docker files change, and on demand from the Actions tab.
+name: checks.cross-platform
+
+on:
+  schedule:
+    - cron: '0 0 * * 0' # at 00:00 on every Sunday
+  workflow_dispatch:
+  push:
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - .github/workflows/checks.cross-platform.yaml
+
+jobs:
+  test-and-build:
+    strategy:
+      matrix:
+        os: [ macos, windows ] # Ubuntu runs in `ci` on every push
+      fail-fast: false # Still interested to see results from the other OS
+    runs-on: ${{ matrix.os }}-latest
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
+      CYPRESS_INSTALL_BINARY: '0'
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v6
+      -
+        name: Setup node
+        uses: ./.github/actions/setup-node
+      -
+        name: Install dependencies
+        uses: ./.github/actions/npm-install-dependencies
+      -
+        name: Unit tests
+        run: npm run test:unit
+      -
+        name: Integration tests
+        if: ${{ !cancelled() }}
+        run: npm run test:integration
+      -
+        name: Build in every Vite mode
+        if: ${{ !cancelled() }}
+        shell: bash # Required for correct argument passing (--)
+        run: |-
+          # development: `npm run dev`; production: `npm run build`; test: Vitest
+          for mode in development production test; do
+            echo "::group::Build in ${mode} mode"
+            npm run build -- --mode "${mode}"
+            npm run check:verify-build-artifacts -- --web
+            echo '::endgroup::'
+          done
+
+  docker:
+    runs-on: ubuntu-latest # macOS runners need nested virtualization for Docker; Windows cannot run Linux containers
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v6
+      -
+        name: Build Docker image
+        run: docker build -t privacy-sexy-revamped:latest .
+      -
+        name: Run Docker image on port 8080
+        run: docker run -d -p 8080:80 --rm --name privacy.sexy privacy-sexy-revamped:latest
+      -
+        name: Enforce IPv4 Connectivity # Used due to GitHub runners' lack of IPv6 support, preventing request timeouts.
+        uses: ./.github/actions/force-ipv4
+      -
+        name: Check server is up and returns HTTP 200
+        run: >-
+          node ./scripts/verify-web-server-status.js
+          --url http://localhost:8080
+          --max-retries 30

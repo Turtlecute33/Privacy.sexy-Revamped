@@ -1,11 +1,15 @@
 name: checks.security.dependencies
 
+# Runs when the dependencies change, and weekly for advisories published since. Not on every push:
+# a new advisory would otherwise turn every unrelated commit red until the dependency is updated.
 on:
   push:
+    paths: [ 'package.json', 'package-lock.json' ]
   pull_request:
-    paths: [ 'package.json', 'package-lock.json' ] # Allow PRs to be green if they do not introduce dependency change
+    paths: [ 'package.json', 'package-lock.json' ]
   schedule:
     - cron: '0 0 * * 0' # at 00:00 on every Sunday
+  workflow_dispatch:
 
 jobs:
   npm-audit:

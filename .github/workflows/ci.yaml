@@ -1,0 +1,163 @@
+# Runs on every push and pull request, so it must be fast and deterministic:
+# - Ubuntu only. The product is a static site built and deployed from Ubuntu; the macOS and Windows
+#   runs live in `checks.cross-platform`, weekly. macOS runners are also limited to a few concurrent
+#   jobs on the free plan, which used to queue each push for over an hour.
+# - Nothing that depends on third-party websites being reachable. Link checks live in
+#   `checks.external-urls`, weekly, where a slow or rate-limiting site cannot fail an unrelated commit.
+name: ci
+
+on:
+  push:
+  pull_request:
+
+# A newer push to the same branch makes the older run's result irrelevant.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: 'true' # No browser is needed
+      CYPRESS_INSTALL_BINARY: '0'
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v6
+      -
+        name: Setup node
+        uses: ./.github/actions/setup-node
+      -
+        name: Setup python
+        uses: ./.github/actions/setup-python
+      -
+        name: Install dependencies
+        uses: ./.github/actions/npm-install-dependencies
+      -
+        name: Install Python tools
+        run: python -m pip install pylint -r ./scripts/validate-collections-yaml/requirements.txt
+      # Every step after the first runs even if an earlier one failed (`!cancelled()`), so one run
+      # reports all lint problems at once.
+      -
+        name: ESLint
+        run: npm run lint:eslint
+      -
+        name: YAML
+        if: ${{ !cancelled() }}
+        run: npm run lint:yaml
+      -
+        name: Markdown
+        if: ${{ !cancelled() }}
+        run: npm run lint:md
+      -
+        name: Markdown consistency
+        if: ${{ !cancelled() }}
+        run: npm run lint:md:consistency
+      -
+        name: Markdown relative links
+        if: ${{ !cancelled() }}
+        run: npm run lint:md:relative-urls
+      -
+        name: Python
+        if: ${{ !cancelled() }}
+        run: npm run lint:pylint
+      -
+        name: Validate collection files
+        if: ${{ !cancelled() }}
+        run: python ./scripts/validate-collections-yaml
+      -
+        name: No TODO comments
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |-
+          readonly todo_comment_search_pattern='TODO'':' # Define search pattern in parts to prevent IDE from flagging this script line as a TODO item
+          if git grep "$todo_comment_search_pattern" HEAD; then
+            echo 'TODO comments found in the latest commit.'
+            exit 1
+          fi
+
+  test:
+    runs-on: ubuntu-latest
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
+      CYPRESS_INSTALL_BINARY: '0'
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v6
+      -
+        name: Setup node
+        uses: ./.github/actions/setup-node
+      -
+        name: Install dependencies
+        uses: ./.github/actions/npm-install-dependencies
+      -
+        name: Unit tests
+        run: npm run test:unit
+      -
+        name: Integration tests
+        if: ${{ !cancelled() }}
+        run: npm run test:integration
+
+  build:
+    runs-on: ubuntu-latest
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
+      CYPRESS_INSTALL_BINARY: '0'
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v6
+      -
+        name: Setup node
+        uses: ./.github/actions/setup-node
+      -
+        name: Install dependencies
+        uses: ./.github/actions/npm-install-dependencies
+      -
+        name: Build
+        run: npm run build
+      -
+        name: Verify build artifacts
+        shell: bash # Required for correct argument passing (--)
+        run: npm run check:verify-build-artifacts -- --web
+
+  e2e:
+    runs-on: ubuntu-latest
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: 'true' # Cypress brings its own browser
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v6
+      -
+        name: Setup node
+        uses: ./.github/actions/setup-node
+      -
+        # Restored before `npm ci` so Cypress's install step finds the binary instead of downloading it.
+        name: Cache Cypress binary
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      -
+        name: Install dependencies
+        uses: ./.github/actions/npm-install-dependencies
+      -
+        name: E2E tests
+        run: npm run test:cy:run
+      -
+        name: Upload screenshots
+        if: failure() # Cypress takes screenshots only when a test fails
+        uses: ./.github/actions/upload-artifact
+        with:
+          name: e2e-screenshots
+          path: tests/e2e/screenshots # `screenshots` in cypress-dirs.json
+      -
+        name: Upload videos
+        if: failure()
+        uses: ./.github/actions/upload-artifact
+        with:
+          name: e2e-videos
+          path: tests/e2e/videos # `videos` in cypress-dirs.json

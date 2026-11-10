@@ -1,13 +1,19 @@
+# Checks that the links in the script documentation and in the Markdown files are still alive.
+# Weekly and on demand only, never per push: the result depends on hundreds of third-party sites
+# being reachable from GitHub's runners, so on a push it failed for reasons unrelated to the commit.
 name: checks.external-urls
 
 on:
-  push:
   schedule:
     - cron: '0 0 * * 0' # at 00:00 on every Sunday
+  workflow_dispatch:
 
 jobs:
-  run-check:
+  script-documentation:
     runs-on: ubuntu-latest
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
+      CYPRESS_INSTALL_BINARY: '0'
     steps:
       -
         name: Checkout
@@ -25,6 +31,26 @@ jobs:
         name: Test
         run: npm run check:external-urls
         env:
-          RANDOMIZED_URL_CHECK_LIMIT: "${{ github.event_name == 'push' && '100' || '3000' }}"
-          # - Scheduled checks has high limit for thorough testing.
-          # - For push events, triggered by code changes, the amount of URLs are limited to provide quick feedback.
+          RANDOMIZED_URL_CHECK_LIMIT: '3000'
+
+  markdown:
+    runs-on: ubuntu-latest
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
+      CYPRESS_INSTALL_BINARY: '0'
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v6
+      -
+        name: Setup node
+        uses: ./.github/actions/setup-node
+      -
+        name: Install dependencies
+        uses: ./.github/actions/npm-install-dependencies
+      -
+        name: Enforce IPv4 Connectivity # Used due to GitHub runners' lack of IPv6 support, preventing request timeouts.
+        uses: ./.github/actions/force-ipv4
+      -
+        name: Check Markdown links
+        run: npm run lint:md:external-urls
