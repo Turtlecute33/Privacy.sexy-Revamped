@@ -48,19 +48,22 @@ async function loadSvg(name: IconName, loaders: FileLoaders): Promise<string> {
   return modifiedContent;
 }
 
-const RawSvgLoaders: FileLoaders = import.meta.glob<string>('@/presentation/assets/icons/**/*.svg', {
+/*
+  Bundled into the code that uses them (`eager`) rather than fetched one by one. All 14 icons come
+  to about 3 KB gzipped, yet as separate chunks they were 14 requests that started only once the
+  app had mounted, the tail of Lighthouse's "Network dependency tree". Mounting also replaces the
+  prerendered snapshot, icons included, so every icon on the page blinked out until its chunk
+  arrived.
+*/
+const RawSvgContents = import.meta.glob<string>('@/presentation/assets/icons/**/*.svg', {
   query: '?raw',
   import: 'default',
-  /*
-    Using `eager: true` to preload all icons.
-    Pros:
-      - Speed: Icons are instantly accessible post-initial load.
-    Cons:
-      - Increased initial load time due to preloading of all icons.
-      - Increased bundle size.
-  */
-  eager: false,
+  eager: true,
 });
+
+const RawSvgLoaders: FileLoaders = Object.fromEntries(
+  Object.entries(RawSvgContents).map(([path, content]) => [path, () => Promise.resolve(content)]),
+);
 
 function modifySvg(svgSource: string): string {
   const parser = new globalThis.window.DOMParser();
