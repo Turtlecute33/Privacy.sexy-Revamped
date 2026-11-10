@@ -88,6 +88,9 @@ async function captureScene(browser, url, scene, scheme) {
       await clickByText(page, text); // eslint-disable-line no-await-in-loop
     }
     await page.mouse.move(700, 880); // Over the footer, outside the shot: no hover states
+    // A clicked row keeps focus, which reveals its documentation button. Rows show it only on
+    // hover and focus, so drop the focus to capture the list as a visitor first sees it.
+    await page.evaluate(() => document.activeElement?.blur());
     await delay(800);
     const clip = await getClipAboveFooter(page);
     const path = resolve(OUTPUT_DIR, `${scene.name}-${scheme}.webp`);
@@ -105,6 +108,11 @@ async function captureScene(browser, url, scene, scheme) {
   }
 }
 
+/*
+ * The card follows the app's flat light theme (src/presentation/assets/styles/_theme.scss): the
+ * canvas with its two soft washes, the logo on a flat accent tile, and the screenshot with a
+ * hairline edge and the one soft shadow the app gives floating layers.
+ */
 function renderSocialPreview(logoSvg, screenshotBase64) {
   const logo = logoSvg
     .replace(/<!--[\s\S]*?-->/g, '')
@@ -118,19 +126,15 @@ function renderSocialPreview(logoSvg, screenshotBase64) {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
     color: #0b1220;
     background:
-      radial-gradient(520px 420px at 92% 8%, rgba(78, 128, 255, 0.30), transparent 70%),
-      radial-gradient(520px 420px at 70% 105%, rgba(30, 205, 185, 0.22), transparent 70%),
-      radial-gradient(460px 380px at 0% 100%, rgba(155, 115, 255, 0.16), transparent 70%),
-      #eef1f8;
+      radial-gradient(760px 520px at 4% -6%, rgba(78, 128, 255, 0.22), transparent 70%),
+      radial-gradient(720px 500px at 100% 104%, rgba(30, 205, 185, 0.14), transparent 70%),
+      #eceff5;
   }
   .copy { position: absolute; left: 72px; top: 72px; width: 520px; }
-  .brand { display: flex; align-items: center; gap: 14px; font-size: 28px; font-weight: 650; letter-spacing: -0.02em; }
+  .brand { display: flex; align-items: center; gap: 14px; font-size: 28px; font-weight: 600; letter-spacing: -0.02em; }
   .logo {
     display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; color: #fff;
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 55%),
-      linear-gradient(140deg, #6f97ff 0%, #2f62e0 52%, #14a58a 100%);
-    box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.45), 0 12px 28px -8px rgba(47, 98, 224, 0.5);
+    background: #2f62e0;
   }
   h1 { margin-top: 70px; font-size: 62px; font-weight: 750; line-height: 1.04; letter-spacing: -0.045em; }
   h1 span { color: #2f62e0; }
@@ -138,8 +142,8 @@ function renderSocialPreview(logoSvg, screenshotBase64) {
   .note { position: absolute; left: 72px; bottom: 64px; font-size: 20px; color: #566174; }
   .frame {
     position: absolute; left: 650px; top: 96px; width: 1060px; border-radius: 22px; overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.9);
-    box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.06), 0 30px 80px -20px rgba(40, 60, 130, 0.35);
+    border: 1px solid rgba(15, 23, 42, 0.09);
+    box-shadow: 0 16px 40px -16px rgba(15, 23, 42, 0.28);
   }
   .frame img { display: block; width: 100%; }
 </style></head><body>
