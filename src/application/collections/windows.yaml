@@ -16,6 +16,12 @@ scripting:
             echo PowerShell is not available. Please install or enable PowerShell.
             pause & exit 1
         )
+        :: Use the 64-bit command processor when a 32-bit program started this script
+        if defined PROCESSOR_ARCHITEW6432 if exist "%SystemRoot%\Sysnative\cmd.exe" (
+            set "privacy_sexy_script_path=%~f0"
+            "%SystemRoot%\Sysnative\cmd.exe" /d /c call "%%privacy_sexy_script_path%%"
+            exit /b
+        )
         :: Ensure admin privileges
         fltmc >nul 2>&1 || (
             echo Administrator privileges are required.
@@ -91,10 +97,14 @@ actions:
                             [6]: https://web.archive.org/web/20231128095448/https://computerforensics.parsonage.co.uk/downloads/TheMeaningofLIFE.pdf "The Meaning of Linkfiles In Forensic Examinations | Harry Parsonage | computerforensics.parsonage.co.uk"
                         children:
                             -
-                                name: Clear Quick Access recent files
+                                name: Clear Quick Access recent files (also unpins Quick Access folders)
                                 docs: |-
                                     This script clears the `AutomaticDestinations` Jump List files in Windows.
                                     It improves user privacy by removing traces of recent file and application usage.
+
+                                    > **Caution:** One of these files holds the folders you pinned to **Quick access** in File Explorer.
+                                    > After running this script the Quick access list is back to its default, and the folders
+                                    > you pinned yourself have to be pinned again.
 
                                     These files are automatically created when a user opens a file or an application [1].
                                     They help users quickly access recently or frequently used items, usually via the Windows taskbar [2].
@@ -901,7 +911,7 @@ actions:
                         call:
                             function: ClearDirectoryContents
                             parameters:
-                                directoryGlob: '%APPDATA%\Sun\Java\Deployment\cache'
+                                directoryGlob: '%USERPROFILE%\AppData\LocalLow\Sun\Java\Deployment\cache' # Java keeps its deployment cache under LocalLow, not Roaming
                     -
                         category: Clear Steam data
                         children:
@@ -1494,7 +1504,7 @@ actions:
                                 call:
                                     function: ClearDirectoryContents
                                     parameters:
-                                        directoryGlob: '%LOCALAPPDATA%\Microsoft\InternetExplorer\DOMStore'
+                                        directoryGlob: '%LOCALAPPDATA%\Microsoft\Internet Explorer\DOMStore'
                             -
                                 name: Clear Internet Explorer usage data
                                 docs:
@@ -1637,6 +1647,24 @@ actions:
                                         function: ClearDirectoryContents
                                         parameters:
                                             directoryGlob: '%LOCALAPPDATA%\Packages\Mozilla.Firefox_n80bbvh6b1yt2\LocalCache\Roaming\Mozilla\Firefox\Profiles'
+                                    # The profile lists must go too: with them still naming the deleted folders, Firefox stops at
+                                    # "Your Firefox profile cannot be loaded" instead of starting with a new profile.
+                                    -
+                                        function: DeleteFiles
+                                        parameters:
+                                            fileGlob: '%APPDATA%\Mozilla\Firefox\profiles.ini'
+                                    -
+                                        function: DeleteFiles
+                                        parameters:
+                                            fileGlob: '%APPDATA%\Mozilla\Firefox\installs.ini'
+                                    -
+                                        function: DeleteFiles
+                                        parameters:
+                                            fileGlob: '%LOCALAPPDATA%\Packages\Mozilla.Firefox_n80bbvh6b1yt2\LocalCache\Roaming\Mozilla\Firefox\profiles.ini'
+                                    -
+                                        function: DeleteFiles
+                                        parameters:
+                                            fileGlob: '%LOCALAPPDATA%\Packages\Mozilla.Firefox_n80bbvh6b1yt2\LocalCache\Roaming\Mozilla\Firefox\installs.ini'
                     -
                         name: Clear Opera history (user profiles, settings, and data)
                         call:
@@ -2149,11 +2177,11 @@ actions:
                                     -
                                         function: ClearDirectoryContents
                                         parameters:
-                                            directoryGlob: '%LOCALAPPDATA%\Microsoft\CLR_v4.0\UsageTraces'
+                                            directoryGlob: '%LOCALAPPDATA%\Microsoft\CLR_v4.0\UsageLogs'
                                     -
                                         function: ClearDirectoryContents
                                         parameters:
-                                            directoryGlob: '%LOCALAPPDATA%\Microsoft\CLR_v4.0_32\UsageTraces'
+                                            directoryGlob: '%LOCALAPPDATA%\Microsoft\CLR_v4.0_32\UsageLogs'
                             -
                                 name: Clear Network Setup Service Events system logs
                                 call:
@@ -2301,7 +2329,7 @@ actions:
                             if (-not $cmdkeyListOutput) {
                                 throw 'Failed to retrieve credentials list. The output from `cmdkey /list` is empty.'
                             }
-                            $credentialEntries = @($cmdkeyListOutput | Select-String 'Target')
+                            $credentialEntries = @($cmdkeyListOutput | Select-String '^\s*[^:]+:\s*\w+:\w+=')
                             if (-not $credentialEntries) {
                                 Write-Host 'Skipping: No credentials found for deletion.'
                                 exit 0
@@ -2309,7 +2337,7 @@ actions:
                             $allCredentialsDeletedSuccessfully = $true
                             Write-Host "Total of $($credentialEntries.Length) credential(s) found. Initiating deletion..."
                             foreach ($credentialEntry in $credentialEntries) {
-                                if ($credentialEntry -notmatch 'Target:(.+)') {
+                                if ($credentialEntry -notmatch '^\s*[^:]+:\s*(\w+:\w+=.+)$') {
                                     Write-Error "Failed to parse credential from output: $credentialEntry"
                                     $allCredentialsDeletedSuccessfully = $false
                                     continue
@@ -2703,27 +2731,24 @@ actions:
                                 function: DeleteFiles
                                 parameters:
                                     fileGlob: '%APPDATA%\Microsoft\Outlook\*.srs'
+                            # Signatures, stationery and templates sit next to the `Outlook` folder, not inside it.
                             -
                                 function: ClearDirectoryContents
                                 parameters:
-                                    directoryGlob: '%APPDATA%\Microsoft\Outlook\Signatures'
+                                    directoryGlob: '%APPDATA%\Microsoft\Signatures'
                             -
                                 function: ClearDirectoryContents
                                 parameters:
-                                    directoryGlob: '%APPDATA%\Microsoft\Outlook\Stationery'
+                                    directoryGlob: '%APPDATA%\Microsoft\Stationery'
                             -
-                                function: ClearDirectoryContents
+                                function: DeleteFiles
                                 parameters:
-                                    directoryGlob: '%APPDATA%\Microsoft\Outlook\Templates'
-                            -
-                                function: ClearDirectoryContents
-                                parameters:
-                                    directoryGlob: '%APPDATA%\Microsoft\Outlook\Proof'
+                                    # Only Outlook's own templates: Word keeps `Normal.dotm` in the same folder.
+                                    fileGlob: '%APPDATA%\Microsoft\Templates\*.oft'
             -
                 name: Minimize DISM "Reset Base" update data
                 # Not recommended in any preset: it permanently removes the ability to uninstall previously
-                # installed Windows updates, which is a supported recovery path. See also the note in `docs`
-                # about the registry key being owned by `TrustedInstaller`.
+                # installed Windows updates, which is a supported recovery path.
                 docs: |-
                     This script diminishes unnecessary system data, thus enhancing your privacy and performance.
 
@@ -2744,8 +2769,8 @@ actions:
                     > Windows updates. Rolling back a faulty update is a supported recovery path, so this action trades away a recovery
                     > option for disk space and is therefore not part of any recommendation preset.
 
-                    > **Note:** The `SideBySide\Configuration` key is owned by `TrustedInstaller`. On many systems the write fails with an
-                    > access-denied error even when running as an administrator, in which case this script has no effect.
+                    > **Note:** The `SideBySide\Configuration` key is owned by `TrustedInstaller`, and administrators cannot write
+                    > to it. The script therefore makes the change as `TrustedInstaller`.
 
                     [1]: https://web.archive.org/web/20230806160623/https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/what-is-dism?view=windows-11 "DISM Overview | Microsoft Learn"
                     [2]: https://web.archive.org/web/20230806160827/https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/clean-up-the-winsxs-folder?view=windows-11 "Clean Up the WinSxS Folder | Microsoft Learn"
@@ -2758,6 +2783,7 @@ actions:
                         dataType: REG_DWORD
                         data: '0'
                         dataOnRevert: '1' # Default value: `1` on Windows 10 Pro (≥ 21H1) | 🔍 Missing on Windows 11 Pro 21H1 | `1` on Windows 11 Pro (≥ 22H2)
+                        elevateToTrustedInstaller: 'true' # Administrators get "Access is denied" (Windows 11 25H2, Windows Server 2025)
             -
                 name: Clear Delivery Optimization cache
                 docs: |-
@@ -3134,8 +3160,8 @@ actions:
                     [2]: https://web.archive.org/web/20240427123038/https://learn.microsoft.com/en-us/windows/uwp/get-started/universal-application-platform-guide "What's a Universal Windows Platform (UWP) app? - UWP applications | Microsoft Learn | learn.microsoft.com"
                 children:
                     -
-                        name: Disable app access to location
-                        recommend: standard
+                        name: Disable app access to location (breaks Wi-Fi network lists in apps)
+                        recommend: strict # Since Windows 11 24H2 apps and `netsh wlan` cannot list or identify Wi-Fi networks without location access
                         docs: |-  # refactor-with-variables: Same • App Access Caution
                             This script prevents Windows apps from accessing your location [1].
                             It restricts access to location-specific network information [2] and sensors [2] [3],
@@ -3149,6 +3175,11 @@ actions:
 
                             > **Caution:**
                             > Disabling app access may affect the functionality of certain Microsoft Store, third-party, and system applications.
+                            > Since Windows 11 24H2, Windows treats the list of nearby Wi-Fi networks as location data [7].
+                            > With location access off, apps and commands such as `netsh wlan show networks` can no longer list
+                            > Wi-Fi networks or read the name of the connected one [7]. This affects Wi-Fi analyzers and VPN or
+                            > firewall apps that react to the network you are on. Connecting to Wi-Fi from the taskbar and
+                            > Settings keeps working.
 
                             [1]: https://web.archive.org/web/20240427110714/https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-privacy#letappsaccesslocation "Privacy Policy CSP - Windows Client Management | Microsoft Learn | learn.microsoft.com"
                             [2]: https://web.archive.org/web/20240427120219/https://learn.microsoft.com/en-us/windows/uwp/packaging/app-capability-declarations "App capability declarations - UWP applications | Microsoft Learn | learn.microsoft.com"
@@ -3156,6 +3187,7 @@ actions:
                             [4]: https://web.archive.org/web/20240427103845/https://www.c-amie.co.uk/technical/windows-10-registry-paths-for-privacy-settings/ "Windows 10 Registry Paths for Privacy Settings - C:Amie (not) Com! | c-amie.co.uk"
                             [5]: https://web.archive.org/web/20240427114500/https://www.joseespitia.com/2019/07/24/registry-keys-for-windows-10-application-privacy-settings/ "Registry Keys for Windows 10 Application Privacy Settings - Jose Espitia | joseespitia.com"
                             [6]: https://web.archive.org/web/20231206211616/https://social.technet.microsoft.com/Forums/en-US/63904312-04af-41e5-8b57-1dd446ea45c5/privacy-settings-reg-keys?forum=win10itprosetup "Privacy Settings Reg Keys | social.technet.microsoft.com"
+                            [7]: https://learn.microsoft.com/en-us/windows/win32/nativewifi/wi-fi-access-location-changes "Changes to API behavior for Wi-Fi access and location | Microsoft Learn | learn.microsoft.com"
                         call:
                             -
                                 function: BlockUWPAccessViaGPO
@@ -4933,12 +4965,13 @@ actions:
                                 call:
                                     function: DisableScheduledTask
                                     parameters:
-                                        # Check: Get-ScheduledTask -TaskPath '\Microsoft\Windows\Application Experience\' -TaskName 'Microsoft Compatibility Appraiser'
+                                        # Check: Get-ScheduledTask -TaskPath '\Microsoft\Windows\Application Experience\' -TaskName 'Microsoft Compatibility Appraiser*'
+                                        # The wildcard covers `Microsoft Compatibility Appraiser Exp`, which Windows 11 24H2 registers for the same collector.
                                         taskPathPattern: \Microsoft\Windows\Application Experience\
-                                        taskNamePattern: Microsoft Compatibility Appraiser
+                                        taskNamePattern: Microsoft Compatibility Appraiser*
                             -
                                 name: Disable telemetry collector and sender process (`CompatTelRunner.exe`)
-                                recommend: standard
+                                recommend: strict # Blocks and renames a Windows system file, which Windows Update also uses to assess upgrades
                                 docs: |-
                                     This script disables `CompatTelRunner.exe`, associated with the Microsoft Compatibility Appraiser [1] [2]
                                     This process runs at least daily [2] from Windows 7 onwards [3] [4].
@@ -5273,7 +5306,7 @@ actions:
                                 deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 21H2) and Windows 11 Pro (≥ 22H2)
                     -
                         name: Disable Application Compatibility Engine
-                        recommend: standard
+                        recommend: strict # Microsoft warns that older applications and installers may stop working without the engine
                         docs: |-
                             This script disables the Application Compatibility Engine on Windows systems.
 
@@ -6385,7 +6418,7 @@ actions:
                                     valueName: PassivePollPeriod
                                     dataType: REG_DWORD
                                     data: "0"
-                                    deleteOnRevert: '15' # Default value: 15 on Windows 10 Pro (≥ 22H2) | 15 on Windows 11 Pro (≥ 23H2)
+                                    dataOnRevert: '15' # Default value: 15 on Windows 10 Pro (≥ 22H2) | 15 on Windows 11 Pro (≥ 23H2)
                     -
                         name: >-
                             Remove "Network Connectivity Status Indicator (NCSI)" app
@@ -6930,6 +6963,32 @@ actions:
                         data: "0"
                         deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 21H2) and Windows 11 Pro (≥ 22H2)
             -
+                name: Disable online speech recognition by policy (breaks voice typing and dictation)
+                recommend: strict # Nobody on the device can turn online speech recognition back on until this is reverted
+                docs: |-
+                    This script turns off online speech recognition for every user of the device and locks the setting.
+
+                    It sets the **Allow users to enable online speech recognition services** policy to disabled [1].
+                    Speech services are then disabled, and users can no longer enable them in
+                    **Settings > Privacy & security > Speech** [1].
+
+                    > **Caution:**
+                    > Voice typing (**Win + H**), dictation and other features that send your voice to Microsoft's speech
+                    > service stop working for everyone on the device until you revert this script [1].
+
+                    Earlier versions applied this policy as part of "Disable text and handwriting data collection".
+                    If dictation stopped working after running that script, reverting this one restores it.
+
+                    [1]: https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-privacy#allowinputpersonalization "Privacy Policy CSP - Windows Client Management | Microsoft Learn | learn.microsoft.com"
+                call:
+                    function: SetRegistryValue
+                    parameters:
+                        keyPath: HKLM\SOFTWARE\Policies\Microsoft\InputPersonalization
+                        valueName: AllowInputPersonalization
+                        dataType: REG_DWORD
+                        data: "0"
+                        deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 21H2) and Windows 11 Pro (≥ 23H2)
+            -
                 name: Opt out of Windows privacy consent
                 recommend: standard
                 call:
@@ -7018,14 +7077,6 @@ actions:
                     -
                         function: SetRegistryValue
                         parameters:
-                            keyPath: HKLM\SOFTWARE\Policies\Microsoft\InputPersonalization
-                            valueName: AllowInputPersonalization
-                            dataType: REG_DWORD
-                            data: "0"
-                            deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 21H2) and Windows 11 Pro (≥ 23H2)
-                    -
-                        function: SetRegistryValue
-                        parameters:
                             keyPath: HKCU\SOFTWARE\Microsoft\InputPersonalization\TrainedDataStore
                             valueName: HarvestContacts
                             dataType: REG_DWORD
@@ -7056,8 +7107,22 @@ actions:
                                 data: "1"
                                 deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
                     -
-                        name: Disable location
-                        recommend: standard
+                        name: Disable location (breaks Wi-Fi network lists in apps, automatic time zone)
+                        recommend: strict # Since Windows 11 24H2 apps and `netsh wlan` cannot list or identify Wi-Fi networks without location services
+                        docs: |-
+                            This script turns off Windows location services for the whole device.
+
+                            It sets the **Turn off location** policy and denies the location sensor permission, so neither
+                            Windows nor any app can determine where the device is.
+
+                            > **Caution:**
+                            > Since Windows 11 24H2, Windows treats the list of nearby Wi-Fi networks as location data [1].
+                            > With location services off, apps and commands such as `netsh wlan show networks` can no longer
+                            > list Wi-Fi networks or read the name of the connected one [1]. This affects Wi-Fi analyzers and
+                            > VPN or firewall apps that react to the network you are on. Connecting to Wi-Fi from the taskbar
+                            > and Settings keeps working. Automatic time zone, Find My Device and local weather also stop working.
+
+                            [1]: https://learn.microsoft.com/en-us/windows/win32/nativewifi/wi-fi-access-location-changes "Changes to API behavior for Wi-Fi access and location | Microsoft Learn | learn.microsoft.com"
                         call:
                             -
                                 function: SetRegistryValue
@@ -7118,8 +7183,8 @@ actions:
                                 data: "0" # 0: Not allowed, 1: Allowed (default)
                                 deleteOnRevert: 'true' # Missing by default; absence leaves the choice to the user
             -
-                name: Disable device sensors
-                recommend: standard
+                name: Disable device sensors (breaks screen auto-rotation)
+                recommend: strict # The policy turns off every sensor, including the one tablets and 2-in-1 devices rotate the screen with
                 call:
                     function: SetRegistryValue
                     parameters:
@@ -7504,37 +7569,6 @@ actions:
                                             deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
                                     -
                                         function: ShowExplorerRestartSuggestion
-                            -
-                                name: Disable iFilters and protocol handlers
-                                recommend: standard
-                                docs: |-
-                                    This script enhances the security of Windows Desktop Search by restricting the use of iFilters and protocol handlers [1].
-
-                                    These components enhance Windows search capabilities by enabling the indexing of specific file types and the processing
-                                    of various file protocols [2] [3].
-                                    By default, Windows Desktop Search can use any installed iFilters and protocol handlers [1], which might
-                                    pose a security risk if untrusted components are used.
-
-                                    The script configures the system to only use iFilters and protocol handlers that are explicitly listed in an 'allow list' [1].
-                                    It does not prevent the installation of new iFilters or protocol handlers, nor does it restrict their use by other applications [1].
-
-                                    This measure is particularly useful for preventing unauthorized or potentially harmful search-related add-ins from being used by
-                                    Windows Desktop Search, thereby enhancing the overall security of the system.
-
-                                    [1]: https://web.archive.org/web/20240121002144/https://admx.help/?Category=Windows_10_2016&Policy=FullArmor.Policies.3B9EA2B5_A1D1_4CD5_9EDE_75B22990BC21::PreventUnwantedAddins "Prevent unwanted iFilters and protocol handlers | admx.help"
-                                    [2]: https://web.archive.org/web/20240121002129/https://learn.microsoft.com/en-us/windows/win32/search/-search-ifilter-conceptual "Developing Filter Handlers for Windows Search - Win32 apps | Microsoft Learn | learn.microsoft.com"
-                                    [3]: https://web.archive.org/web/20240121002136/https://learn.microsoft.com/en-us/windows/win32/search/-search-ifilter-registering-filters "Registering Filter Handlers - Win32 apps | Microsoft Learn | learn.microsoft.com"
-                                call:
-                                    -
-                                        function: SetRegistryValue
-                                        parameters:
-                                            keyPath: HKLM\SOFTWARE\Policies\Microsoft\Windows\Windows Search
-                                            valueName: PreventUnwantedAddIns
-                                            dataType: REG_SZ
-                                            data: " "
-                                            deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
-                                    -
-                                        function: ShowExplorerRestartSuggestion
                     -
                         name: Disable search's access to location
                         recommend: standard
@@ -7595,7 +7629,7 @@ actions:
                             [2]: https://web.archive.org/web/20240121010852/https://support.microsoft.com/en-us/windows/cortana-and-privacy-47e5856e-3680-d930-22e1-71ec6cdde231 "Cortana and privacy - Microsoft Support | support.microsoft.com"
                         children:
                             -
-                                name: Disable Bing search and recent search suggestions (breaks search history)
+                                name: Disable Bing search and recent search suggestions (hides recent searches in File Explorer)
                                 recommend: standard
                                 docs: |-
                                     This script improves privacy by disabling Bing search in the Start menu and recent search suggestions in File Explorer [1] [2] [3] [4] [5].
@@ -7985,13 +8019,33 @@ actions:
                                 recommend: standard
                                 docs: https://web.archive.org/web/20250311090325/https://admx.help/?Category=Windows_10_2016&Policy=Microsoft.Policies.CloudContent::DisableSoftLanding
                                 call:
-                                    function: SetRegistryValue
-                                    parameters:
-                                        keyPath: HKLM\SOFTWARE\Policies\Microsoft\Windows\CloudContent
-                                        valueName: DisableSoftLanding
-                                        dataType: REG_DWORD
-                                        data: "1"
-                                        deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
+                                    -
+                                        function: SetRegistryValue
+                                        parameters:
+                                            keyPath: HKLM\SOFTWARE\Policies\Microsoft\Windows\CloudContent
+                                            valueName: DisableSoftLanding
+                                            dataType: REG_DWORD
+                                            data: "1"
+                                            deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
+                                    # Windows applies the policy above only on Enterprise and Education editions. These two
+                                    # values are the user's own "Get tips and suggestions when using Windows" setting, which
+                                    # every edition honours.
+                                    -
+                                        function: SetRegistryValue
+                                        parameters:
+                                            keyPath: HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager
+                                            valueName: SoftLandingEnabled
+                                            dataType: REG_DWORD
+                                            data: "0"
+                                            dataOnRevert: '1' # Tips are on by default
+                                    -
+                                        function: SetRegistryValue
+                                        parameters:
+                                            keyPath: HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager
+                                            valueName: SubscribedContent-338389Enabled
+                                            dataType: REG_DWORD
+                                            data: "0"
+                                            dataOnRevert: '1' # Tips are on by default
                             -
                                 name: Disable Windows Spotlight (shows random wallpapers on lock screen)
                                 recommend: strict
@@ -8169,10 +8223,11 @@ actions:
                                         function: SetRegistryValue
                                         parameters:
                                             keyPath: HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced
-                                            valueName: Start_IrisRecommendationEnabled
+                                            valueName: Start_IrisRecommendations
                                             dataType: REG_DWORD
                                             data: "0"
                                             dataOnRevert: '1' # Default value: `1` on Windows 11 Pro (≥ 23H2) | 🔍 Missing on Windows 10 Pro (≥ 22H2)
+                                            minimumWindowsVersion: Windows11-FirstRelease
                             -
                                 name: Disable lock screen tips and advertisements
                                 recommend: standard
@@ -11020,8 +11075,7 @@ actions:
                                                 valueName: ShowRecommendationsEnabled # Edge ≥ 89
                                                 dwordData: '0'
                                     -
-                                        name: Disable Edge Bing ads
-                                        recommend: standard
+                                        name: Disable Edge Bing ads (school accounts only)
                                         docs: |- # refactor-with-variables: • Chromium Policy Caution
                                             This script blocks all advertisements on Bing when using Edge,
                                             enhancing the search experience by eliminating interruptions and unwanted content.
@@ -11217,43 +11271,6 @@ actions:
                                                 valueName: NewTabPageHideDefaultTopSites # Edge ≥ 77
                                                 dwordData: '1' # Enabled (1) hides the tiles, disabled (0) shows them
                             -
-                                name: Disable Edge Follow feature
-                                recommend: standard # Recommended by CIS
-                                docs: |- # refactor-with-variables: • Chromium Policy Caution
-                                    This script disables the Follow feature in Microsoft Edge.
-
-                                    The Follow feature in Edge allows users to receive updates from influencers, websites,
-                                    or topics directly in the browser [1].
-                                    By default, this feature is enabled [1].
-                                    The feature sends the URLs of websites you visit to Microsoft's Bing API, compromising privacy [2] [3].
-                                    It risks exposing sensitive information, such as search terms and personal details.
-                                    It creates a personalized feed in Edge's Collections by collecting browsing data [4].
-                                    To protect privacy, it's advisable not to send browsing data to third parties [4].
-
-                                    Disabling this feature stops Edge from sending visited URLs to Microsoft [2] [3],
-                                    and prevents communication with the Follow service [1],
-                                    keeping browsing data private and local.
-
-                                    The Center for Internet Security (CIS) advises disabling this feature to bolster security [4].
-
-                                    This script configures the `EdgeFollowEnabled` Edge policy [1] [3] [5].
-                                    Running this script does not require a browser restart for the changes to take effect [1].
-
-                                    > **Caution**:
-                                    > - This will display the message "Your browser is managed by your organization" on the settings page.
-                                    > - This locks settings and prevents them from being changed on the settings page.
-
-                                    [1]: https://web.archive.org/web/20240517212443/https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies#edgefollowenabled "Microsoft Edge Browser Policy Documentation | Microsoft Learn | learn.microsoft.com"
-                                    [2]: https://web.archive.org/web/20240625101642/https://www.theverge.com/2023/4/25/23697532/microsoft-edge-browser-url-leak-bing-privacy "Microsoft Edge is leaking the sites you visit to Bing - The Verge | www.theverge.com"
-                                    [3]: https://web.archive.org/web/20240625101605/https://borncity.com/win/2023/04/27/microsoft-edge-feature-follow-creators-sends-nerly-all-visited-website-urls-to-bing-api/ "Microsoft Edge feature \"Follow creators\" sends nerly all visited website URLs to Bing API | Born's Tech and Windows World | borncity.com"
-                                    [4]: https://web.archive.org/web/20240625100526/https://www.syxsense.com/syxsense-securityarticles/cis_benchmarks/syx-1033-12814.html "Follow Service Enabled (CIS LEVEL 1 MS Edge) | www.syxsense.com"
-                                    [5]: https://github.com/privacysexy-forks/Audit-Test-Automation/blob/2ad030524021e94dbd09c7771e6ee4d9794bb4af/ATAPAuditor/AuditGroups/Microsoft%20Edge-CIS-2.0.0%23RegistrySettings.ps1#L3381-L3416 "Audit-Test-Automation/ATAPAuditor/AuditGroups/Microsoft Edge-CIS-2.0.0#RegistrySettings.ps1 at 2ad030524021e94dbd09c7771e6ee4d9794bb4af · fbprogmbh/Audit-Test-Automation | github.com"
-                                call:
-                                    function: SetEdgePolicyViaRegistry
-                                    parameters:
-                                        valueName: EdgeFollowEnabled # Edge ≥ 98
-                                        dwordData: '0'
-                            -
                                 name: Disable Edge Shopping Assistant
                                 recommend: strict # Recommended by DISA
                                 docs: |- # refactor-with-variables: • Chromium Policy Caution • Authorities • Microsoft recommends
@@ -11410,103 +11427,6 @@ actions:
                                         function: SetEdgePolicyViaRegistry
                                         parameters:
                                             valueName: ShowMicrosoftRewards # Edge ≥ 88
-                                            dwordData: '0'
-                                    -
-                                        function: ShowEdgeRestartSuggestion
-                            -
-                                name: Disable Edge Bing suggestions in address bar
-                                recommend: strict
-                                docs: |- # refactor-with-variables: • Chromium Policy Caution
-                                    This script disables suggestions from Microsoft Search in Bing within the address bar.
-                                    This enhances privacy by reducing unsolicited data sharing with Bing.
-
-                                    By default, Microsoft Edge may display results powered by Microsoft Search in Bing within the address bar suggestions [1] [2].
-                                    This occurs even if Bing is not the default search provider [1].
-                                    This feature can raise privacy concerns, as it involves sending query data to Bing.
-
-                                    This script stops the display of Microsoft Search in Bing suggestions in the address bar as users type their search terms [1] [2].
-                                    It modifies the `AddressBarMicrosoftSearchInBingProviderEnabled` Edge policy [1] [2].
-
-                                    This script specifically targets Bing suggestions without affecting other search providers [1] [2].
-                                    Additionally, the script disables internal search results for users logged in with an Entra ID (Azure AD) within their organization [1] [2].
-
-                                    The changes take effect after restarting the browser [1].
-
-                                    > **Caution**:
-                                    > - This will block the display of internal search results within an organization when logged in.
-                                    > - This will display the message "Your browser is managed by your organization" on the settings page.
-                                    > - This locks settings and prevents them from being changed on the settings page.
-
-                                    [1]: https://web.archive.org/web/20240517212443/https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies#addressbarmicrosoftsearchinbingproviderenabled "Microsoft Edge Browser Policy Documentation | Microsoft Learn | learn.microsoft.com"
-                                    [2]: https://web.archive.org/web/20240619091742/https://admx.help/?Category=EdgeChromium&Policy=Microsoft.Policies.Edge::AddressBarMicrosoftSearchInBingProviderEnabled "Enable Microsoft Search in Bing suggestions in the address bar | admx.help"
-                                call:
-                                    -
-                                        function: SetEdgePolicyViaRegistry
-                                        parameters:
-                                            valueName: AddressBarMicrosoftSearchInBingProviderEnabled # Edge ≥ 81
-                                            dwordData: '0'
-                                    -
-                                        function: ShowEdgeRestartSuggestion
-                            -
-                                name: Disable Edge "Find on Page" data collection
-                                recommend: standard # Recommended by CIS
-                                docs: |- # refactor-with-variables: • Chromium Policy Caution
-                                    This script stops Edge from sending data to Microsoft during 'Find on Page' searches, enhancing privacy.
-
-                                    'Find on Page' allows users to search for text on a webpage, highlighting matches and suggesting related terms [1] [2] [3] [4] [5].
-                                    This feature sends data to Microsoft for processing [1] [3] [4].
-                                    This data transmission is enabled by default [1] [3].
-                                    The data includes the text of the webpage, search terms, and a service token [5].
-                                    Sharing browsing and search history may expose data to third parties [3].
-
-                                    After applying this script, the 'Find on Page' feature remains usable, but without sending data to Microsoft [1] [3].
-                                    Instead, all related matches are generated on the user's device, significantly enhancing privacy without sacrificing functionality.
-                                    Local processing minimizes exposure of sensitive data and aligns with security best practices from the CIS (Center for Internet Security) [3] [6].
-
-                                    This script configures the `RelatedMatchesCloudServiceEnabled` Edge policy [1] [3] [4] [6].
-
-                                    > **Caution**:
-                                    > - This will display the message "Your browser is managed by your organization" on the settings page.
-                                    > - This locks settings and prevents them from being changed on the settings page.
-
-                                    [1]: https://web.archive.org/web/20240517212443/https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies#relatedmatchescloudserviceenabled "Microsoft Edge Browser Policy Documentation | Microsoft Learn | learn.microsoft.com"
-                                    [2]: https://web.archive.org/web/20240623123237/https://www.microsoft.com/en-us/edge/features/find-on-page?ch=1&form=MA13FJ "Find on Page | Microsoft Edge | www.microsoft.com"
-                                    [3]: https://web.archive.org/web/20240623123235/https://www.syxsense.com/syxsense-securityarticles/cis_benchmarks/syx-1033-12793.html "Related Matches Cloud Service Enabled (CIS LEVEL 1 MS Edge) | www.syxsense.com"
-                                    [4]: https://web.archive.org/web/20240623123512/https://learn.microsoft.com/en-us/deployedge/microsoft-edge-relnote-archive-stable-channel#feature-updates-4 "Archived release notes for Microsoft Edge Stable Channel | Microsoft Learn | learn.microsoft.com"
-                                    [5]: https://web.archive.org/web/20240623123514/https://learn.microsoft.com/en-us/microsoft-edge/privacy-whitepaper/#find-on-page "Microsoft Edge Privacy Whitepaper - Microsoft Edge Developer documentation | Microsoft Learn | learn.microsoft.com"
-                                    [6]: https://github.com/privacysexy-forks/Audit-Test-Automation/blob/72d878930bc5b31295d50271314e591fa087ee42/ATAPAuditor/AuditGroups/Microsoft%20Edge-CIS-1.1.0%23RegistrySettings.ps1#L2159-L2193 "Audit-Test-Automation/ATAPAuditor/AuditGroups/Microsoft Edge-CIS-1.1.0#RegistrySettings.ps1 at 72d878930bc5b31295d50271314e591fa087ee42 · privacysexy-forks/Audit-Test-Automation | github.com"
-                                call:
-                                    function: SetEdgePolicyViaRegistry
-                                    parameters:
-                                        valueName: RelatedMatchesCloudServiceEnabled # Edge ≥ 99
-                                        dwordData: '0'
-                            -
-                                name: Disable Edge sign-in prompt on new tab page
-                                recommend: standard
-                                docs: |- # refactor-with-variables: • Chromium Policy Caution
-                                    This script removes the sign-in prompt from the new tab page in Microsoft Edge to
-                                    minimize distractions and protect your privacy.
-                                    
-                                    By default, Microsoft Edge shows a sign-in prompt on the new tab page, asking users to log in [1].
-                                    This prompt, which resembles advertising, can compromise your privacy by encouraging the sharing of
-                                    personal information.
-
-                                    After applying this script, the sign-in prompt will no longer appear on the new tab page [1].
-                                    This change leads to a cleaner and more private browsing environment.
-
-                                    This script configures the `SignInCtaOnNtpEnabled` Edge policy [1].
-                                    This change only takes effect after restarting the browser [1].
-
-                                    > **Caution**:
-                                    > - This will display the message "Your browser is managed by your organization" on the settings page.
-                                    > - This locks settings and prevents them from being changed on the settings page.
-
-                                    [1]: https://web.archive.org/web/20240517212443/https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies#signinctaonntpenabled "Microsoft Edge Browser Policy Documentation | Microsoft Learn | learn.microsoft.com"
-                                call:
-                                    -
-                                        function: SetEdgePolicyViaRegistry
-                                        parameters:
-                                            valueName: SignInCtaOnNtpEnabled # Edge ≥ 99
                                             dwordData: '0'
                                     -
                                         function: ShowEdgeRestartSuggestion
@@ -11721,53 +11641,6 @@ actions:
                                     parameters:
                                         valueName: NewTabPageAllowedBackgroundTypes # Edge ≥ 86
                                         dwordData: '1' # DisableImageOfTheDay (1) = Disable daily background image type | DisableCustomImage (2) = Disable custom background image type | DisableAll (3) = Disable all background image types
-                            -
-                                name: Disable Edge Collections feature
-                                recommend: strict
-                                docs: |- # refactor-with-variables: • Chromium Policy Caution • Authorities
-                                    This script disables the Collections feature in Microsoft Edge.
-
-                                    By default, if this script is not executed, users can access and use the Collections feature in Microsoft Edge [1].
-                                    The Collections feature in Edge compiles and manages web content (articles, images, and videos) for activities like shopping, trip planning, or research [2] [3].
-                                    This feature syncs across devices when logged into Microsoft Edge, keeping your collections updated no matter where you access the browser [2].
-                                    The Collections feature enables efficient collection, organization, sharing, and exporting of content, with seamless integration into Office [1] [4].
-                                    The feature lets users save and categorize web pages, text, images, and videos into groups for specific projects or interests [3].
-                                    Additionally, it enhances saved items with thumbnails and metadata, such as price and star ratings [3].
-
-                                    This feature raises several privacy concerns:
-
-                                    - Microsoft analyzes saved web pages to understand item names and primary images [3].
-                                    - Data is stored on Microsoft servers once a user signs into Edge [2].
-                                    - Microsoft analyzes data from Collections to personalize advertising and user experiences [5].
-
-                                    Authorities like The Defense Information Systems Agency (DISA) [4]
-                                    recommend this script for enhanced security.
-                                    DISA categorizes the absence of this setting as a medium severity security vulnerability [4].
-
-                                    Running this script prevents access to this feature [1] [6], thereby mitigating associated privacy risks and
-                                    adhering to security recommendations
-
-                                    This script configures the `EdgeCollectionsEnabled` Edge policy [1] [4] [6].
-                                    This change only takes effect after restarting the browser [6].
-
-                                    > **Caution**:
-                                    > - This will display the message "Your browser is managed by your organization" on the settings page.
-                                    > - This locks settings and prevents them from being changed on the settings page.
-
-                                    [1]: https://web.archive.org/web/20240623183109/https://admx.help/?Category=EdgeChromium&Policy=Microsoft.Policies.Edge::EdgeCollectionsEnabled "Enable the Collections feature | admx.help"
-                                    [2]: https://web.archive.org/web/20240623182734/https://support.microsoft.com/en-us/microsoft-edge/organize-your-ideas-with-collections-in-microsoft-edge-60fd7bba-6cfd-00b9-3787-b197231b507e "Organize your ideas with Collections in Microsoft Edge - Microsoft Support | support.microsoft.com"
-                                    [3]: https://web.archive.org/web/20240623123514/https://learn.microsoft.com/en-us/microsoft-edge/privacy-whitepaper/#collections  "Microsoft Edge Privacy Whitepaper - Microsoft Edge Developer documentation | Microsoft Learn | learn.microsoft.com"
-                                    [4]: https://web.archive.org/web/20240623183057/https://www.stigviewer.com/stig/microsoft_edge/2021-02-16/finding/V-235770 "The collections feature must be disabled. | www.stigviewer.com"
-                                    [5]: https://web.archive.org/web/20240623170024/https://support.microsoft.com/en-us/microsoft-edge/microsoft-edge-browsing-activity-for-personalized-advertising-and-experiences-37aa831e-6372-238e-f33f-7cd3f0e53679 "Microsoft Edge browsing activity for personalized advertising and experiences - Microsoft Support | support.microsoft.com"
-                                    [6]: https://web.archive.org/web/20240517212443/https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies#edgecollectionsenabled "Microsoft Edge Browser Policy Documentation | Microsoft Learn | learn.microsoft.com"
-                                call:
-                                    -
-                                        function: SetEdgePolicyViaRegistry
-                                        parameters:
-                                            valueName: EdgeCollectionsEnabled # Edge ≥ 78
-                                            dwordData: '0'
-                                    -
-                                        function: ShowEdgeRestartSuggestion
                             -
                                 name: Disable Edge failed page data collection and suggestions
                                 recommend: standard
@@ -12090,33 +11963,6 @@ actions:
                                     parameters:
                                         valueName: FamilySafetySettingsEnabled # Edge ≥ 83
                                         dwordData: '0'
-                            -
-                                name: Disable Edge site information gathering from Bing
-                                recommend: strict
-                                docs: |- # refactor-with-variables: • Chromium Policy Caution
-                                    This script disables the Site Safety Services in Microsoft Edge.
-                                    
-                                    By default, this service displays top site information in the page information dialog [1].
-                                    Clicking the lock icon in the address bar causes Edge to retrieve detailed site information from Microsoft Bing [2] [3].
-
-                                    Although intended to enhance security by providing detailed website information [3], this feature also collects data
-                                    about your visits, posing privacy risks.
-                                    This script stops Edge from displaying this information [1], enhancing your privacy by reducing data transmission to Microsoft.
-                                    It prevents Microsoft from automatically querying or storing information about the sites you visit, thereby
-                                    maintaining greater control over your personal browsing data.
-
-                                    > **Caution**:
-                                    > - This will display the message "Your browser is managed by your organization" on the settings page.
-                                    > - This locks settings and prevents them from being changed on the settings page.
-
-                                    [1]: https://web.archive.org/web/20240517212443/https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies#sitesafetyservicesenabled "Microsoft Edge Browser Policy Documentation | Microsoft Learn | learn.microsoft.com"
-                                    [2]: https://web.archive.org/web/20240625110427/https://www.tenforums.com/browsers-email/148535-latest-microsoft-edge-released-windows-212.html#post2292645 "Latest Microsoft Edge released for Windows - Page 212 - Windows 10 Forums | www.tenforums.com"
-                                    [3]: https://web.archive.org/web/20240625111427/https://www.digitalinformationworld.com/2021/09/microsoft-edge-to-soon-have-feature.html "Microsoft Edge to soon have a feature that will allow its users to be able to know more about a site in its information box | www.digitalinformationworld.com"
-                                call:
-                                    function: SetEdgePolicyViaRegistry
-                                    parameters:
-                                        valueName: SiteSafetyServicesEnabled # Edge ≥ 101
-                                        dwordData: '0'
                     -
                         category: Configure Internet Explorer
                         children:
@@ -12246,85 +12092,6 @@ actions:
 
                             [1]: https://web.archive.org/web/20230402091425/https://www.google.com/chrome/privacy/ "Chrome Browser Privacy Policy - Google Chrome | www.google.com"
                         children:
-                            -
-                                category: Configure Chrome cleanup
-                                children:
-                                    -
-                                        name: Disable sharing scanned software data with Google
-                                        recommend: standard # DISA recommends
-                                        docs: |- # refactor-with-variables: • Chromium Policy Caution • Authorities • Performance + Privacy • Active Directory only
-                                            This script stops the Chrome Cleanup Tool from sending scan data to Google, enhancing privacy.
-
-                                            By default, when the Chrome Cleanup Tool detects unwanted software, it reports metadata about the scan and the software to Google [1] [2].
-                                            The reported data includes file metadata, automatically installed extensions, and registry keys [1] [2].
-                                            Users can choose to share cleanup results with Google to enhance future software detection [1] [2].
-
-                                            Disabling this feature reduces potential privacy risks by preventing data sharing.
-                                            This may also improve system performance by reducing processing workload.
-
-                                            Authorities like The Defense Information Systems Agency (DISA) [2]
-                                            recommend this script for enhanced security.
-                                            DISA categorizes the absence of this setting as a medium severity security vulnerability [2].
-
-                                            This script applies only to Windows devices within a Microsoft Active Directory domain or managed in similar way [1] [2].
-                                            It is effective only on computers under organizational management, such as those in workplaces or schools.
-                                            It's not applicable to personal computers that are not managed by an organization.
-
-                                            This script configures the `ChromeCleanupReportingEnabled` policy [1] [2].
-                                            Changing this policy does not require restarting the browser to take effect [1].
-
-                                            > **Caution**:
-                                            > - This will display the message "Your browser is managed by your organization" on the settings page.
-                                            > - This locks settings and prevents them from being changed on the settings page.
-
-                                            [1]: https://web.archive.org/web/20200606120247/https://www.chromium.org/administrators/policy-list-3#ChromeCleanupReportingEnabled "Policy List - The Chromium Projects | www.chromium.org"
-                                            [2]: https://web.archive.org/web/20240624111317/https://www.stigviewer.com/stig/google_chrome_current_windows/2018-09-06/finding/V-81593 "Chrome Cleanup reporting must be disabled. | www.stigviewer.com"
-                                        call:
-                                            function: SetChromePolicyViaRegistry
-                                            parameters:
-                                                valueName: ChromeCleanupReportingEnabled # Chrome ≥ 68
-                                                dwordData: "0"
-                                    - 
-                                        name: Disable Chrome system cleanup scans
-                                        recommend: standard # DISA recommends
-                                        docs: |- # refactor-with-variables: • Chromium Policy Caution • Authorities • Performance + Privacy • Active Directory only
-                                            This script disables Chrome system cleanup scans to enhance user privacy and improve system performance.
-
-                                            By default, Chrome Cleanup Tool periodically scans the system for unwanted software and prompts the user for removal [1] [2].
-                                            This feature can also be manually triggered from the `chrome://settings/cleanup` page [1] [2].
-
-                                            Running this script stops the Chrome Cleanup Tool from performing system scans and cleanups [1] [2],
-                                            which protects your system's information from being analyzed and shared.
-                                            It also disables the manual trigger of this feature from the settings page [1] [2].
-
-                                            Disabling this feature reduces potential privacy risks by preventing data sharing.
-                                            This may also improve system performance by reducing processing workload.
-
-                                            Authorities like The Defense Information Systems Agency (DISA) [2]
-                                            recommend this script for enhanced security.
-                                            DISA categorizes the absence of this setting as a medium severity security vulnerability [2].
-
-                                            This script applies only to Windows devices within a Microsoft Active Directory domain or managed in similar way [1] [2].
-                                            It is effective only on computers under organizational management, such as those in workplaces or schools.
-                                            It's not applicable to personal computers that are not managed by an organization.
-
-                                            This script configures the `ChromeCleanupEnabled` policy [1] [2].
-                                            Changes will take effect after restarting the browser [1].
-
-                                            > **Caution**:
-                                            > - This will display the message "Your browser is managed by your organization" on the settings page.
-                                            > - This locks settings and prevents them from being changed on the settings page.
-
-                                            [1]: https://web.archive.org/web/20200606120247/https://www.chromium.org/administrators/policy-list-3#ChromeCleanupEnabled "Policy List - The Chromium Projects | www.chromium.org"
-                                            [2]: https://web.archive.org/web/20240624112722/https://www.stigviewer.com/stig/google_chrome_current_windows/2018-09-06/finding/V-81591 "Chrome Cleanup must be disabled. | www.stigviewer.com"
-                                        call:
-                                            -
-                                                function: SetChromePolicyViaRegistry
-                                                parameters:
-                                                    valueName: ChromeCleanupEnabled # Chrome ≥ 68
-                                                    dwordData: "0"
-                                            -
-                                                function: ShowChromeRestartSuggestion
                             -
                                 name: Disable Chrome metrics reporting
                                 recommend: standard # DISA recommends
@@ -12760,11 +12527,26 @@ actions:
                                 parameters:
                                     serviceName: gupdate # Check: (Get-Service -Name gupdate).StartType
                                     defaultStartupMode: Automatic
+                                    ignoreMissingOnRevert: 'true' # Current Chrome installations no longer have this service
                             -
                                 function: DisableService
                                 parameters:
                                     serviceName: gupdatem # Check: (Get-Service -Name gupdatem).StartType
                                     defaultStartupMode: Manual
+                                    ignoreMissingOnRevert: 'true' # Current Chrome installations no longer have this service
+                            # Chrome's current updater replaced `gupdate` and `gupdatem` with a pair of services whose names
+                            # carry the updater version, such as `GoogleUpdaterService147.0.7703.0`. An updater upgrade
+                            # registers new names, so this script has to be run again after one.
+                            -
+                                function: DisableServiceInRegistry
+                                parameters:
+                                    serviceName: GoogleUpdaterService* # Check: (Get-Service -Name 'GoogleUpdaterService*').StartType
+                                    defaultStartupMode: Automatic
+                            -
+                                function: DisableServiceInRegistry
+                                parameters:
+                                    serviceName: GoogleUpdaterInternalService* # Check: (Get-Service -Name 'GoogleUpdaterInternalService*').StartType
+                                    defaultStartupMode: Automatic
                     -
                         name: Disable Google automatic updates scheduled tasks (breaks Google Credential Provider)
                         docs: |-
@@ -12862,6 +12644,14 @@ actions:
                                     # Check: Get-ScheduledTask -TaskPath '\' -TaskName 'GoogleUpdateTaskMachineUA{*}'
                                     taskPathPattern: \
                                     taskNamePattern: GoogleUpdateTaskMachineUA{*}
+                            # Chrome's current updater names its tasks after the updater version and keeps them in its own
+                            # folder (`\GoogleSystem\GoogleUpdater\`), earlier builds of it in the root folder.
+                            -
+                                function: DisableScheduledTask
+                                parameters:
+                                    # Check: Get-ScheduledTask -TaskPath '\*' -TaskName 'GoogleUpdaterTaskSystem*'
+                                    taskPathPattern: \*
+                                    taskNamePattern: GoogleUpdaterTaskSystem*
             -
                 category: Disable Adobe background automatic updates
                 docs: |-
@@ -14225,7 +14015,7 @@ actions:
                                             linked with SMBv1 [1] [4] [13],
                                             and adjusting related settings to keep older systems stable [1] [4] [13].
                                             - Disabling server side processing of SMBv1 protocol using
-                                            `HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters!SMBv1` registry key [1] [14] [15].
+                                            `HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters!SMB1` registry key [1] [14] [15].
 
                                             These changes require a system reboot to take effect [1] [4] [9].
 
@@ -14320,7 +14110,7 @@ actions:
                                                 function: SetRegistryValue
                                                 parameters:
                                                     keyPath: HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters
-                                                    valueName: SMBv1
+                                                    valueName: SMB1
                                                     dataType: REG_DWORD
                                                     data: '0'
                                                     deleteOnRevert: 'true' # Missing value by default since Windows 10 Pro (≥ 22H1) and Windows 11 Pro (≥ 23H2)
@@ -15058,7 +14848,7 @@ actions:
                                         function: SetRegistryValue
                                         parameters:
                                             keyPath: HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
-                                            valueName: AllowBasic
+                                            valueName: fAllowToGetHelp
                                             dataType: REG_DWORD
                                             data: '0'
                                             deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
@@ -17377,7 +17167,7 @@ actions:
                                                 parameters:
                                                     property: CloudBlockLevel       # Status:   Get-MpPreference | Select-Object -Property CloudBlockLevel
                                                     value: "'0'"                    # Set:      Set-MpPreference -Force -CloudBlockLevel '0'
-                                                    default: "'2'"                  # Default:  0 on Windows 10 Pro (≥ 22H2) | `2` on Windows 11 Pro (≥ 23H2) | Set-MpPreference -Force -CloudBlockLevel '2'
+                                                    default: "'0'"                  # Default:  0 on Windows 10 Pro (≥ 22H2) | `2` on Windows 11 Pro (≥ 23H2) | Used on Windows 10 only: Set-MpPreference -Force -CloudBlockLevel '0'
                                             -
                                                 function: SetRegistryValue
                                                 parameters:
@@ -17753,7 +17543,7 @@ actions:
                                     -
                                         function: SetRegistryValue
                                         parameters:
-                                            keyPath: HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Reporting
+                                            keyPath: HKLM\SOFTWARE\Policies\Microsoft\Microsoft Antimalware\Reporting
                                             valueName: DisableGenericRePorts
                                             dataType: REG_DWORD
                                             data: '1'
@@ -19142,7 +18932,7 @@ actions:
                                             valueName: RequireMicrosoftSignedBootChain
                                             dataType: REG_DWORD
                                             data: '0'
-                                            dataOnRevert: '1' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 24H2)
+                                            dataOnRevert: '1' # `1` where virtualization-based security runs (Windows 11 25H2) | Missing on systems without it
                                     # Memory Integrity (HypervisorEnforcedCodeIntegrity):
                                     -
                                         function: SetRegistryValue
@@ -21106,6 +20896,7 @@ actions:
                                                     dataType: REG_DWORD
                                                     data: "0"
                                                     dataOnRevert: "1" # Default value: `1` on Windows 10 Pro (≥ 22H2) | `1` on Windows 11 Pro (≥ 23H2)
+                                                    elevateToTrustedInstaller: 'true' # Administrators get "Access is denied" (Windows 11 25H2, Windows Server 2025)
                                             -
                                                 function: SetRegistryValue
                                                 parameters:
@@ -21114,6 +20905,7 @@ actions:
                                                     dataType: REG_DWORD
                                                     data: "0"
                                                     dataOnRevert: "1" # Default value: `1` on Windows 10 Pro (≥ 22H2) | `1` on Windows 11 Pro (≥ 23H2)
+                                                    elevateToTrustedInstaller: 'true' # Administrators get "Access is denied" (Windows 11 25H2, Windows Server 2025)
                                     -
                                         name: Disable Defender ETW provider (Windows Event Logs)
                                         docs:
@@ -26701,7 +26493,7 @@ actions:
                                                 function: SoftDeleteFiles
                                                 parameters:
                                                     fileGlob: '%SYSTEMROOT%\System32\SecurityCenterBrokerPS.dll'
-                                                    # grantPermissions: 'true' # 🔒️ Protected on Windows 10 since 22H2 | 🔒️ Protected on Windows 11 since 23H2
+                                                    grantPermissions: 'true' # 🔒️ Protected on Windows 10 since 22H2 | 🔒️ Protected on Windows 11 since 23H2
                                             -
                                                 function: SoftDeleteRegistryKey
                                                 parameters:
@@ -26999,55 +26791,6 @@ actions:
                                         dataType: REG_DWORD
                                         data: '1'
                                         deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
-                            -
-                                name: Disable outdated non-administrator access to Defender threat history
-                                docs: |-
-                                    This script disables privacy mode for Defender scans, limiting threat history access to administrators.
-
-                                    By default, privacy mode is enabled [1].
-                                    When active, it restricts the display of spyware and potentially dangerous programs to administrators only,
-                                    instead of all users on the computer [2].
-                                    It blocks non-administrators from viewing threat history [1].
-
-                                    This is a legacy setting that only affects older versions of Defender Antivirus [1].
-                                    It has no impact on current platforms [1].
-
-                                    Limiting threat history to administrators has both benefits and drawbacks.
-                                    It improves security and privacy by limiting access to sensitive threat information.
-                                    However, it may reduce transparency and hinder security efforts for users without admin access who
-                                    need this data.
-
-                                    > **Caution**: Non-admin users will be unable to view potential security threats on their accounts.
-
-                                    ### Technical Details
-
-                                    The script configures:
-
-                                    - `DisablePrivacyMode` Defender preference using Command Line Interface (CLI) [1] [3].
-                                      It sets the value to `$True`, effectively disabling privacy mode [1].
-                                    - `HKLM\SOFTWARE\Microsoft\Windows Defender\UX Configuration!DisablePrivacyMode` registry value [2].
-                                      This undocumented registry key has been verified to work on older Windows versions by the community [2].
-
-                                    [1]: https://web.archive.org/web/20240314124716/https://learn.microsoft.com/en-us/powershell/module/defender/set-mppreference?view=windowsserver2022-ps#-disableprivacymode "Set-MpPreference (Defender) | Microsoft Learn | learn.microsoft.com"
-                                    [2]: https://web.archive.org/web/20240725094236/https://www.win7help.ru/manual/reestr-windows/soft/ "Софт | Секреты Windows 7 | www.win7help.ru"
-                                    [3]: https://web.archive.org/web/20231207105608/https://powershell.one/wmi/root/microsoft/windows/defender/msft_mppreference#disableprivacymode "MSFT_MpPreference - powershell.one | powershell.one"
-                                call:
-                                    -
-                                        function: SetMpPreference
-                                        parameters:
-                                            property: DisablePrivacyMode        # Status:   Get-MpPreference | Select-Object -Property DisablePrivacyMode
-                                            value: $True                        # Set:      Set-MpPreference -Force -DisablePrivacyMode $True
-                                            default: $False                     # Default:  False | Remove-MpPreference -Force -DisablePrivacyMode | Set-MpPreference -Force -DisablePrivacyMode $False
-                                            elevateToTrustedInstaller: 'true'   # Without TrustedInstaller: ✅ Windows 10 Pro (>= 22H2) | ❌ Windows 11 Pro (>= 23H2)
-                                    -
-                                        function: SetRegistryValue
-                                        parameters:
-                                            keyPath: HKLM\SOFTWARE\Microsoft\Windows Defender\UX Configuration
-                                            valueName: DisablePrivacyMode
-                                            dataType: REG_DWORD
-                                            data: "1"
-                                            deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
-                                            elevateToTrustedInstaller: 'true' # Without TrustedInstaller: ❌ Windows 10 Pro (>= 20H2) | ❌ Windows 11 Pro (>= 23H2)
                             -
                                 category: Disable sections in "Windows Security" 
                                 docs: |-
@@ -29062,7 +28805,7 @@ actions:
                                             valueName: value
                                             dataType: REG_DWORD
                                             data: "1"
-                                            dataOnRevert: '1' # Default value: `0` on Windows 10 Pro (≥ 22H2) | `0` on Windows 11 Pro (≥ 24H2)
+                                            dataOnRevert: '0' # Default value: `0` on Windows 10 Pro (≥ 22H2) | `0` on Windows 11 Pro (≥ 24H2)
                                     -
                                         function: SetRegistryValue
                                         parameters:
@@ -29119,7 +28862,7 @@ actions:
                                     - `HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\DriverSearching!SearchOrderConfig` [2] [4]
                                       - Sets the value to `0` to block driver updates [2] [4]
                                     - `HKLM\SOFTWARE\Policies\Microsoft\Windows\DriverSearching!SearchOrderConfig` [1] [3]
-                                      - Sets the value to `2` to stop Windows Update driver searches [1]
+                                      - Sets the value to `0` to stop Windows Update driver searches [1]
 
                                     [1]: https://web.archive.org/web/20241108204353/https://admx.help/?Category=Windows_10_2016&Policy=Microsoft.Policies.DeviceSoftwareSetup::DriverSearchPlaces_SearchOrderConfiguration "Specify search order for device driver source locations | admx.help"
                                     [2]: https://web.archive.org/web/20241108204345/https://www.ghacks.net/2015/07/21/how-to-disable-driver-updates-from-windows-update/ "How to disable driver updates from Windows Update - gHacks Tech News | www.ghacks.net"
@@ -29140,7 +28883,7 @@ actions:
                                             keyPath: HKLM\SOFTWARE\Policies\Microsoft\Windows\DriverSearching
                                             valueName: SearchOrderConfig
                                             dataType: REG_DWORD
-                                            data: '2'
+                                            data: '0' # 0: never search Windows Update | 1: always | 2: only if the driver is not found locally
                                             deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 24H2)
                             # - # Excluded: Insignificant privacy impact, hides consent prompt
                             #     name: Disable Windows Update driver prompts
@@ -29466,7 +29209,7 @@ actions:
                                 valueName: NoAutoUpdate
                                 dataType: REG_DWORD
                                 data: "1"
-                                dataOnRevert: "0" # Default value: `0` on Windows 10 Pro (≥ 21H2) | `0` on Windows 11 Pro (≥ 21H2)
+                                deleteOnRevert: 'true' # A clean installation has no `AU` policy key; writing `0` would leave the policy configured
                     -
                         name: Disable automatic installation of Windows updates without user consent
                         docs: |-
@@ -29500,7 +29243,7 @@ actions:
                                 valueName: AUOptions
                                 dataType: REG_DWORD
                                 data: "2"
-                                dataOnRevert: "4" # Default value: `4` on Windows 10 Pro (≥ 21H2) | `0` on Windows 11 Pro (≥ 21H2)
+                                deleteOnRevert: 'true' # A clean installation has no `AU` policy key; writing `4` would leave the policy configured
                     -
                         name: Disable automatic daily installation of Windows updates
                         docs: |-
@@ -30776,7 +30519,7 @@ actions:
                                             keyPath: HKLM\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings
                                             valueName: PauseFeatureUpdatesStartTime
                                             dataType: REG_SZ
-                                            data: (Get-Date).ToString('yyyy-MM-ddTHH:mm:ssZ')
+                                            data: "[DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)" # Not `Get-Date`: it formats with the user's calendar (Thai, Persian, Hijri years) and time separator
                                             evaluateDataAsPowerShell: 'true'
                                             deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
                                     -
@@ -30793,7 +30536,7 @@ actions:
                                             keyPath: HKLM\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings
                                             valueName: PauseQualityUpdatesStartTime
                                             dataType: REG_SZ
-                                            data: (Get-Date).ToString('yyyy-MM-ddTHH:mm:ssZ')
+                                            data: "[DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)" # Not `Get-Date`: it formats with the user's calendar (Thai, Persian, Hijri years) and time separator
                                             evaluateDataAsPowerShell: 'true'
                                             deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
                                     -
@@ -30810,7 +30553,7 @@ actions:
                                             keyPath: HKLM\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings
                                             valueName: PauseUpdatesStartTime
                                             dataType: REG_SZ
-                                            data: (Get-Date).ToString('yyyy-MM-ddTHH:mm:ssZ')
+                                            data: "[DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)" # Not `Get-Date`: it formats with the user's calendar (Thai, Persian, Hijri years) and time separator
                                             evaluateDataAsPowerShell: 'true'
                                             deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
                                     -
@@ -30920,7 +30663,7 @@ actions:
                                             keyPath: HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate
                                             valueName: PauseFeatureUpdatesStartTime
                                             dataType: REG_SZ
-                                            data: (Get-Date).ToString('yyyy-MM-ddTHH:mm:ssZ')
+                                            data: "[DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)" # Not `Get-Date`: it formats with the user's calendar (Thai, Persian, Hijri years) and time separator
                                             evaluateDataAsPowerShell: 'true'
                                             deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
                                     - # GPO
@@ -30977,7 +30720,7 @@ actions:
                                             keyPath: HKLM\SOFTWARE\Microsoft\WindowsUpdate\UpdatePolicy\Settings
                                             valueName: PausedFeatureDate
                                             dataType: REG_SZ
-                                            data: (Get-Date).ToString('yyyy-MM-ddTHH:mm:ssZ')
+                                            data: "[DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)" # Not `Get-Date`: it formats with the user's calendar (Thai, Persian, Hijri years) and time separator
                                             evaluateDataAsPowerShell: 'true'
                                             deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
                                     - # MDM (PolicyManager)
@@ -31002,7 +30745,7 @@ actions:
                                             keyPath: HKLM\SOFTWARE\Microsoft\PolicyManager\default\Update\PauseFeatureUpdatesStartTime
                                             valueName: value
                                             dataType: REG_SZ
-                                            data: (Get-Date).ToString('yyyy-MM-ddTHH:mm:ssZ')
+                                            data: "[DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)" # Not `Get-Date`: it formats with the user's calendar (Thai, Persian, Hijri years) and time separator
                                             evaluateDataAsPowerShell: 'true'
                                             deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
                                     - # MDM (PolicyManager)
@@ -31115,7 +30858,7 @@ actions:
                                             keyPath: HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate
                                             valueName: PauseQualityUpdatesStartTime
                                             dataType: REG_SZ
-                                            data: (Get-Date).ToString('yyyy-MM-ddTHH:mm:ssZ')
+                                            data: "[DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)" # Not `Get-Date`: it formats with the user's calendar (Thai, Persian, Hijri years) and time separator
                                             evaluateDataAsPowerShell: 'true'
                                             deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
                                     - # GPO
@@ -31148,7 +30891,7 @@ actions:
                                             keyPath: HKLM\SOFTWARE\Microsoft\WindowsUpdate\UpdatePolicy\Settings
                                             valueName: PausedQualityDate
                                             dataType: REG_SZ
-                                            data: (Get-Date).ToString('yyyy-MM-ddTHH:mm:ssZ')
+                                            data: "[DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)" # Not `Get-Date`: it formats with the user's calendar (Thai, Persian, Hijri years) and time separator
                                             evaluateDataAsPowerShell: 'true'
                                             deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
                                     - # State
@@ -31166,7 +30909,7 @@ actions:
                                             valueName: value
                                             dataType: REG_DWORD
                                             data: '1'
-                                            dataOnRevert: '0' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
+                                            deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
                                     - # MDM (PolicyManager)
                                         function: SetRegistryValue
                                         parameters:
@@ -31182,7 +30925,7 @@ actions:
                                             keyPath: HKLM\SOFTWARE\Microsoft\PolicyManager\default\Update\PauseQualityUpdatesStartTime
                                             valueName: value
                                             dataType: REG_SZ
-                                            data: (Get-Date).ToString('yyyy-MM-ddTHH:mm:ssZ')
+                                            data: "[DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)" # Not `Get-Date`: it formats with the user's calendar (Thai, Persian, Hijri years) and time separator
                                             evaluateDataAsPowerShell: 'true'
                                             deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
                                     - # MDM (PolicyManager)
@@ -34829,7 +34572,7 @@ actions:
                                         # Official docs point to wrong "Microsoft.AAD.Broker.Plugin"
                                         publisherId: cw5n1h2txyewy
                             -
-                                name: Remove "Microsoft Accounts Control" app
+                                name: Remove "Microsoft Accounts Control" app (breaks Microsoft account sign-in in apps)
                                 docs: |-
                                     It is also known as "Email and accounts" [1].
 
@@ -36050,6 +35793,10 @@ actions:
                             This script will call official Microsoft uninstaller that will uninstall the application but residual files will be left.
                             You won't lose data by uninstalling OneDrive from computer because they will be stored in cloud [1].
 
+                            The script does not uninstall OneDrive while it backs up your Desktop, Documents, Pictures or another personal
+                            folder. Files that OneDrive keeps only in the cloud would stop opening without it. Turn off folder backup in
+                            the OneDrive settings first, then run the script again.
+
                             Running OneDrive client setup package (`OneDriveSetup.exe`) with the `/uninstall` command line switch uninstalls OneDrive [2] [3].
                             On Windows 10, the setup package is found on different folders (`System32` or `SysWOW64`) based on the CPU architecture [4].
                             On Windows 11, the setup package is always inside `System32` regarding of the CPU architecture.
@@ -36062,26 +35809,63 @@ actions:
                             [4]: https://web.archive.org/web/20231206192414/https://answers.microsoft.com/en-us/windows/forum/all/onedrive-on-windows-11-does-not-appear-in-file/250c679b-9d02-410f-8c8f-41cca112ccfa "OneDrive on Windows 11 - Does Not Appear in File Explorer - Microsoft Community | answers.microsoft.com"
                             [5]: https://web.archive.org/web/20231002162808/https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/rds_vdi-recommendations-1909#remove-onedrive-components "Optimizing Windows 10, version 1909, for a Virtual Desktop Infrastructure (VDI) role | Microsoft Learn"
                         recommend: strict
-                        code: |-
-                            if exist "%SYSTEMROOT%\System32\OneDriveSetup.exe" (
-                                "%SYSTEMROOT%\System32\OneDriveSetup.exe" /uninstall
-                            ) else (
-                                if exist "%SYSTEMROOT%\SysWOW64\OneDriveSetup.exe" (
-                                    "%SYSTEMROOT%\SysWOW64\OneDriveSetup.exe" /uninstall
-                                ) else (
-                                    echo Failed to uninstall, uninstaller could not be found. 1>&2
-                                )
-                            )
-                        revertCode: |-
-                            if exist "%SYSTEMROOT%\System32\OneDriveSetup.exe" (
-                                "%SYSTEMROOT%\System32\OneDriveSetup.exe" /silent
-                            ) else (
-                                if exist "%SYSTEMROOT%\SysWOW64\OneDriveSetup.exe" (
-                                    "%SYSTEMROOT%\SysWOW64\OneDriveSetup.exe" /silent
-                                ) else (
-                                    echo Failed to install, installer could not be found. 1>&2
-                                )
-                            )
+                        call:
+                            function: RunPowerShell
+                            parameters:
+                                # OneDrive folder backup moves Desktop, Documents and Pictures into the OneDrive folder, and
+                                # Files On-Demand keeps some of them only in the cloud. Without the OneDrive client those files
+                                # fail to open ("The cloud file provider is not running"), so the uninstall is skipped while a
+                                # personal folder still lives in OneDrive.
+                                code: |-
+                                    $oneDriveFolderPattern = [Environment]::ExpandEnvironmentVariables('%USERPROFILE%\OneDrive') + '*'
+                                    $shellFoldersPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders'
+                                    $foldersInOneDrive = @()
+                                    if (Test-Path -LiteralPath $shellFoldersPath) {
+                                        $shellFolders = Get-Item -LiteralPath $shellFoldersPath
+                                        foreach ($folderName in $shellFolders.GetValueNames()) {
+                                            $folderPath = "$($shellFolders.GetValue($folderName))"
+                                            if ($folderPath -like $oneDriveFolderPattern) {
+                                                $foldersInOneDrive += $folderPath
+                                            }
+                                        }
+                                    }
+                                    if ($foldersInOneDrive.Count -gt 0) {
+                                        Write-Warning "Skipping, OneDrive is not uninstalled because it backs up your personal folders: $(($foldersInOneDrive | Sort-Object -Unique) -join ', ')."
+                                        Write-Warning 'Files kept only in the cloud would stop opening. To uninstall OneDrive, first turn off folder backup in OneDrive settings (Sync and backup > Manage backup), then run this again.'
+                                        Exit 0
+                                    }
+                                    $installers = @("$env:SYSTEMROOT\System32\OneDriveSetup.exe", "$env:SYSTEMROOT\SysWOW64\OneDriveSetup.exe")
+                                    $installer = $installers | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+                                    if (-Not $installer) {
+                                        Write-Host 'Skipping, the OneDrive setup program is not on this computer, so there is nothing to uninstall with.'
+                                        Exit 0
+                                    }
+                                    Write-Host "Uninstalling OneDrive using `"$installer`"."
+                                    $process = Start-Process -FilePath $installer -ArgumentList '/uninstall' -PassThru
+                                    $null = $process.Handle # Keeps the exit code readable after the process ends
+                                    $process.WaitForExit()
+                                    if ($process.ExitCode -eq 0) {
+                                        Write-Host 'Successfully uninstalled OneDrive.'
+                                    } else {
+                                        Write-Host "The OneDrive setup program finished with exit code $($process.ExitCode). OneDrive may not be installed for this user."
+                                    }
+                                revertCode: |-
+                                    $installers = @("$env:SYSTEMROOT\System32\OneDriveSetup.exe", "$env:SYSTEMROOT\SysWOW64\OneDriveSetup.exe")
+                                    $installer = $installers | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+                                    if (-Not $installer) {
+                                        Write-Warning 'The OneDrive setup program is not on this computer. Install OneDrive from https://www.microsoft.com/microsoft-365/onedrive/download instead.'
+                                        Exit 0
+                                    }
+                                    Write-Host "Installing OneDrive using `"$installer`"."
+                                    # Waits for the setup program only: `-Wait` would also wait for the OneDrive client it starts.
+                                    $process = Start-Process -FilePath $installer -ArgumentList '/silent' -PassThru
+                                    $null = $process.Handle # Keeps the exit code readable after the process ends
+                                    $process.WaitForExit()
+                                    if ($process.ExitCode -eq 0) {
+                                        Write-Host 'Successfully installed OneDrive.'
+                                    } else {
+                                        Write-Warning "The OneDrive setup program finished with exit code $($process.ExitCode)."
+                                    }
                     -
                         name: Remove empty OneDrive folders
                         docs: |-
@@ -36288,15 +36072,19 @@ actions:
                             -
                                 function: RunPowerShell
                                 parameters:
+                                    # The key is missing for users who never had a navigation pane entry. `Set-Location` then
+                                    # failed and the loop went through the files of the current folder instead.
                                     code: |-
-                                        Set-Location "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace"
-                                        Get-ChildItem | ForEach-Object {Get-ItemProperty $_.pspath} | ForEach-Object {
-                                            $leftnavNodeName = $_."(default)";
-                                        if (($leftnavNodeName -eq "OneDrive") -Or ($leftnavNodeName -eq "OneDrive - Personal")) {
-                                                if (Test-Path $_.pspath) {
-                                                    Write-Host "Deleting $($_.pspath)."
-                                                    Remove-Item $_.pspath;
-                                                }
+                                        $namespacePath = 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace'
+                                        if (-Not (Test-Path -LiteralPath $namespacePath)) {
+                                            Write-Host 'Skipping, this user has no OneDrive entry in the navigation pane.'
+                                            Exit 0
+                                        }
+                                        foreach ($entry in @(Get-ChildItem -LiteralPath $namespacePath)) {
+                                            $leftnavNodeName = (Get-ItemProperty -LiteralPath $entry.PSPath).'(default)'
+                                            if (($leftnavNodeName -eq 'OneDrive') -Or ($leftnavNodeName -eq 'OneDrive - Personal')) {
+                                                Write-Host "Deleting $($entry.PSPath)."
+                                                Remove-Item -LiteralPath $entry.PSPath -Recurse
                                             }
                                         }
                     -
@@ -36449,7 +36237,7 @@ actions:
                             including the SIDs.
 
                             If OneDrive is installed for all users on a machine (which is not the default behavior [6]), an additional task is present:
-                            - `OneDrive Per-Machine Standalone Update` [1] [7].
+                            - `OneDrive Per-Machine Standalone Update Task` [1] [7].
 
                             Disabling the `OneDrive Standalone Update Task` is recommended by Microsoft to improve system performance and reduce
                             unnecessary data collection [2].
@@ -36470,7 +36258,7 @@ actions:
                             | Windows 10 22H2  | 🟢 Ready |
                             | Windows 11 22H2  | 🟢 Ready |
 
-                            `\OneDrive Per-Machine Standalone Update`:
+                            `\OneDrive Per-Machine Standalone Update Task`:
 
                             | OS Version       | Default status |
                             | ---------------- | -------------- |
@@ -36500,9 +36288,9 @@ actions:
                             -
                                 function: DisableScheduledTask
                                 parameters:
-                                    # Check: Get-ScheduledTask -TaskPath '\' -TaskName 'OneDrive Per-Machine Standalone Update'
+                                    # Check: Get-ScheduledTask -TaskPath '\' -TaskName 'OneDrive Per-Machine Standalone Update Task'
                                     taskPathPattern: \
-                                    taskNamePattern: OneDrive Per-Machine Standalone Update
+                                    taskNamePattern: OneDrive Per-Machine Standalone Update Task
                     -
                         name: Clear OneDrive environment variable
                         recommend: strict
@@ -36603,7 +36391,12 @@ actions:
                                                 }
                                             }
                                         }
-                                    revertCodeComment: Download and run the official uninstaller
+                                    revertCodeComment: Download and run the official installer
+                                    # The installer appends its own tag after the arguments it is given, so `/install` has to be
+                                    # the last one: `/install /silent` is an invalid command line and the installer never
+                                    # finished (both Windows 11 25H2 and Windows Server 2025 waited until they were killed).
+                                    # Only the installer itself is waited for: `Start-Process -Wait` also waits for the update
+                                    # service it leaves running.
                                     revertCode: |-
                                         $edgeExePath = Get-ChildItem -Path "$($env:ProgramFiles)*\Microsoft\Edge\Application" -Filter 'msedge.exe' -Recurse
                                         if ($edgeExePath) {
@@ -36614,10 +36407,15 @@ actions:
                                         $edgeInstallerUrl = 'https://c2rsetup.officeapps.live.com/c2r/downloadEdge.aspx?platform=Default&Channel=Stable&language=en'
                                         $downloadPath = "$($env:TEMP)\MicrosoftEdgeSetup.exe"
                                         Invoke-WebRequest -Uri "$edgeInstallerUrl" -OutFile "$downloadPath"
-                                        $installerArguments = @('/install', '/silent')
+                                        $installerArguments = @('/silent', '/install')
                                         Write-Host 'Installing Microsoft Edge...'
-                                        $process = Start-Process -FilePath "$downloadPath" -ArgumentList "$installerArguments" -Wait -PassThru
-                                        Remove-Item -Path $downloadPath -Force
+                                        $process = Start-Process -FilePath "$downloadPath" -ArgumentList "$installerArguments" -PassThru
+                                        $null = $process.Handle
+                                        if (-Not $process.WaitForExit(900000)) {
+                                            Write-Warning 'The Microsoft Edge installer is still running after 15 minutes. It is left to finish in the background.'
+                                            Exit 0
+                                        }
+                                        Remove-Item -Path $downloadPath -Force -ErrorAction SilentlyContinue
                                         if ($process.ExitCode -eq 0) {
                                             Write-Host 'Successfully reinstalled Microsoft Edge.'
                                         } else {
@@ -38317,7 +38115,8 @@ actions:
                                         capabilityName: MathRecognizer
                             -
                                 name: Remove "OneSync" capability (breaks Mail, People, and Calendar)
-                                recommend: strict
+                                # Not in a preset: presets do not remove components, and Microsoft lists this one among the
+                                # features on demand that should not be removed.
                                 docs: https://web.archive.org/web/20240314062310/https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/features-on-demand-non-language-fod?view=windows-11#onesync
                                 call:
                                     function: UninstallCapability
@@ -38627,25 +38426,32 @@ actions:
                         name: Remove "Widgets" from taskbar
                         recommend: strict
                         docs: |-
-                            To control whether the Widgets button is visible on the taskbar, Microsoft introduced `TaskbarDa` registry value [1].
-                            Possible `DWORD` 32-bit settings for the `TaskbarDa` value are [1] [2]:
+                            This script turns off Widgets, which removes the Widgets button from the taskbar.
 
-                            1. 0 = Hidden
-                            2. 1 = Visible
+                            It sets the default of the **Allow widgets** policy [3] to "not allowed"
+                            (`HKLM\SOFTWARE\Microsoft\PolicyManager\default\NewsAndInterests\AllowNewsAndInterests!value` = `0`).
+                            Windows ships this value as `1`.
 
-                            This registry key does not exist in Windows 11 installations by default.
+                            Earlier versions of this script set the `TaskbarDa` value of the taskbar settings to `0` (hidden) [1] [2].
+                            Since the March 2024 updates, Windows 11 has a driver (`UCPD.sys`) that refuses changes to that
+                            value, and to the policy value itself (`HKLM\SOFTWARE\Policies\Microsoft\Dsh!AllowNewsAndInterests`),
+                            with "Access is denied", even for administrators. The policy default is not protected.
 
                             [1]: https://web.archive.org/web/20231206213443/https://www.elevenforum.com/t/add-or-remove-widgets-button-on-taskbar-in-windows-11.32/ " Add or Remove Widgets Button on Taskbar in Windows 11 | Windows Eleven Forum"
                             [2]: https://web.archive.org/web/20261021112707/https://www.bleepingcomputer.com/news/microsoft/new-windows-11-registry-hacks-to-customize-your-device/ "New Windows 11 registry hacks to customize your device | Bleeping Computer"
+                            [3]: https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-newsandinterests "NewsAndInterests Policy CSP | Microsoft Learn | learn.microsoft.com"
                         call:
                             -
                                 function: SetRegistryValue
                                 parameters:
-                                    keyPath: HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced
-                                    valueName: TaskbarDa
+                                    # Tested on Windows 11 25H2 (UCPD 4.8): `TaskbarDa`, `Policies\Microsoft\Dsh!AllowNewsAndInterests`
+                                    # and `Policies\Microsoft\Windows\Windows Feeds!EnableFeeds` are refused through reg.exe,
+                                    # PowerShell and WMI alike. This value is accepted.
+                                    keyPath: HKLM\SOFTWARE\Microsoft\PolicyManager\default\NewsAndInterests\AllowNewsAndInterests
+                                    valueName: value
                                     dataType: REG_DWORD
                                     data: "0"
-                                    deleteOnRevert: 'true' # Missing by default since Windows 10 Pro (≥ 22H2) and Windows 11 Pro (≥ 23H2)
+                                    dataOnRevert: '1' # Default value: `1`
                             -
                                 function: ShowExplorerRestartSuggestion
                     -
@@ -39128,16 +38934,17 @@ actions:
                     [7]: https://web.archive.org/web/20240424100805/https://www.bleepingcomputer.com/news/microsoft/windows-11-snipping-tool-privacy-bug-exposes-cropped-image-content/ "Windows 11 Snipping Tool privacy bug exposes cropped image content | www.bleepingcomputer.com"
                 children:
                     -
-                        name: Remove outdated "Snipping Tool" app
+                        name: Remove "Snipping Tool" app (breaks Win+Shift+S screenshots)
                         docs: |-
-                            This script removes the outdated **Snipping Tool** app.
+                            This script removes the **Snipping Tool** app.
                             It was previously known as **Snip & Sketch** [1] [2] [3].
 
                             It allows users to capture, edit, and share screenshots [3].
 
-                            In recent Windows versions, this app is part of the *Windows Feature Experience Pack*
-                            (`MicrosoftWindows.Client.Core`) and is no longer a separate application [4] [5] [6] [7].
-                            This script disables snipping functionality on older Windows versions.
+                            On Windows 11 this package is the Snipping Tool itself. Removing it also removes the
+                            **Win + Shift + S** capture overlay and the screenshot that the **Print Screen** key opens.
+                            Some Windows builds also ship parts of the capture experience in the *Windows Feature Experience Pack*
+                            (`MicrosoftWindows.Client.Core`) [4] [5] [6] [7].
                             privacy.sexy does not remove the entire Windows Feature Experience Pack,
                             as it contains many other essential functions [7].
 
@@ -39795,7 +39602,7 @@ actions:
                             -
                                 function: SetRegistryValue
                                 parameters:
-                                    keyPath: HKCU\Software\Policies\Microsoft\Office\16.0\Outlook\Options
+                                    keyPath: HKCU\Software\Policies\Microsoft\Office\16.0\Outlook\Options\General
                                     valueName: HideNewOutlookToggle
                                     dataType: REG_DWORD
                                     data: "1"
@@ -39971,11 +39778,12 @@ functions:
                 function: RunInlineCode
                 parameters:
                     code: |-
-                        tasklist /fi "ImageName eq {{ $executableNameWithExtension }}" /fo csv 2>NUL | find /i "{{ $executableNameWithExtension }}">NUL && (
+                        tasklist /fi "ImageName eq {{ $executableNameWithExtension }}" /fo csv 2>NUL | find /i "{{ $executableNameWithExtension }}">NUL
+                        if errorlevel 1 (
+                            echo Skipping, {{ $executableNameWithExtension }} is not running.
+                        ) else (
                             echo {{ $executableNameWithExtension }} is running and will be killed.
                             taskkill /f /im {{ $executableNameWithExtension }}
-                        ) || (
-                            echo Skipping, {{ $executableNameWithExtension }} is not running.
                         )
                     # `start` command is used to start processes without blocking execution of rest of the script, see https://ss64.com/nt/start.html.
                     revertCode: |-
@@ -40072,8 +39880,10 @@ functions:
                         if ($LASTEXITCODE -ne 0) {
                             throw "Failed to protect state directory `"$stateDirectory`"."
                         }
+                        $stateCreated = $false
                         if (-Not (Test-Path -LiteralPath $statePath)) {
                             [IO.File]::WriteAllText($statePath, 'Enabled')
+                            $stateCreated = $true
                         }
                         try {
                             Write-Host "Disabling feature: `"$featureName`"."
@@ -40086,6 +39896,9 @@ functions:
                                 -ErrorAction Stop `
                                 | Out-Null
                         } catch {
+                            if ($stateCreated) {
+                                Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue
+                            }
                             Write-Error "Failed to disable the feature `"$featureName`": $($_.Exception.Message)"
                             Exit 1
                         }
@@ -40114,12 +39927,13 @@ functions:
                             Write-Error "Failed to revert changes to the feature `"$featureName`". The feature is not found."
                             Exit 1
                         }
-                        if ($feature.State -eq [Microsoft.Dism.Commands.FeatureState]::Enabled) {
-                            Write-Warning "Skipping revert because feature `"$featureName`" changed after privacy.sexy disabled it."
-                            Exit 1
+                        if (@('Enabled', 'EnablePending') -contains "$($feature.State)") {
+                            Remove-Item -LiteralPath $statePath -Force
+                            Write-Output "Skipping: The feature `"$featureName`" is already enabled ($($feature.State)). No action required."
+                            Exit 0
                         }
-                        if ($feature.State -ne [Microsoft.Dism.Commands.FeatureState]::Disabled) {
-                            Write-Error "Cannot safely restore feature `"$featureName`" from transitional state `"$($feature.State)`"."
+                        if (@('Disabled', 'DisabledWithPayloadRemoved') -notcontains "$($feature.State)") {
+                            Write-Error "Cannot restore feature `"$featureName`" while it is in the state `"$($feature.State)`". Restart Windows, then run this revert again."
                             Exit 1
                         }
                         try {
@@ -40127,6 +39941,7 @@ functions:
                             Enable-WindowsOptionalFeature `
                                 -FeatureName "$featureName" `
                                 -Online `
+                                -All `
                                 -NoRestart `
                                 -LogLevel ([Microsoft.Dism.Commands.LogLevel]::Errors) `
                                 -WarningAction SilentlyContinue `
@@ -40518,6 +40333,9 @@ functions:
                         {{ with $elevateToTrustedInstaller }}as TrustedInstaller{{ end }}
             -
                 function: IterateGlob
+                # Revert never overwrites a file that exists again: Windows Update and `sfc` put renamed system
+                # files back, and moving the old `.OLD` copy over the current one would leave a component with
+                # files from two versions.
                 parameters:
                     maximumWindowsVersion: '{{ with $maximumWindowsVersion }}{{ . }}{{ end }}'
                     minimumWindowsVersion: '{{ with $minimumWindowsVersion }}{{ . }}{{ end }}'
@@ -40562,40 +40380,22 @@ functions:
                             internal const int SE_PRIVILEGE_ENABLED = 0x00000002;
                             internal const int TOKEN_QUERY = 0x00000008;
                             internal const int TOKEN_ADJUST_PRIVILEGES = 0x00000020;
-                            public static bool AddPrivilege(string privilege) {
+                            static bool SetPrivilege(string privilege, int attributes) {
                                 try {
-                                    bool retVal;
                                     TokPriv1Luid tp;
-                                    IntPtr hproc = GetCurrentProcess();
                                     IntPtr htok = IntPtr.Zero;
-                                    retVal = OpenProcessToken(hproc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, ref htok);
+                                    OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, ref htok);
                                     tp.Count = 1;
                                     tp.Luid = 0;
-                                    tp.Attr = SE_PRIVILEGE_ENABLED;
-                                    retVal = LookupPrivilegeValue(null, privilege, ref tp.Luid);
-                                    retVal = AdjustTokenPrivileges(htok, false, ref tp, 0, IntPtr.Zero, IntPtr.Zero);
-                                    return retVal;
+                                    tp.Attr = attributes;
+                                    LookupPrivilegeValue(null, privilege, ref tp.Luid);
+                                    return AdjustTokenPrivileges(htok, false, ref tp, 0, IntPtr.Zero, IntPtr.Zero);
                                 } catch (Exception ex) {
                                     throw new Exception("Failed to adjust token privileges", ex);
                                 }
                             }
-                            public static bool RemovePrivilege(string privilege) {
-                                try {
-                                    bool retVal;
-                                    TokPriv1Luid tp;
-                                    IntPtr hproc = GetCurrentProcess();
-                                    IntPtr htok = IntPtr.Zero;
-                                    retVal = OpenProcessToken(hproc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, ref htok);
-                                    tp.Count = 1;
-                                    tp.Luid = 0;
-                                    tp.Attr = 0;  // This line is changed to revoke the privilege
-                                    retVal = LookupPrivilegeValue(null, privilege, ref tp.Luid);
-                                    retVal = AdjustTokenPrivileges(htok, false, ref tp, 0, IntPtr.Zero, IntPtr.Zero);
-                                    return retVal;
-                                } catch (Exception ex) {
-                                    throw new Exception("Failed to adjust token privileges", ex);
-                                }
-                            }
+                            public static bool AddPrivilege(string privilege) { return SetPrivilege(privilege, SE_PRIVILEGE_ENABLED); }
+                            public static bool RemovePrivilege(string privilege) { return SetPrivilege(privilege, 0); }
                             [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
                             public static extern IntPtr GetCurrentProcess();
                         }
@@ -40641,6 +40441,16 @@ functions:
                             $skippedCount++
                             continue
                         }
+                        if ($revert -eq $true) {
+                            $newFilePath = $originalFilePath.Substring(0, $originalFilePath.Length - 4)
+                            if (Test-Path -LiteralPath $newFilePath) {
+                                Write-Host "Skipping, `"$newFilePath`" exists again: keeping it and leaving the backup in place."
+                                $skippedCount++
+                                continue
+                            }
+                        } else {
+                            $newFilePath = "$($originalFilePath).OLD"
+                        }
                         {{ with $grantPermissions }}
                             $originalAcl = Get-Acl -LiteralPath "$originalFilePath"
                             $accessGranted = $false
@@ -40654,11 +40464,6 @@ functions:
                                 Write-Warning "Failed to grant access to `"$originalFilePath`": $($_.Exception.Message)"
                             }
                         {{ end }}
-                        if ($revert -eq $true) {
-                            $newFilePath = $originalFilePath.Substring(0, $originalFilePath.Length - 4)
-                        } else {
-                            $newFilePath = "$($originalFilePath).OLD"
-                        }
                         try {
                             Move-Item -LiteralPath "$($originalFilePath)" -Destination "$newFilePath" -Force -ErrorAction Stop
                             Write-Host "Successfully processed `"$originalFilePath`"."
@@ -40742,6 +40547,12 @@ functions:
                 #   block, WinGet's `installBehavior.preferences.architectures`) came back as a string like
                 #   `@{source=PowerShell}`. Plain `Set-Content` writes the ANSI code page on 5.1 and mangles
                 #   non-ASCII values, hence the explicit encoding.
+                # ❗ Both readers strip comments and trailing commas before parsing. `ConvertFrom-Json` in Windows
+                #   PowerShell 5.1 rejects them, but the settings file WinGet writes when `winget settings` is
+                #   first opened has both, and VS Code documents its `settings.json` as JSON with comments. The
+                #   scripts failed with "Failed to parse JSON" on those files. The two expressions match string
+                #   literals first and put them back unchanged, so `//` or `,}` inside a value is left alone.
+                #   Rewriting the file cannot keep the comments, so the original is copied to `<file>.bak` once.
                 # ❗ Both readers pass `-Encoding UTF8` to match: Windows PowerShell 5.1 otherwise reads the file
                 #   with the ANSI code page and corrupts every non-ASCII character when it is written back.
                 parameters:
@@ -40770,7 +40581,10 @@ functions:
                             $fileContent = "{}"
                         }
                         try {
-                            $json = $fileContent | ConvertFrom-Json
+                            $jsonSource = $fileContent -join "`n"
+                            $strictJson = [regex]::Replace($jsonSource, '("(?:\\.|[^"\\])*")|//[^\r\n]*|/\*[\s\S]*?\*/', '$1')
+                            $strictJson = [regex]::Replace($strictJson, '("(?:\\.|[^"\\])*")|,(?=\s*[}\]])', '$1')
+                            $json = $strictJson | ConvertFrom-Json
                         } catch {
                             throw "Failed to parse JSON in file: '$jsonFilePath'. Error: $_"
                         }
@@ -40792,6 +40606,13 @@ functions:
                             exit 0
                         }
                         $target | Add-Member -Type NoteProperty -Name $propertyKey -Value $desiredValue -Force
+                        if ($strictJson -cne $jsonSource) {
+                            $backupPath = "$jsonFilePath.bak"
+                            if (-Not (Test-Path -LiteralPath $backupPath)) {
+                                Copy-Item -LiteralPath $jsonFilePath -Destination $backupPath
+                            }
+                            Write-Host "The file has comments or trailing commas, which are lost when it is rewritten. A copy that has them is at '$backupPath'."
+                        }
                         $jsonText = $json | ConvertTo-Json -Depth 100
                         [System.IO.File]::WriteAllText($jsonFilePath, $jsonText, (New-Object System.Text.UTF8Encoding($false)))
                         Write-Host "Successfully set '$propertyKey' in '$jsonFilePath'."
@@ -40817,7 +40638,10 @@ functions:
                                 exit 0
                             }
                             try {
-                                $json = $fileContent | ConvertFrom-Json
+                                $jsonSource = $fileContent -join "`n"
+                                $strictJson = [regex]::Replace($jsonSource, '("(?:\\.|[^"\\])*")|//[^\r\n]*|/\*[\s\S]*?\*/', '$1')
+                                $strictJson = [regex]::Replace($strictJson, '("(?:\\.|[^"\\])*")|,(?=\s*[}\]])', '$1')
+                                $json = $strictJson | ConvertFrom-Json
                             } catch {
                                 throw "Failed to parse JSON in file '$jsonFilePath'. Error: $_"
                             }
@@ -40844,6 +40668,13 @@ functions:
                                     $json.PSObject.Properties.Remove($parentPropertyKey)
                                 }
                             {{ end }}
+                            if ($strictJson -cne $jsonSource) {
+                                $backupPath = "$jsonFilePath.bak"
+                                if (-Not (Test-Path -LiteralPath $backupPath)) {
+                                    Copy-Item -LiteralPath $jsonFilePath -Destination $backupPath
+                                }
+                                Write-Host "The file has comments or trailing commas, which are lost when it is rewritten. A copy that has them is at '$backupPath'."
+                            }
                             $jsonText = $json | ConvertTo-Json -Depth 100
                             [System.IO.File]::WriteAllText($jsonFilePath, $jsonText, (New-Object System.Text.UTF8Encoding($false)))
                             Write-Host "Successfully removed '$propertyKey' from '$jsonFilePath'."
@@ -41075,6 +40906,9 @@ functions:
                 #           - ❌ Not using `Unregister-ScheduledTask $taskName -Confirm:$false` because it sometimes fails with `0x80070002`
                 #           - ✅ Using `schtasks.exe /delete /tn "$taskName" /f` with additional `| Out-Null` or `2>&1 | Out-Null`
                 #                to suppress errors.
+                # - The temporary files live in the user's profile, whose name may hold an apostrophe (`D'Angelo`).
+                #   Inside the single-quoted `-File '...'` it ended the string, and every elevated command failed
+                #   with "Failed, due to exit code: 1". The paths are doubled-apostrophe escaped.
                 # - Inlining is not working when elevated, should use `{{ . | inlinePowerShell}}` when elevated (refactor-with-if-syntax).
                 #   Inlinining PowerShell would help save space to not hit maximum batch command length limit (8191)
                 setupCode: |-
@@ -41093,7 +40927,7 @@ functions:
                             $Script | Out-File $scriptFile -Encoding UTF8
                             $taskName = "privacy$([char]0x002E)sexy invoke"
                             schtasks.exe /delete /tn $taskName /f 2>&1 | Out-Null
-                            $executionCommand = "powershell.exe -ExecutionPolicy Bypass -File '$scriptFile' *>&1 | Out-File -FilePath '$streamFile' -Encoding UTF8"
+                            $executionCommand = "powershell.exe -ExecutionPolicy Bypass -File '$($scriptFile.FullName.Replace("'", "''"))' *>&1 | Out-File -FilePath '$($streamFile.FullName.Replace("'", "''"))' -Encoding UTF8"
                             $action = New-ScheduledTaskAction `
                                 -Execute 'powershell.exe' `
                                 -Argument "-ExecutionPolicy Bypass -Command `"$executionCommand`""
@@ -41189,6 +41023,10 @@ functions:
                 #   Implementation shares similar code: `DisableService`, `StopService`, `StartService`
                 # Marked refactor-with-if-syntax:
                 #   {{ with }} is used awkwardly with commented out code.
+                # Several services:
+                #   A per-user service has one instance per signed-in user (`CDPUserSvc_1a2b3`, `CDPUserSvc_4c5d6`),
+                #   so the query can match more than one. Each match is handled in turn. Treating the matches as
+                #   one service built the registry path from both names joined by a space and changed nothing.
                 # Stopping services:
                 #   Some services are not stoppable (i.e. WdFilter) and attempting to stop it:
                 #   - With `sc stop` returns `[SC] ControlService FAILED 1052: The requested control is not valid for this service.`.
@@ -41201,11 +41039,13 @@ functions:
                         $serviceQuery = '{{ $serviceName }}'
                         $stopWithDependencies={{ with $waitForDependentServicesOnStop }} $true # {{ end }} $false
                         # -- 1. Skip if service does not exist
-                        $service = Get-Service -Name $serviceQuery -ErrorAction SilentlyContinue
-                        if(!$service) {
+                        $services = @(Get-Service -Name $serviceQuery -ErrorAction SilentlyContinue)
+                        if ($services.Count -eq 0) {
                             Write-Host "Service query `"$serviceQuery`" did not yield any results, no need to disable it."
                             Exit 0
                         }
+                        $hasFailed = $false
+                        foreach ($service in $services) {
                         $serviceName = $service.Name
                         Write-Host "Disabling service: `"$serviceName`"."
                         # -- 2. Stop if running
@@ -41235,14 +41075,14 @@ functions:
                         }
                         # -- 3. Skip if service info is not found in registry
                         $registryKey = "HKLM:\SYSTEM\CurrentControlSet\Services\$serviceName"
-                        if (-Not (Test-Path $registryKey)) {
-                            Write-Host "`"$registryKey`" is not found in registry, cannot enable it."
-                            Exit 0
+                        if (-Not (Test-Path -LiteralPath $registryKey)) {
+                            Write-Host "`"$registryKey`" is not found in registry, cannot disable it."
+                            continue
                         }
                         # -- 4. Skip if already disabled
-                        if( $(Get-ItemProperty -Path "$registryKey").Start -eq 4) {
+                        if( $(Get-ItemProperty -LiteralPath "$registryKey").Start -eq 4) {
                             Write-Host "`"$serviceName`" is already disabled from start, no further action is needed."
-                            Exit 0
+                            continue
                         }
                         # -- 5. Disable service
                         try {
@@ -41254,24 +41094,31 @@ functions:
                             Write-Host 'Successfully disabled the service. It will not start automatically on next boot.'
                         } catch {
                             Write-Error "Failed to disable the service. Error: $($_.Exception.Message)"
+                            $hasFailed = $true
+                        }
+                        }
+                        if ($hasFailed) {
                             Exit 1
                         }
                     revertCode: |-
                         $serviceQuery = '{{ $serviceName }}'
                         $defaultStartupMode = '{{ $defaultStartupMode }}'
                         # -- 1. Skip if service does not exist
-                        $service = Get-Service -Name $serviceQuery -ErrorAction SilentlyContinue
-                        if (!$service) {
-                            Write-Warning "Service query `"$serviceQuery`" did not yield and results. Revert cannot proceed."
-                            Exit 1
+                        $services = @(Get-Service -Name $serviceQuery -ErrorAction SilentlyContinue)
+                        if ($services.Count -eq 0) {
+                            Write-Host "Skipping, service query `"$serviceQuery`" did not yield any results, there is nothing to restore."
+                            Exit 0
                         }
+                        $hasFailed = $false
+                        foreach ($service in $services) {
                         $serviceName = $service.Name
                         Write-Host "Restoring registry settings for service `"$serviceName`" to default startup mode `"$defaultStartupMode`"."
                         # -- 2. Skip if service info is not found in registry
                         $registryKey = "HKLM:\SYSTEM\CurrentControlSet\Services\$serviceName"
-                        if (-Not (Test-Path $registryKey)) {
+                        if (-Not (Test-Path -LiteralPath $registryKey)) {
                             Write-Warning "`"$registryKey`" is not found in registry. Revert cannot proceed."
-                            Exit 1
+                            $hasFailed = $true
+                            continue
                         }
                         # -- 3. Enable if not already enabled
                         $defaultStartupRegValue = switch ($defaultStartupMode) {
@@ -41289,11 +41136,12 @@ functions:
                             Write-Host "`"$serviceName`" is has already default startup mode: `"$defaultStartupMode`"."
                         } else {
                             try {
-                                Set-ItemProperty $registryKey -Name Start -Value $defaultStartupRegValue -Force
+                                Set-ItemProperty -LiteralPath $registryKey -Name Start -Value $defaultStartupRegValue -Force -ErrorAction Stop
                                 Write-Host "Successfully restored `"$serviceName`" with `"$defaultStartupMode`" start, this may require restarting your computer."
                             } catch {
                                 Write-Error "Could not enable `"$serviceName`": $_"
-                                Exit 1
+                                $hasFailed = $true
+                                continue
                             }
                         }
                         # -- 4. Start if not running (must be enabled first)
@@ -41309,6 +41157,10 @@ functions:
                             } else {
                                 Write-Host "`"$serviceName`" is already running, no need to start."
                             }
+                        }
+                        }
+                        if ($hasFailed) {
+                            Exit 1
                         }
     -
         name: StopService
@@ -41435,7 +41287,7 @@ functions:
                                 return $path
                             }
                             $fileGlob = Get-StateFilePath -BaseName $serviceName -Suffix '*'
-                            $files = Get-ChildItem -Path "$fileGlob"
+                            $files = @(Get-ChildItem -Path "$fileGlob" -ErrorAction SilentlyContinue)
                             if ($files.Count -gt 0) {
                                 $firstFilePath = $files[0].FullName
                                 try {
@@ -41470,7 +41322,7 @@ functions:
         name: DisableService
         parameters: # Ensure that this function has the same parameters as `DisableServiceInRegistry` to simplify testing and interchangeability.
             - name: serviceName
-            - name: defaultStartupMode      # Allowed values: Automatic | Manual | Disabled
+            - name: defaultStartupMode      # Allowed values: Boot | System | Automatic | Manual | Disabled
             - name: ignoreMissingOnRevert   # When set to true, the revert operation will skip any actions for services that cannot be found, instead of failing.
               optional: true
             - name: minimumWindowsVersion   # See `RunPowerShellWithWindowsVersionConstraints`
@@ -41493,6 +41345,9 @@ functions:
                 #           Powershell >= 6.0 : Automatic, AutomaticDelayedStart, Disabled, InvalidValue, Manual
                 #           PowerShell <= 5   : Boot, System, Automatic, Manual, Disabled
                 #           So "Disabled", "Automatic" and "Manual" are only consistent ones.
+                #       In Windows PowerShell 5.1 `-StartupType Boot` and `System` are accepted and then ignored:
+                #       the cmdlet reports no error and changes nothing, so reverting "Disable Secure Boot driver"
+                #       printed "Reverted" and left the driver disabled. The revert uses `sc.exe config` for them.
                 #       Read more:
                 #           https://github.com/PowerShell/PowerShell/blob/v7.2.0/src/Microsoft.PowerShell.Commands.Management/commands/management/Service.cs#L2966-L2978
                 #           https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/set-service?view=powershell-7.4
@@ -41566,7 +41421,14 @@ functions:
                             Write-Host "`"$serviceName`" has already expected startup mode: `"$defaultStartupMode`". No action required."
                         } else {
                             try {
-                                Set-Service -Name "$serviceName" -StartupType "$defaultStartupMode" -Confirm:$false -ErrorAction Stop
+                                if (@('Boot', 'System') -contains $defaultStartupMode) {
+                                    & "$env:SystemRoot\System32\sc.exe" config "$serviceName" start= $defaultStartupMode.ToLower() | Out-Null
+                                    if ($LASTEXITCODE -ne 0) {
+                                        throw "sc.exe config failed with exit code $LASTEXITCODE"
+                                    }
+                                } else {
+                                    Set-Service -Name "$serviceName" -StartupType "$defaultStartupMode" -Confirm:$false -ErrorAction Stop
+                                }
                                 Write-Host "Reverted `"$serviceName`" with `"$defaultStartupMode`" start, this may require restarting your computer."
                             } catch {
                                 Write-Error "Failed to enable `"$serviceName`": $_"
@@ -41656,8 +41518,9 @@ functions:
                     $shortcuts = @(
                         {{ $shortcutItems }}
                     )
-                    if (-Not (Test-Path $expandedTargetFilePath)) {
-                        Write-Warning "Target file `"$expandedTargetFilePath`" does not exist."
+                    if (-Not (Test-Path -LiteralPath $expandedTargetFilePath)) {
+                        Write-Warning "Skipping, the shortcuts are not restored because their target `"$expandedTargetFilePath`" does not exist."
+                        exit 0
                     }
                     $wscriptShell = $null
                     try {
@@ -41672,6 +41535,10 @@ functions:
                         }
                         if (Test-Path $shortcut.Path) {
                             Write-Host "Shortcut already exists, skipping: `"$($shortcut.Path)`"."
+                            continue
+                        }
+                        if (-Not (Test-Path -LiteralPath (Split-Path -Parent $shortcut.Path))) {
+                            Write-Host "Skipping, the folder of this shortcut does not exist: `"$($shortcut.Path)`"."
                             continue
                         }
                         try {
@@ -41728,6 +41595,21 @@ functions:
               optional: true
         call:
             function: RunPowerShellWithOptionalElevation
+            # Links:
+            #   `Get-ChildItem -Recurse` walks into junctions and directory symbolic links when the folder it
+            #   starts from holds only folders. Everything found behind such a link is dropped from the list
+            #   (1024 is the `ReparsePoint` attribute), so a link in a cleaned folder, such as one a build tool
+            #   leaves in `%TEMP%`, costs the link itself and never the files it points to.
+            #   The links are looked for in both listings: with a pattern such as `folder\*`, `Get-ChildItem`
+            #   returns what is inside the matched folders and only `Get-Item` returns the matched folders,
+            #   which is where a link at the top of the cleaned folder shows up.
+            # Locations that cannot be listed:
+            #   The profile holds compatibility junctions such as `INetCache\Content.IE5` and `Local Settings`
+            #   that deny "list folder" to everyone. Listing stops at them and carries on with the rest. With
+            #   `-ErrorAction Stop` one such junction made the whole listing fail, so nothing was cleaned.
+            # Hidden items:
+            #   `Get-Item` fails on a hidden file or folder unless `-Force` is given. It is given only when the
+            #   path has no wildcard, so `Recent\*` still leaves the hidden `desktop.ini` alone.
             parameters:
                 elevateToTrustedInstaller: '{{ with $elevateToTrustedInstaller }}true{{ end }}'
                 maximumWindowsVersion: '{{ with $maximumWindowsVersion }}{{ . }}{{ end }}'
@@ -41739,26 +41621,22 @@ functions:
                     {{ with $beforeIteration }}
                         {{ . }}
                     {{ end }}
-                    $foundAbsolutePaths = @()
+                    $foundItems = @()
+                    $listErrors = @()
                     {{ with $recurse }}
                         Write-Host 'Iterating files and directories recursively.'
-                        try {
-                            $foundAbsolutePaths += @(
-                                Get-ChildItem -Path $expandedPath -Force -Recurse -ErrorAction Stop | Select-Object -ExpandProperty FullName
-                            )
-                        } catch [System.Management.Automation.ItemNotFoundException] {
-                            # Swallow, do not run `Test-Path` before, it's unreliable for globs requiring extra permissions
-                        }
+                        $foundItems += @(Get-ChildItem -Path $expandedPath -Force -Recurse -ErrorAction SilentlyContinue -ErrorVariable +listErrors)
                     {{ end }}
-                    try {
-                        $foundAbsolutePaths += @(
-                            Get-Item -Path $expandedPath -ErrorAction Stop | Select-Object -ExpandProperty FullName
-                        )
-                    } catch [System.Management.Automation.ItemNotFoundException] {
-                        # Swallow, do not run `Test-Path` before, it's unreliable for globs requiring extra permissions
+                    $foundItems += @(Get-Item -Path $expandedPath -Force:(-not [WildcardPattern]::ContainsWildcardCharacters($expandedPath)) -ErrorAction SilentlyContinue -ErrorVariable +listErrors)
+                    $deniedCount = @($listErrors | Where-Object { $_.Exception -is [System.UnauthorizedAccessException] }).Count
+                    if ($deniedCount -gt 0) {
+                        Write-Host "Skipping $deniedCount locations that Windows does not allow to be listed."
                     }
-                    $foundAbsolutePaths = $foundAbsolutePaths   `
-                        | Select-Object -Unique                 `
+                    $linkPaths = @($foundItems | Where-Object { ($_.Attributes -band 1024) -and $_.LinkType } | ForEach-Object { $_.FullName + '\' })
+                    $foundAbsolutePaths = $foundItems `
+                        | ForEach-Object { $_.FullName } `
+                        | Where-Object { $foundPath = $_; -not ($linkPaths | Where-Object { $foundPath.StartsWith($_, [StringComparison]::OrdinalIgnoreCase) }) } `
+                        | Select-Object -Unique `
                         | Sort-Object -Property { $_.Length } -Descending
                     if (!$foundAbsolutePaths) {
                         Write-Host 'Skipping, no items available.'
@@ -41785,26 +41663,22 @@ functions:
                         {{ with $beforeIteration }}
                             {{ . }}
                         {{ end }}
-                        $foundAbsolutePaths = @()
+                        $foundItems = @()
+                        $listErrors = @()
                         {{ with $recurse }}
                             Write-Host 'Iterating files and directories recursively.'
-                            try {
-                                $foundAbsolutePaths += @(
-                                    Get-ChildItem -Path $expandedPath -Force -Recurse -ErrorAction Stop | Select-Object -ExpandProperty FullName
-                                )
-                            } catch [System.Management.Automation.ItemNotFoundException] {
-                                # Swallow, do not run `Test-Path` before, it's unreliable for globs requiring extra permissions
-                            }
+                            $foundItems += @(Get-ChildItem -Path $expandedPath -Force -Recurse -ErrorAction SilentlyContinue -ErrorVariable +listErrors)
                         {{ end }}
-                        try {
-                            $foundAbsolutePaths += @(
-                                Get-Item -Path $expandedPath -ErrorAction Stop | Select-Object -ExpandProperty FullName
-                            )
-                        } catch [System.Management.Automation.ItemNotFoundException] {
-                            # Swallow, do not run `Test-Path` before, it's unreliable for globs requiring extra permissions
+                        $foundItems += @(Get-Item -Path $expandedPath -Force:(-not [WildcardPattern]::ContainsWildcardCharacters($expandedPath)) -ErrorAction SilentlyContinue -ErrorVariable +listErrors)
+                        $deniedCount = @($listErrors | Where-Object { $_.Exception -is [System.UnauthorizedAccessException] }).Count
+                        if ($deniedCount -gt 0) {
+                            Write-Host "Skipping $deniedCount locations that Windows does not allow to be listed."
                         }
-                        $foundAbsolutePaths = $foundAbsolutePaths   `
-                            | Select-Object -Unique                 `
+                        $linkPaths = @($foundItems | Where-Object { ($_.Attributes -band 1024) -and $_.LinkType } | ForEach-Object { $_.FullName + '\' })
+                        $foundAbsolutePaths = $foundItems `
+                            | ForEach-Object { $_.FullName } `
+                            | Where-Object { $foundPath = $_; -not ($linkPaths | Where-Object { $foundPath.StartsWith($_, [StringComparison]::OrdinalIgnoreCase) }) } `
+                            | Select-Object -Unique `
                             | Sort-Object -Property { $_.Length } -Descending
                         if (!$foundAbsolutePaths) {
                             Write-Host 'Skipping, no items available.'
@@ -41858,6 +41732,13 @@ functions:
                 #     It requires a localized 'yes' flag, which varies with the system language ('y' for English).
                 #     To find the localized 'yes', the script uses the `choice` command. This approach is simpler and more reliable
                 #     than parsing `takeown /?`, which has proven to be inconsistent across different languages.
+                # Links:
+                #   `takeown /r` and `icacls /t` follow junctions. `Windows.old` keeps junctions such as
+                #   `Documents and Settings` that point at the live `C:\Users`, so taking ownership "of the old
+                #   installation" re-owned the current user profiles. `/skipsl` keeps `takeown` out of links and
+                #   leaves their "deny list folder" entry in place, which is also what stops `icacls`. `icacls`
+                #   is refused on those links, so it runs with `/c` to carry on with the remaining items; its last
+                #   line (processed, then failed) says whether anything matched at all.
                 #   For future enhancements:
                 #       - Explore handling folder listing permission issues when transitioning to `Get-Acl` and `Set-Acl`.
                 #       - Currently, `takeown` is preferred for its reliability in permission handling, especially in wildcard scenarios.
@@ -41878,7 +41759,7 @@ functions:
                             $cmdPath += '\' # Escape trailing backslash for correct handling in batch commands
                         }
                         $takeOwnershipCommand = "takeown /f `"$cmdPath`" /a" # `icacls /setowner` does not succeed, so use `takeown` instead.
-                        if (-not (Test-Path -Path "$expandedPath" -PathType Leaf)) {
+                        if (-not (Test-Path -LiteralPath "$expandedPath" -PathType Leaf)) {
                             $localizedYes = 'Y' # Default 'Yes' flag (fallback)
                             try {
                                 $choiceOutput = cmd /c "choice <nul 2>nul"
@@ -41890,7 +41771,7 @@ functions:
                             } catch {
                                 Write-Warning "Failed to determine localized 'Yes' character. Error: $_"
                             }
-                            $takeOwnershipCommand += " /r /d $localizedYes"
+                            $takeOwnershipCommand += " /r /skipsl /d $localizedYes"
                         }
                         $takeOwnershipOutput = cmd /c "$takeOwnershipCommand 2>&1" # `stderr` message is misleading, e.g. "ERROR: The system cannot find the file specified." is not an error.
                         if ($LASTEXITCODE -eq 0) {
@@ -41904,23 +41785,22 @@ functions:
                         $adminSid = New-Object System.Security.Principal.SecurityIdentifier 'S-1-5-32-544'
                         $adminAccount = $adminSid.Translate([System.Security.Principal.NTAccount])
                         $adminAccountName = $adminAccount.Value
-                        $grantPermissionsCommand = "icacls `"$cmdPath`" /grant `"$($adminAccountName):F`" /t"
-                        $icaclsOutput = cmd /c "$grantPermissionsCommand"
-                        if ($LASTEXITCODE -eq 3) {
+                        $grantPermissionsCommand = "icacls `"$cmdPath`" /grant `"$($adminAccountName):F`" /t /c"
+                        $icaclsOutput = @(cmd /c "$grantPermissionsCommand 2>&1")
+                        $icaclsExitCode = $LASTEXITCODE
+                        $processedCount = -1
+                        if ("$($icaclsOutput | Select-Object -Last 1)" -match '\d+') {
+                            $processedCount = [int]$matches[0]
+                        }
+                        if (($icaclsExitCode -eq 3) -or ($processedCount -eq 0)) {
                             Write-Host "Skipping, no items available for deletion according to: ``$grantPermissionsCommand``."
                             exit 0
-                        } elseif ($LASTEXITCODE -ne 0) {
+                        } elseif ($icaclsExitCode -ne 0) {
                             Write-Host "Take ownership message:`n$takeOwnershipOutput"
-                            Write-Host "Grant permissions:`n$icaclsOutput"
-                            Write-Warning "Failed to assign permissions for `"$expandedPath`" using ``$grantPermissionsCommand``, status code: $LASTEXITCODE."
+                            Write-Host "Grant permissions:`n$($icaclsOutput | Select-Object -Last 3)"
+                            Write-Warning "Failed to assign permissions for some items of `"$expandedPath`" using ``$grantPermissionsCommand``, status code: $icaclsExitCode."
                         } else {
-                            $fileStats = $icaclsOutput | ForEach-Object { $_ -match '\d+' | Out-Null; $matches[0] } | Where-Object { $_ -ne $null } | ForEach-Object { [int]$_ }
-                            if ($fileStats.Count -gt 0 -and ($fileStats | ForEach-Object { $_ -eq 0 } | Where-Object { $_ -eq $false }).Count -eq 0) {
-                                Write-Host "Skipping, no items available for deletion according to: ``$grantPermissionsCommand``."
-                                exit 0
-                            } else {
-                                Write-Host "Successfully granted permissions for `"$expandedPath`" (using ``$grantPermissionsCommand``)."
-                            }
+                            Write-Host "Successfully granted permissions for `"$expandedPath`" (using ``$grantPermissionsCommand``)."
                         }
                     {{ end }}
                     $deletedCount = 0
@@ -41932,13 +41812,13 @@ functions:
                     {{ with $duringIteration }}
                         {{ . }}
                     {{ end }}
-                    if (-not (Test-Path $path)) { # Re-check existence as prior deletions might remove subsequent items (e.g., subdirectories).
+                    if (-not (Test-Path -LiteralPath $path)) { # Re-check existence as prior deletions might remove subsequent items (e.g., subdirectories).
                         Write-Host "Successfully deleted: $($path) (already deleted)."
                         $deletedCount++
                         continue
                     } 
                     try {
-                        Remove-Item -Path $path -Force -Recurse -ErrorAction Stop
+                        Remove-Item -LiteralPath $path -Force -Recurse -ErrorAction Stop
                         $deletedCount++
                         Write-Host "Successfully deleted: $($path)"
                     } catch {
@@ -41983,7 +41863,7 @@ functions:
                     # - 'C:'    becomes 'C:\*'
                     # - 'C:\*'  remains 'C:\*'
                     pathGlob: >-
-                        $($directoryGlob = '{{ $directoryGlob }}'; if ($directoryGlob.EndsWith('\*')) { $directoryGlob } elseif ($directoryGlob.EndsWith('\')) { "$($directoryGlob)*" } else { "$($directoryGlob)\*" } )
+                        $($directoryGlob = "{{ $directoryGlob }}"; if ($directoryGlob.EndsWith('\*')) { $directoryGlob } elseif ($directoryGlob.EndsWith('\')) { "$($directoryGlob)*" } else { "$($directoryGlob)\*" } )
                     grantPermissions: '{{ with $grantPermissions }}true{{ end }}'
                     recurse: 'true' # Logs every deleted file name
     -
@@ -42017,7 +41897,7 @@ functions:
                     # - 'C:\'   remains 'C:\'
                     # - 'C:'    becomes 'C:\'
                     pathGlob: >-
-                        $($directoryGlob = '{{ $directoryGlob }}'; if (-Not $directoryGlob.EndsWith('\')) { $directoryGlob += '\' }; $directoryGlob )
+                        $($directoryGlob = "{{ $directoryGlob }}"; if (-Not $directoryGlob.EndsWith('\')) { $directoryGlob += '\' }; $directoryGlob )
                     grantPermissions: '{{ with $grantPermissions }}true{{ end }}'
                     recurse: 'true' # Logs every deleted file name
                     beforeIteration: '{{ with $beforeIteration }}{{ . }}{{ end }}'
@@ -42045,7 +41925,7 @@ functions:
                     beforeIteration: |-
                         $skippedCount = 0
                     duringIteration: |-
-                        if (Test-Path -Path $path -PathType Container) {
+                        if (Test-Path -LiteralPath $path -PathType Container) {
                             Write-Host "Skipping, the path is not a file but a folder: $($path)."
                             $skippedCount++
                             continue
@@ -42264,7 +42144,7 @@ functions:
                             $userSid = (New-Object System.Security.Principal.NTAccount($env:USERNAME)).Translate([Security.Principal.SecurityIdentifier]).Value
                             $registryPath = $registryPath.Replace('$CURRENT_USER_SID', $userSid)
                         {{ end }}
-                        if (Test-Path $registryPath) {
+                        if (Test-Path -LiteralPath $registryPath) {
                             Write-Host "Skipping, no action needed, registry path `"$registryPath`" already exists."
                             exit 0
                         }
@@ -42430,12 +42310,34 @@ functions:
                 #   hash symbol in strings without confusing the PowerShell parser.
                 # A line break is prepended when the file does not end with one: otherwise the entry was glued
                 # onto the user's last line, breaking both that entry and this one.
+                # Encoding:
+                #   The file is read and written as ISO-8859-1 (code page 28591), which maps every byte to one
+                #   character and back. The user's own lines therefore survive byte for byte, whatever encoding
+                #   they are in, and no byte order mark is added. Reading as UTF-8 replaced ANSI characters in
+                #   comments for good, and writing with `[Text.Encoding]::UTF8` put a byte order mark in front of
+                #   the first line.
+                # Retry:
+                #   Every entry is added by its own PowerShell process, a fraction of a second after the last
+                #   one. Windows (DNS client, antivirus) still holds the file open then, and on Windows 11 some
+                #   writes failed with "being used by another process", leaving a domain unblocked.
                 codeComment: 'Add hosts entries for {{ $domain }}'
                 code: |-
                     $domain ='{{ $domain }}'
                     $hostsFilePath = "$env:SYSTEMROOT\System32\drivers\etc\hosts"
                     $comment = "managed by privacy.sexy"
-                    $hostsFileEncoding = [Microsoft.PowerShell.Commands.FileSystemCmdletProviderEncoding]::Utf8
+                    $hostsFileEncoding = [System.Text.Encoding]::GetEncoding(28591)
+                    function Invoke-WithRetry($Action) {
+                        for ($attempt = 1; ; $attempt++) {
+                            try {
+                                return (& $Action)
+                            } catch [System.IO.IOException] {
+                                if ($attempt -ge 20) {
+                                    throw
+                                }
+                                Start-Sleep -Milliseconds 250
+                            }
+                        }
+                    }
                     $blockingHostsEntries = @(
                         @{ AddressType = "IPv4";  IPAddress = '0.0.0.0'; }
                         @{ AddressType = "IPv6";  IPAddress = '::1'; }
@@ -42462,11 +42364,7 @@ functions:
                     foreach ($blockingEntry in $blockingHostsEntries) {
                         Write-Output "Processing addition for $($blockingEntry.AddressType) entry."
                         try {
-                            $hostsFileContents = Get-Content `
-                                -Path "$hostsFilePath" `
-                                -Raw `
-                                -Encoding $hostsFileEncoding `
-                                -ErrorAction Stop
+                            $hostsFileContents = Invoke-WithRetry { [System.IO.File]::ReadAllText($hostsFilePath, $hostsFileEncoding) }
                         } catch {
                             Write-Error "Failed to read the hosts file. Error: $_"
                             continue
@@ -42481,11 +42379,7 @@ functions:
                             $hostsEntryValue = [Environment]::NewLine + $hostsEntryLine
                         }
                         try {
-                            Add-Content `
-                                -Path $hostsFilePath `
-                                -Value $hostsEntryValue `
-                                -Encoding $hostsFileEncoding `
-                                -ErrorAction Stop
+                            Invoke-WithRetry { [System.IO.File]::AppendAllText($hostsFilePath, $hostsEntryValue + [Environment]::NewLine, $hostsFileEncoding) }
                             Write-Output 'Successfully added the entry.'
                         } catch {
                             Write-Error "Failed to add the entry. Error: $_"
@@ -42508,7 +42402,19 @@ functions:
                     $domain ='{{ $domain }}'
                     $hostsFilePath = "$env:SYSTEMROOT\System32\drivers\etc\hosts"
                     $comment = "managed by privacy.sexy"
-                    $hostsFileEncoding = [System.Text.Encoding]::UTF8
+                    $hostsFileEncoding = [System.Text.Encoding]::GetEncoding(28591)
+                    function Invoke-WithRetry($Action) {
+                        for ($attempt = 1; ; $attempt++) {
+                            try {
+                                return (& $Action)
+                            } catch [System.IO.IOException] {
+                                if ($attempt -ge 20) {
+                                    throw
+                                }
+                                Start-Sleep -Milliseconds 250
+                            }
+                        }
+                    }
                     $blockingHostsEntries = @(
                         @{ AddressType = "IPv4";  IPAddress = '0.0.0.0'; }
                         @{ AddressType = "IPv6";  IPAddress = '::1'; }
@@ -42529,7 +42435,7 @@ functions:
                     foreach ($blockingEntry in $blockingHostsEntries) {
                         Write-Output "Processing removal for $($blockingEntry.AddressType) entry."
                         try {
-                            $hostsFileContents = [System.IO.File]::ReadAllText($hostsFilePath, $hostsFileEncoding)
+                            $hostsFileContents = Invoke-WithRetry { [System.IO.File]::ReadAllText($hostsFilePath, $hostsFileEncoding) }
                         } catch {
                             Write-Error "Failed to read the hosts file for removal. Error: $_"
                             continue
@@ -42542,7 +42448,7 @@ functions:
                         $hostsEntryRemovalPattern = [regex]::Escape($hostsEntryLine) + "(\r?\n)?"
                         $hostsFileContentAfterRemoval = $hostsFileContents -Replace $hostsEntryRemovalPattern, ""
                         try {
-                            [System.IO.File]::WriteAllText($hostsFilePath, $hostsFileContentAfterRemoval, $hostsFileEncoding)
+                            Invoke-WithRetry { [System.IO.File]::WriteAllText($hostsFilePath, $hostsFileContentAfterRemoval, $hostsFileEncoding) }
                             Write-Output 'Successfully removed the entry.'
                         } catch {
                             Write-Error "Failed to remove the entry. Error: $_"
@@ -43821,46 +43727,26 @@ functions:
                 parameters:
                     # Marked: refactor-with-if-syntax
                     #   If checks can be handled during compile time.
+                    # Every supported release is version 10.0, so the build number alone orders them. This code is
+                    # part of every constrained command, some of which are within a hundred characters of cmd's
+                    # line limit, so it is kept short: a lookup instead of a `switch`, and fixed messages.
                     setupCode: |- # See: Find build numbers: https://en.wikipedia.org/wiki/List_of_Microsoft_Windows_versions
                         {{ with $minimumWindowsVersion }}
-                            $versionName = '{{ . }}'
-                            $buildNumber = switch ($versionName) {
-                                'Windows11-FirstRelease' { '10.0.22000' }
-                                'Windows11-22H2' { '10.0.22621' }
-                                'Windows11-21H2' { '10.0.22000' }
-                                'Windows10-22H2' { '10.0.19045' }
-                                'Windows10-21H2' { '10.0.19044' }
-                                'Windows10-20H2' { '10.0.19042' }
-                                'Windows10-1909' { '10.0.18363' }
-                                'Windows10-1607' { '10.0.14393' }
-                                default {
-                                    throw "Internal privacy$([char]0x002E)sexy error: No build for minimum Windows '$versionName'"
-                                }
+                            $minimumBuild = @{ 'Windows11-FirstRelease' = 22000; 'Windows11-22H2' = 22621; 'Windows11-21H2' = 22000; 'Windows10-22H2' = 19045; 'Windows10-21H2' = 19044; 'Windows10-20H2' = 19042; 'Windows10-1909' = 18363; 'Windows10-1607' = 14393 }['{{ . }}']
+                            if (-Not $minimumBuild) {
+                                throw 'Unknown Windows version name'
                             }
-                            $minVersion = [System.Version]::Parse($buildNumber)
-                            $ver = [Environment]::OSVersion.Version
-                            $verNoPatch = [System.Version]::new($ver.Major, $ver.Minor, $ver.Build)
-                            if ($verNoPatch -lt $minVersion) {
-                                Write-Output "Skipping: Windows ($verNoPatch) is below minimum $minVersion ($versionName)"
+                            if ([Environment]::OSVersion.Version.Build -lt $minimumBuild) {
+                                Write-Output 'Skipping: This Windows version is older than {{ . }}.'
                                 Exit 0
                             }
                         {{ end }}{{ with $maximumWindowsVersion }}
-                            $versionName = '{{ . }}'
-                            $buildNumber = switch ($versionName) {
-                                'Windows11-21H2' { '10.0.22000' }
-                                'Windows10-MostRecent' { '10.0.19045' }
-                                'Windows10-22H2' { '10.0.19045' }
-                                'Windows10-1909' { '10.0.18363' }
-                                'Windows10-1903' { '10.0.18362' }
-                                default {
-                                    throw "Internal privacy$([char]0x002E)sexy error: No build for maximum Windows '$versionName'"
-                                }
+                            $maximumBuild = @{ 'Windows11-21H2' = 22000; 'Windows10-MostRecent' = 19045; 'Windows10-22H2' = 19045; 'Windows10-1909' = 18363; 'Windows10-1903' = 18362 }['{{ . }}']
+                            if (-Not $maximumBuild) {
+                                throw 'Unknown Windows version name'
                             }
-                            $maxVersion=[System.Version]::Parse($buildNumber)
-                            $ver = [Environment]::OSVersion.Version
-                            $verNoPatch = [System.Version]::new($ver.Major, $ver.Minor, $ver.Build)
-                            if ($verNoPatch -gt $maxVersion) {
-                                Write-Output "Skipping: Windows ($verNoPatch) is above maximum $maxVersion ($versionName)"
+                            if ([Environment]::OSVersion.Version.Build -gt $maximumBuild) {
+                                Write-Output 'Skipping: This Windows version is newer than {{ . }}.'
                                 Exit 0
                             }
                         {{ end }}{{ with $setupCode }}
@@ -43931,6 +43817,9 @@ functions:
                         {{ with $deleteSubkeyValuesRecursively }}(recursively){{ end }}
             -
                 function: RunPowerShell
+                # Values are deleted through the .NET key, not `Remove-ItemProperty`: the cmdlet cannot delete
+                # the unnamed default value under the name `(default)` that `Get-Item` lists it by, so a key
+                # with a default value kept all its values and the remaining keys were never reached.
                 parameters:
                     code: |-
                         $rootRegistryKeyPath = '{{ $keyPath }}'
@@ -43943,18 +43832,20 @@ functions:
                                     Write-Output "Skipping: Registry key not found: `"$formattedRegistryKeyPath`"."
                                     return
                                 }
-                                $directValueNames=(Get-Item -LiteralPath $formattedRegistryKeyPath -ErrorAction Stop | Select-Object -ExpandProperty Property)
-                                if (-Not $directValueNames) {
-                                    Write-Output 'Skipping: Registry key has no direct values.'
-                                } else {
-                                    foreach ($valueName in $directValueNames) {
-                                        Remove-ItemProperty `
-                                            -LiteralPath $formattedRegistryKeyPath `
-                                            -Name $valueName `
-                                            -ErrorAction Stop
-                                        Write-Output "Successfully deleted value: `"$valueName`" from `"$formattedRegistryKeyPath`"."
+                                $registryKey = (Get-Item -LiteralPath $formattedRegistryKeyPath -ErrorAction Stop).OpenSubKey('', $true)
+                                try {
+                                    $directValueNames = $registryKey.GetValueNames()
+                                    if ($directValueNames.Count -eq 0) {
+                                        Write-Output 'Skipping: Registry key has no direct values.'
+                                    } else {
+                                        foreach ($valueName in $directValueNames) {
+                                            $registryKey.DeleteValue($valueName, $true)
+                                            Write-Output "Successfully deleted value: `"$valueName`" from `"$formattedRegistryKeyPath`"."
+                                        }
+                                        Write-Output "Successfully cleared all direct values in `"$formattedRegistryKeyPath`"."
                                     }
-                                    Write-Output "Successfully cleared all direct values in `"$formattedRegistryKeyPath`"."
+                                } finally {
+                                    $registryKey.Close()
                                 }
                                 {{ with $deleteSubkeyValuesRecursively }}
                                     Write-Output "Iterating subkeys recursively: `"$formattedRegistryKeyPath`"."
@@ -44324,12 +44215,13 @@ functions:
 
             ### Windows 11
 
-            On Windows 11, it sets:
+            On Windows 11, it changes nothing. Windows 11 hides these folders through the values below, which it
+            ships itself and which differ between releases [3]:
 
             - `HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{<Folder CLSID>}!HiddenByDefault` [3]
             - `HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{<Folder CLSID>}!HideIfEnabled` [3]
 
-            Community reports suggest that the `HiddenByDefault` and `HideIfEnabled` method is effective only on certain Windows 11 versions [3].
+            `HideExplorerThisPCFolderViaGuid` hides the folder on every Windows version.
 
             ### Windows 10 and below
 
@@ -44359,24 +44251,10 @@ functions:
                     keyPath: HKLM\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{{{ $folderClsid }}}
                     recreateOnRevert: 'true'
                     maximumWindowsVersion: Windows10-MostRecent # No action needed on Windows 11
-            -
-                function: SetRegistryValue
-                parameters:
-                    keyPath: HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{{{ $folderClsid }}}
-                    valueName: 'HiddenByDefault'
-                    dataType: REG_DWORD
-                    data: '1' # It hides on Windows 11 Pro (≥ 23H2) 11, this is the default behavior but this value is missing by default
-                    deleteOnRevert: 'true' # 🔍 Missing on Windows 10 Pro (≥ 22H2) | 🔍 Missing on Windows 11 Pro (≥ 23H2)
-                    minimumWindowsVersion: Windows11-FirstRelease # `HiddenByDefault` has no effect Windows 10
-            -
-                function: SetRegistryValue
-                parameters:
-                    keyPath: HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{{{ $folderClsid }}}
-                    valueName: 'HideIfEnabled'
-                    dataType: REG_DWORD
-                    data: '0x22ab9b9' # Default value on Windows 11 Pro (≥ 23H2) 11, it hides
-                    dataOnRevert: '0x22ab9b9' # Default value: 🔍 Missing on Windows 10 Pro (≥ 22H2) | `0x22ab9b9` on Windows 11 Pro (≥ 23H2)
-                    minimumWindowsVersion: Windows11-FirstRelease # `HideIfEnabled` has no effect Windows 10
+            # Nothing is written on Windows 11. Earlier versions set `HiddenByDefault` and `HideIfEnabled` there,
+            # which Windows 11 already ships in a form that differs by release: 23H2 has `HideIfEnabled`, while
+            # 24H2 and 25H2 have `HiddenByDefault` = 1 and no `HideIfEnabled`. Reverting deleted `HiddenByDefault`,
+            # so on 24H2 and later it removed the value that hides the folder by default.
             -
                 function: ShowExplorerRestartSuggestion
     -
@@ -44913,6 +44791,10 @@ functions:
                     #       1. Soft-delete `HKLM\Software\Classes\CLSID\{6CED0DAA-4CDE-49C9-BA3A-AE163DC3D7AF}`
                     #       2. Open `regedit`, navigate to key, view Permissions > Advanced Security
                     #  - Use -Path instead of -LiteralPath for `Get-Acl` and `Set-Acl` with registry keys
+                    #  - Rename values through the .NET key and not `Rename-ItemProperty`: the cmdlet reads the
+                    #    data with environment variables expanded, so after apply and revert a `REG_EXPAND_SZ`
+                    #    value such as `@%SystemRoot%\system32\actioncentercpl.dll,-1` held `C:\Windows\...`
+                    #    instead (seen on Windows 11 25H2).
                     setupCodeElevated: |-
                         function Copy-Acl($Src, $Dst) {
                             $srcKeys = @(Get-ChildItem -LiteralPath $Src -ErrorAction SilentlyContinue)
@@ -44948,6 +44830,19 @@ functions:
                                 throw "Failed to remove: $_"
                             }
                         }
+                        function Rename-ValueRaw($Path, $Name, $NewName) {
+                            $key = (Get-Item -LiteralPath $Path -ErrorAction Stop).OpenSubKey('', $true)
+                            try {
+                                $from = if ($Name -eq '(default)') { '' } else { $Name }
+                                $to = if ($NewName -eq '(default)') { '' } else { $NewName }
+                                $kind = $key.GetValueKind($from)
+                                $data = $key.GetValue($from, $null, [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames)
+                                $key.SetValue($to, $data, $kind)
+                                $key.DeleteValue($from, $true)
+                            } finally {
+                                $key.Close()
+                            }
+                        }
                     code: |-
                         $rawPath='{{ $keyPath }}'
                         $suffix='.OLD'
@@ -44972,7 +44867,7 @@ functions:
                                 $backupName = $value + $suffix
                                 Write-Host "Renaming to '$backupName'."
                                 try {
-                                    Rename-ItemProperty -LiteralPath $Path -Name $value -NewName $backupName -ErrorAction Stop
+                                    Rename-ValueRaw $Path $value $backupName
                                     Write-Host 'Successfully renamed.'
                                     $global:ok++
                                 } catch {
@@ -45073,7 +44968,7 @@ functions:
                                 $real = Get-Real $value
                                 Write-Host "Renaming to '$real'."
                                 try {
-                                    Rename-ItemProperty -LiteralPath $Path -Name $value -NewName $real -ErrorAction Stop
+                                    Rename-ValueRaw $Path $value $real
                                     Write-Host 'Successfully restored.'
                                     $global:ok++
                                 } catch {
@@ -45177,6 +45072,13 @@ functions:
                 #       "Broad" to type "Microsoft.PowerShell.Cmdletization.GeneratedTypes.MpPreference.UpdatesChannelType".
                 #       Error: "Unable to match the identifier name Broad to a valid enumerator name. Specify one of the
                 #       following enumerator names and try again: NotConfigured, Beta, Preview"`
+                #   The message is localized ("Impossibile convertire il valore..." in Italian), so the exception
+                #   type is checked first.
+                # Tamper Protection ->
+                #   With Tamper Protection on, which is the default, `Set-MpPreference` returns without an error and
+                #   changes nothing. The setting is read back, and if it did not move the script says so instead of
+                #   "Successfully set". Only booleans and numbers are compared: `Get-MpPreference` returns a number
+                #   for names such as `Broad`, which cannot be compared with the name.
                 code: |-
                     $propertyName = '{{ $property }}'
                     $value = {{ $value }}
@@ -45193,15 +45095,22 @@ functions:
                         Write-Host "Skipping. `"$propertyName`" is not supported for `"$($command.Name)`"."
                         exit 0
                     }
+                    $valueBefore = (Get-MpPreference -ErrorAction Ignore).$propertyName
                     try {
                         Invoke-Expression "$($command.Name) -Force -$propertyName `$value -ErrorAction Stop"
+                        $valueAfter = (Get-MpPreference -ErrorAction Ignore).$propertyName
+                        $isComparable = ($value -is [bool]) -or ("$value" -match '^\d+$')
+                        if ($isComparable -and ($null -ne $valueAfter) -and ("$valueAfter" -eq "$valueBefore") -and (-not ($valueAfter -eq $value))) {
+                            Write-Warning "`"$propertyName`" is still `"$valueAfter`": Windows accepted the command without applying it. Tamper Protection blocks this setting. Turn it off in Windows Security (Virus and threat protection settings), then run this again."
+                            exit 0
+                        }
                         Write-Host "Successfully set `"$propertyName`" to `"$value`"."
                         exit 0
                     } catch {
                         if ( $_.FullyQualifiedErrorId -like '*0x800106ba*') {
                             Write-Warning "Cannot $($command.Name): Defender service (WinDefend) is not running. Try to enable it (revert) and re-run this?"
                             exit 0
-                        } elseif (($_ | Out-String) -like '*Cannot convert*') {
+                        } elseif (($_.Exception -is [System.Management.Automation.ParameterBindingException]) -or (($_ | Out-String) -like '*Cannot convert*')) {
                             Write-Host "Skipping. Argument `"$value`" for property `"$propertyName`" is not supported for `"$($command.Name)`"."
                             exit 0
                         } else {

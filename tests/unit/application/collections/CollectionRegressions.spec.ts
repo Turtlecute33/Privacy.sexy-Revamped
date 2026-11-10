@@ -19,12 +19,16 @@ import { formatAssertionMessage } from '@tests/shared/FormatAssertionMessage';
 
 const collections = loadCollections(new ProjectDetailsStub());
 
-function getScripts(os: OperatingSystem): readonly Script[] {
+function getCollection(os: OperatingSystem): CategoryCollection {
   const collection = collections.find((candidate) => candidate.os === os);
   if (!collection) {
     throw new Error(`Missing collection for ${OperatingSystem[os]}`);
   }
-  return collection.actions.flatMap((action) => action.getAllScriptsRecursively());
+  return collection;
+}
+
+function getScripts(os: OperatingSystem): readonly Script[] {
+  return getCollection(os).actions.flatMap((action) => action.getAllScriptsRecursively());
 }
 
 function getScript(os: OperatingSystem, name: string): Script {
@@ -370,6 +374,206 @@ describe('compiled collection regressions', () => {
         /Select-CorroboratedOmadmAccount\s+`\s+-OmadmAccountIds \$omadmIds\s+`\s+-RealEnrollmentIds @\(\$realEnrollmentIds\)/,
       );
     });
+
+    /*
+      The cases below come from running every Windows script on Windows 11 25H2 and Windows Server
+      2025 (see `tests/checks/windows-scripts`) and from replaying the compiled commands on scratch
+      files. Each one failed, did nothing, or damaged something before it was fixed.
+    */
+
+    it('never puts a backslash directly before a double quote in a PowerShell command', () => {
+      /*
+        Inside `-Command "..."` every double quote is written `"^""`, and PowerShell.exe reads its
+        command line by the C runtime rules, where a backslash before a quote escapes the quote.
+        `"C:\folder\"` would therefore end one character late and swallow what follows it. Build
+        such a path with `+ '\'` instead.
+      */
+      const offenders = getScripts(OperatingSystem.Windows).flatMap((script) => (
+        (['execute', 'revert'] as const)
+          .filter((kind) => (script.code[kind] ?? '').includes('\\"^""'))
+          .map((kind) => `${script.name} (${kind})`)
+      ));
+
+      expect(offenders).to.deep.equal([]);
+    });
+
+    it('starts over in the 64-bit command processor when a 32-bit program launched the script', () => {
+      // From a 32-bit process every `HKLM\SOFTWARE` write lands in `WOW6432Node`, without an error.
+      const { startCode } = getCollection(OperatingSystem.Windows).scriptMetadata;
+
+      expect(startCode).to.include('if defined PROCESSOR_ARCHITEW6432');
+      expect(startCode).to.include('"%SystemRoot%\\Sysnative\\cmd.exe" /d /c call "%%privacy_sexy_script_path%%"');
+    });
+
+    it('restores boot and system drivers with sc.exe, which Set-Service silently ignores', () => {
+      // `Set-Service -StartupType Boot` changes nothing in Windows PowerShell 5.1 and reports no
+      // error, so reverting left the driver disabled while printing "Reverted".
+      const script = getScript(OperatingSystem.Windows, 'Disable Secure Boot driver');
+
+      expect(script.code.revert).to.include("if (@('Boot', 'System') -contains $defaultStartupMode)");
+      expect(script.code.revert).to.include('sc.exe"^"" config');
+    });
+
+    it('leaves what is behind a junction alone when it clears a folder', () => {
+      // A junction in `%TEMP%` that pointed at a folder elsewhere had that folder emptied.
+      const script = getScript(OperatingSystem.Windows, 'Clear temporary user folder');
+
+      expect(script.code.execute).to.include('($_.Attributes -band 1024) -and $_.LinkType');
+      expect(script.code.execute).to.include(
+        '-not ($linkPaths | Where-Object { $foundPath.StartsWith($_, [StringComparison]::OrdinalIgnoreCase) })',
+      );
+    });
+
+    it('deletes files by their literal name', () => {
+      // `report[1].txt` was read as a pattern, matched nothing, and was reported as deleted.
+      const script = getScript(OperatingSystem.Windows, 'Clear temporary user folder');
+
+      expect(script.code.execute).to.include('Remove-Item -LiteralPath $path -Force -Recurse');
+      expect(script.code.execute).to.include('Test-Path -LiteralPath $path');
+    });
+
+    it('accepts a profile folder with an apostrophe in its name', () => {
+      // cmd expands `%TEMP%` into the PowerShell source, so `'C:\Users\D'Angelo\...'` ended early.
+      const clearing = getScript(OperatingSystem.Windows, 'Clear temporary user folder');
+      const elevated = getScript(OperatingSystem.Windows, 'Minimize DISM "Reset Base" update data');
+
+      expect(clearing.code.execute).to.include('$directoryGlob = "^""%TEMP%"^""');
+      expect(elevated.code.execute).to.include(
+        '-File \'$($scriptFile.FullName.Replace("^""\'"^"", "^""\'\'"^""))\'',
+      );
+    });
+
+    it('does not take ownership through junctions', () => {
+      // `Windows.old\Documents and Settings` points at the live `C:\Users`.
+      const script = getScript(OperatingSystem.Windows, 'Clear previous Windows installations');
+
+      expect(script.code.execute).to.include(' /r /skipsl /d $localizedYes');
+    });
+
+    it('edits the hosts file byte for byte and waits while it is locked', () => {
+      // Entries were lost on Windows 11 ("being used by another process"), and reverting put a
+      // byte order mark in front of the first line.
+      const script = getScript(OperatingSystem.Windows, 'Block Windows crash report hosts');
+
+      for (const code of [script.code.execute, script.code.revert ?? '']) {
+        expect(code).to.include('[System.Text.Encoding]::GetEncoding(28591)');
+        expect(code).to.include('Invoke-WithRetry {');
+        expect(code).to.not.include('[System.Text.Encoding]::UTF8');
+        expect(code).to.not.include('Add-Content');
+      }
+    });
+
+    it('keeps a system file that Windows put back instead of overwriting it with the backup', () => {
+      const scripts = getScripts(OperatingSystem.Windows)
+        .filter((script) => (script.code.revert ?? '').includes(':: Restore files matching pattern'));
+
+      expect(scripts.length).to.be.greaterThan(0);
+      for (const script of scripts) {
+        expect(script.code.revert, script.name).to.include(
+          'exists again: keeping it and leaving the backup in place.',
+        );
+      }
+    });
+
+    it('reads settings files that have comments', () => {
+      // The file `winget settings` creates has comments, and so do most VS Code settings.
+      for (const name of ['Disable WinGet telemetry', 'Disable Visual Studio Code telemetry']) {
+        const script = getScript(OperatingSystem.Windows, name);
+
+        for (const code of [script.code.execute, script.code.revert ?? '']) {
+          expect(code, name).to.include('$strictJson | ConvertFrom-Json');
+          expect(code, name).to.include('Copy-Item -LiteralPath $jsonFilePath -Destination $backupPath');
+        }
+      }
+    });
+
+    it('reports a Defender setting that Tamper Protection did not let through', () => {
+      const scripts = getScripts(OperatingSystem.Windows)
+        .filter((script) => script.code.execute.includes('Set-MpPreference'));
+
+      expect(scripts.length).to.be.greaterThan(0);
+      for (const script of scripts) {
+        expect(script.code.execute, script.name).to.include('Tamper Protection blocks this setting.');
+      }
+    });
+
+    it('names only known Windows releases in version constraints', () => {
+      /*
+        The generated check looks the release up in a table. A name missing from the table makes
+        the command throw when it runs, so a typo in the collection has to fail here instead.
+      */
+      const lookup = /@\{ ((?:'[^']+' = \d+;? ?)+)\}\['([^']+)'\]/g;
+      const lookups = getScripts(OperatingSystem.Windows).flatMap((script) => (
+        Array.from(`${script.code.execute}\n${script.code.revert ?? ''}`.matchAll(lookup))
+          .map((match) => ({ script: script.name, known: match[1], requested: match[2] }))
+      ));
+
+      expect(lookups.length).to.be.greaterThan(0);
+      expect(
+        lookups
+          .filter((entry) => !entry.known.includes(`'${entry.requested}' =`))
+          .map((entry) => `${entry.script}: ${entry.requested}`),
+      ).to.deep.equal([]);
+    });
+
+    it("gives deleteOnRevert no value other than 'true'", () => {
+      /*
+        Any text turns the option on, so `deleteOnRevert: '15'`, meant as `dataOnRevert: '15'`,
+        deleted the value on revert instead of restoring it.
+      */
+      const source = readFileSync(resolve('src/application/collections/windows.yaml'), 'utf8');
+      const offenders = source.split(/\r?\n/)
+        .map((line, index) => ({ line: line.trim(), number: index + 1 }))
+        .filter(({ line }) => line.startsWith('deleteOnRevert:'))
+        .filter(({ line }) => !/^deleteOnRevert: ('true'|'\{\{ with \$\w+ \}\}true\{\{ end \}\}')(\s+#.*)?$/.test(line))
+        .map(({ line, number }) => `line ${number}: ${line}`);
+
+      expect(offenders).to.deep.equal([]);
+    });
+
+    it('writes the policies that Windows documents', () => {
+      const expectations = [
+        // DeviceSetup.admx: 0 never searches Windows Update, 2 searches it "if needed".
+        {
+          script: 'Disable Windows Update driver search',
+          line: "'HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DriverSearching' /v 'SearchOrderConfig'",
+          data: "$data =  '0';",
+        },
+        // RemoteAssistance.admx: the policy value is `fAllowToGetHelp`. `AllowBasic` is WinRM's.
+        {
+          script: 'Disable Windows Remote Assistance feature',
+          line: "'HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows NT\\Terminal Services' /v 'fAllowToGetHelp'",
+          data: "$data =  '0';",
+        },
+        // The server reads `SMB1`; `SMBv1` is not a value it knows.
+        {
+          script: 'Disable insecure "SMBv1" protocol',
+          line: "'HKLM\\SYSTEM\\CurrentControlSet\\Services\\LanmanServer\\Parameters' /v 'SMB1'",
+          data: "$data =  '0';",
+        },
+        // Explorer reads `Start_IrisRecommendations`.
+        {
+          script: 'Disable Start menu suggestions',
+          line: "/v 'Start_IrisRecommendations'",
+          data: "$data =  '0';",
+        },
+        // Windows 11 refuses `TaskbarDa` and the `Dsh` policy value, but not the policy default.
+        {
+          script: 'Remove "Widgets" from taskbar',
+          line: "'HKLM\\SOFTWARE\\Microsoft\\PolicyManager\\default\\NewsAndInterests\\AllowNewsAndInterests' /v 'value'",
+          data: "$data =  '0';",
+        },
+      ];
+
+      for (const expectation of expectations) {
+        const write = getScript(OperatingSystem.Windows, expectation.script).code.execute
+          .split('\n')
+          .find((line) => line.includes(expectation.line));
+
+        expect(write, expectation.script).to.not.equal(undefined);
+        expect(write, expectation.script).to.include(expectation.data);
+      }
+    });
   });
 
   describe('macOS', () => {
@@ -523,7 +727,9 @@ describe('compiled collection regressions', () => {
     }
 
     it('does not recommend package or app removal', () => {
-      const removalCommands = ['Remove-AppxPackage', 'apt-get purge', 'pacman -Rcns'];
+      const removalCommands = [
+        'Remove-AppxPackage', 'Remove-WindowsCapability', 'apt-get purge', 'pacman -Rcns',
+      ];
       const offenders = [OperatingSystem.Windows, OperatingSystem.macOS, OperatingSystem.Linux]
         .flatMap((os) => getScripts(os))
         .filter((script) => script.level !== undefined)
@@ -536,6 +742,21 @@ describe('compiled collection regressions', () => {
         'A preset recommends package or app removal, which cannot restore app data or provenance:',
         ...offenders,
       ]));
+    });
+
+    it('keeps scripts that warn about breaking something out of the Standard preset', () => {
+      /*
+        "Standard" is the preset for everyone. Turning location off, for example, was in it and
+        stopped apps from listing Wi-Fi networks on Windows 11 24H2. A script whose name carries a
+        "(breaks ...)" warning belongs in "Strict" at most.
+      */
+      const offenders = [OperatingSystem.Windows, OperatingSystem.macOS, OperatingSystem.Linux]
+        .flatMap((os) => getScripts(os))
+        .filter((script) => script.level === RecommendationLevel.Standard)
+        .filter((script) => /\(breaks\b/i.test(script.name))
+        .map((script) => script.name);
+
+      expect(offenders).to.deep.equal([]);
     });
 
     it('does not recommend non-stateful Windows task mutation', () => {

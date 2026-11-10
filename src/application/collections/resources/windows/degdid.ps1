@@ -4571,8 +4571,11 @@ function Invoke-UnblockConfiguration {
   param([switch]$DryRun)
 
   # Validate that the managed region can be removed before touching either
-  # layer. The real operation removes firewall state first and hosts last so
-  # a partial failure leaves the independent hosts block in place.
+  # layer. The real operation removes firewall state first and hosts last.
+  # A firewall cleanup failure does not keep the hosts block: this is the
+  # revert, and with the Windows Firewall service stopped or disabled the
+  # firewall cmdlets fail, which left login.live.com and the other hosts
+  # blocked with no way to undo it. The failure is still reported (exit 3).
   try {
     $hostsPreflight = Invoke-HostsDocumentChange -Mode Unblock -DryRun
   } catch {
@@ -4586,21 +4589,16 @@ function Invoke-UnblockConfiguration {
   }
 
   $firewallResult = Remove-FirewallBlock -DryRun:$DryRun
-  if (-not $firewallResult.Success) {
-    return [pscustomobject]@{
-      Success = $false
-      ExitCode = 3
-      Message = 'Firewall cleanup failed; the hosts block was left unchanged.'
-      Hosts = $hostsPreflight
-      Firewall = $firewallResult
-    }
-  }
 
   if ($DryRun) {
     return [pscustomobject]@{
-      Success = $true
-      ExitCode = 0
-      Message = 'Would remove managed firewall state first, then the valid hosts region.'
+      Success = [bool]$firewallResult.Success
+      ExitCode = $(if ($firewallResult.Success) { 0 } else { 3 })
+      Message = $(if ($firewallResult.Success) {
+        'Would remove managed firewall state first, then the valid hosts region.'
+      } else {
+        'Firewall cleanup would fail; the valid hosts region would still be removed.'
+      })
       Hosts = $hostsPreflight
       Firewall = $firewallResult
     }
@@ -4617,8 +4615,22 @@ function Invoke-UnblockConfiguration {
     return [pscustomobject]@{
       Success = $false
       ExitCode = 4
-      Message = 'Firewall state was removed, but hosts cleanup did not complete: {0}' -f $_.Exception.Message
+      Message = $(if ($firewallResult.Success) {
+        'Firewall state was removed, but hosts cleanup did not complete: {0}' -f $_.Exception.Message
+      } else {
+        'Neither firewall nor hosts cleanup completed: {0}' -f $_.Exception.Message
+      })
       Hosts = $hostsPreflight
+      Firewall = $firewallResult
+    }
+  }
+
+  if (-not $firewallResult.Success) {
+    return [pscustomobject]@{
+      Success = $false
+      ExitCode = 3
+      Message = 'The hosts block was removed, but firewall cleanup failed. Start the Windows Firewall service and run this again to remove the firewall rules.'
+      Hosts = $hostsResult
       Firewall = $firewallResult
     }
   }
