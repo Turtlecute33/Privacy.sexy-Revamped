@@ -8,6 +8,119 @@ milestones; `git log` remains the complete history of changes.
 Release history up to and including `0.13.8`, the point this project forked, belongs to upstream and is
 kept there: <https://github.com/undergroundwires/privacy.sexy/blob/master/CHANGELOG.md>.
 
+## 0.18.1 (2026-11-10)
+
+A review and test of the Windows scripts. Every one of them was applied twice and reverted twice on
+real machines, Windows 11 25H2 and Windows Server 2025, while the registry keys it names, every
+service, every scheduled task and the hosts file were recorded before and after. The collection was
+also read line by line against Windows' own policy definitions and the vendors' documentation. The
+fixes below are what that turned up.
+
+Protecting your files and system:
+
+- Cleaning a folder no longer deletes what a junction or symbolic link inside it points to. A link in
+  the temporary folder that pointed at a folder elsewhere, as build tools leave them, had that folder
+  emptied by "Clear temporary user folder" and the other folder cleanups.
+- "Clear previous Windows installations" no longer takes ownership through the junctions that
+  `Windows.old` keeps to the live `C:\Users` and `C:\ProgramData`.
+- Reverting a script that renamed a Windows system file no longer overwrites the file when Windows
+  Update has put it back in the meantime. The older copy used to replace the current one.
+- The hosts file is edited byte for byte. Reverting a "Block ... hosts" script used to put a byte
+  order mark in front of the first line and replaced accented characters in your own comments. On
+  Windows 11 some entries were also dropped while Windows still had the file open; the scripts now
+  wait and retry.
+- OneDrive is not uninstalled while it backs up your Desktop, Documents or Pictures. Files that
+  OneDrive keeps only in the cloud would have stopped opening.
+
+Presets:
+
+- "Standard" no longer turns location off. Since Windows 11 24H2 that stops apps, and
+  `netsh wlan`, from listing Wi-Fi networks. "Disable app access to location", "Disable location"
+  and "Disable device sensors" (which breaks screen auto-rotation) are now in "Strict", with what
+  they break in their names. "Disable Application Compatibility Engine" and "Disable telemetry
+  collector and sender process" moved to "Strict" as well.
+- "Disable text and handwriting data collection" no longer locks online speech recognition, which
+  broke voice typing. The lock is its own "Strict" script, "Disable online speech recognition by
+  policy". If dictation stopped working after an earlier version, reverting that script restores it.
+- "Remove OneSync capability" is no longer part of "Strict": presets do not remove components.
+- Ten scripts that do nothing on current software are gone: seven for Edge and Chrome policies that
+  the browsers have removed, "Disable iFilters and protocol handlers", "Disable Edge sign-in prompt
+  on new tab page" and "Disable outdated non-administrator access to Defender threat history".
+  "Disable Edge Bing ads" stays, named for what it is: it only applies to school accounts.
+
+Scripts that did not work:
+
+- "Remove Widgets from taskbar": Windows 11 refuses the setting it used ("Access is denied"). It now
+  sets the default of the Allow widgets policy.
+- "Minimize DISM Reset Base update data" and "Disable Windows Defender boot logging" failed with
+  "Access is denied" on every machine tested. They now run as TrustedInstaller, which those keys
+  require. The second still needs Tamper Protection to be off.
+- Reverting "Remove Edge through official installer" never finished: the installer was started with
+  its arguments in an order it rejects. Edge is now reinstalled.
+- Reverting "Disable Secure Boot driver" printed "Reverted" and left the driver disabled.
+- "Clear credentials in Windows Credential Manager" deleted nothing on a Windows that is not in
+  English.
+- "Disable Windows Update driver search" wrote the value for "search if needed" instead of "never".
+  "Disable insecure SMBv1 protocol" wrote a value name the server does not read. "Disable Windows
+  Remote Assistance feature" wrote one policy under a wrong name. "Disable Start menu suggestions"
+  did the same for the Windows 11 setting.
+- "Disable Windows Tips" only wrote a policy that Home and Pro editions ignore. It now also turns
+  off the user's own setting.
+- The VS Code and WinGet scripts failed on a settings file with comments, which is what WinGet
+  creates and what most VS Code users have. They now read such files and keep a copy of the
+  original next to it, because a rewritten file cannot keep the comments.
+- Cleanup scripts pointed at folders that do not exist: Internet Explorer DOMStore, .NET usage logs,
+  the Java cache, and Outlook signatures, stationery and templates. "Clear all Firefox user
+  information and preferences" left Firefox unable to start.
+- Files with brackets in their names, such as `report[1].txt`, were reported as deleted and left in
+  place. Registry keys with a default value were not cleared.
+- Google's current updater, Microsoft's renamed compatibility task, the per-machine OneDrive update
+  task and the policy that hides the new Outlook toggle are now covered.
+
+Reverting:
+
+- Several reverts restored the wrong state: the passive connectivity poll period, the Automatic
+  Updates policies, driver updates in quality updates, the update pause flag, Defender's cloud
+  block level on Windows 10, and the folders under "This PC" on Windows 11 24H2 and later.
+- Reverting a shortcut removal no longer creates shortcuts to a program that is not installed.
+- Reverting a disabled Windows feature also enables the features it depends on, and no longer
+  reports a feature that is already enabled as a failure.
+- Reverting the Windows Global Device ID block removes the hosts entries even when the firewall
+  rules cannot be removed, for example with the Windows Firewall service disabled. It used to leave
+  Microsoft sign-in blocked.
+
+Everywhere:
+
+- A script started by a 32-bit program restarts in the 64-bit command processor. It used to write
+  machine-wide settings to the 32-bit part of the registry and report success.
+- A profile folder with an apostrophe in its name (`D'Angelo`) no longer breaks the folder cleanups
+  and every command that runs as TrustedInstaller.
+- The Defender scripts now say when Tamper Protection ignored a setting, instead of "Successfully
+  set".
+- Per-user services are handled for every signed-in user, not only when one user is signed in.
+- The update pause scripts write their start dates in the Gregorian calendar and in UTC on every
+  regional setting.
+- Generated scripts are about 6% smaller, and the longest command line is 800 characters below the
+  limit of the command processor instead of 15.
+
+Known limitations:
+
+- Reverting a disabled service, scheduled task or app permission restores the Windows default, not
+  the state from before the script ran.
+- While Tamper Protection is on, Windows refuses most of the opt-in "Disable Defender" scripts. They
+  report the refusal.
+- Windows 11 refuses changes to the default app for PDF files and web links, so "Remove Edge user
+  associations" reports a failure for those.
+- Reinstalling a removed Windows capability depends on Windows Update and can take a long time.
+- Some opt-in scripts that disable Windows Security components rename the files in `System32` only.
+  Current Windows 11 builds keep further copies in a versioned `SecurityHealth` folder.
+
+Repository:
+
+- `checks.windows-scripts` is a new on-demand workflow that runs every Windows script on GitHub's
+  Windows 11 and Windows Server 2025 runners and uploads what each one printed and changed. See
+  [docs/tests.md](docs/tests.md#windows-script-check).
+
 ## 0.18.0 (2026-11-10)
 
 A flatter, quieter interface, and a round of fixes to the Linux scripts. Every Linux script was run

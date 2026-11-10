@@ -51,9 +51,9 @@ choices are not sent anywhere.
 
 ## What you can change
 
-More than 1,300 tweaks across three systems, each with documentation and sources.
+About 1,300 tweaks across three systems, each with documentation and sources.
 
-**Windows 11 and Windows 10**: 930+ tweaks
+**Windows 11 and Windows 10**: 920+ tweaks
 
 - Turn off telemetry, diagnostic data, the advertising ID, and activity tracking
 - Disable Recall, Click to Do, Copilot in Edge, and generative AI in Paint; request removal of
