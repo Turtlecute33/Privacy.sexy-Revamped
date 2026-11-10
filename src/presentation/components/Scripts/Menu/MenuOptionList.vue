@@ -27,7 +27,7 @@
 
 <script lang="ts">
 import {
-  defineComponent, computed, shallowRef, ref, onMounted, onUnmounted, nextTick,
+  defineComponent, computed, shallowRef, ref, onMounted, onUnmounted,
   type CSSProperties,
 } from 'vue';
 
@@ -80,11 +80,22 @@ export default defineComponent({
       if (!container) {
         return;
       }
-      updateLens();
-      // Placed without motion first, so the lens does not fly in from the corner on load.
-      nextTick(() => requestAnimationFrame(() => {
-        isLensAnimated.value = true;
-      }));
+      /*
+        Measured in the first frame, not here. `onMounted` runs inside the task that mounts the
+        whole app, before the browser has laid out any of it, so reading geometry here forced a
+        layout of the entire page into that task: about 30 ms of it with the CPU throttled 4x, and
+        the top entry of Lighthouse's "Forced reflow" insight. A frame callback runs right before
+        the browser lays the page out anyway, so the same measurement costs nothing extra there,
+        and the lens is still in place in the first frame that is painted.
+        Placed without motion first, so the lens does not fly in from the corner on load: the
+        transition is switched on one frame after the lens has been positioned.
+      */
+      requestAnimationFrame(() => {
+        updateLens();
+        requestAnimationFrame(() => {
+          isLensAnimated.value = true;
+        });
+      });
       mutationObserver = new MutationObserver(() => updateLens());
       mutationObserver.observe(container, {
         subtree: true,

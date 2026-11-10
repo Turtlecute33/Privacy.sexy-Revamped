@@ -30,9 +30,16 @@ export default defineComponent({
       throttleInMs: 200,
     });
 
+    /*
+      Measured in the next frame rather than straight away. `onMounted` runs inside the task that
+      mounts the whole app, before the browser has laid any of it out, so reading `offsetWidth`
+      here forced a layout of the entire page into that task (about 30 ms with the CPU throttled
+      4x). A frame callback runs right before the browser lays the page out anyway, so the same
+      reading costs nothing extra there.
+    */
     onMounted(() => {
-      watch(() => containerElement.value, async () => {
-        updateSize();
+      watch(() => containerElement.value, () => {
+        requestAnimationFrame(() => updateSize());
       }, { immediate: true });
     });
 
