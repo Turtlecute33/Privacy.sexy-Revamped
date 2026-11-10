@@ -1,12 +1,27 @@
 # Changelog
 
-Every commit merged to `master` is built and deployed to <https://privacy.turtlecute.org> once the
+Every commit merged to `master` is built and deployed to <https://debloat.net> once the
 unit and integration tests pass. Releases are tagged (`v<version>`) and published on
 [GitHub Releases](https://github.com/Turtlecute33/Privacy.sexy-Revamped/releases) to mark tested
 milestones; `git log` remains the complete history of changes.
 
 Release history up to and including `0.13.8`, the point this project forked, belongs to upstream and is
 kept there: <https://github.com/undergroundwires/privacy.sexy/blob/master/CHANGELOG.md>.
+
+## 0.17.0 (2026-11-10)
+
+The site has moved to its own domain, debloat.net. Every old privacy.turtlecute.org address forwards to the
+same page on debloat.net, so bookmarks and shared links keep working.
+
+- The top bar, page titles, canonical links, link previews, structured data, sitemap, `robots.txt`,
+  `llms.txt` and the web app manifest now use debloat.net. "privacy.sexy Revamped" and
+  privacy.turtlecute.org stay listed as alternate names, so searches for either still find the site.
+- Downloaded scripts now start with the site's address (`https://debloat.net`) instead of the GitHub
+  repository URL.
+- The link preview image shows the new address; its URL revision changed so cached previews refresh.
+- If you installed the site as an app, reinstall it from the new address.
+- The external link check now lists links whose server refuses automated requests (401, 403, 406, 429,
+  501) as unverified instead of failing. Removed pages and dead hosts still fail it.
 
 ## 0.16.3 (2026-11-09)
 
