@@ -8,6 +8,60 @@ milestones; `git log` remains the complete history of changes.
 Release history up to and including `0.13.8`, the point this project forked, belongs to upstream and is
 kept there: <https://github.com/undergroundwires/privacy.sexy/blob/master/CHANGELOG.md>.
 
+## 0.18.0 (2026-11-10)
+
+A flatter, quieter interface, and a round of fixes to the Linux scripts. Every Linux script was run
+twice and reverted twice in a sandbox built from an Omarchy (Arch Linux) installation, with real `sudo`
+and `systemd`; the fixes below are what that turned up.
+
+Interface:
+
+- Panels are flat, with a single hairline edge instead of a glossy rim and large shadows. Only tooltips
+  and the dialog, which float over the page, cast a shadow. Buttons, checkboxes and the pickers lose
+  their gradients and glows, and the dark appearance is a dark grey instead of near black.
+- A script's documentation button and apply/revert switch appear when you point at the row or focus it,
+  so a long list reads as titles. The switch stays visible once the script is selected, and touch
+  screens always show both.
+- Text is one step larger: 15px body text, up from 14px.
+- The slogan is now "Debloat is sexy". It opens every generated script and leads the footer.
+
+Linux scripts:
+
+- Brave policies now apply on Arch Linux and to Brave Origin. The six "Configure Brave" scripts looked
+  for the `brave-browser` command, which the Arch packages name `brave`, so they reported that Brave was
+  not installed. The Brave cleanup scripts also clean Brave Origin's profile and cache folders.
+- "Remove orphaned Flatpak runtimes" cleans the system-wide installation as root and your own
+  installation as you. It used to run both as root and left files in your home folder that you could
+  no longer change.
+- GNOME settings are read back after they are set. Without a desktop session, for example over SSH,
+  `gsettings` reports success but saves nothing, and the scripts repeated that success.
+- Reverting a "Remove ... package" script reinstalls the package only if the script removed it. It used
+  to install the package on any system that lacked it, so reverting "Remove `pkgstats` package" installed
+  a usage statistics tool where there had never been one. If you removed a package with an earlier
+  version, the revert now prints the command to install it yourself.
+- Environment variables are written to `/etc/environment` as complete lines. The last one had no line
+  ending, so the next program to add a variable joined it to that line. Reverting now leaves the file
+  exactly as it was.
+- A script that ran to the end no longer exits with an error and "Failed to relaunch the script with
+  administrator privileges" when no key can be read at the closing prompt.
+- "Clear Snap application cache" and "Clear Firefox crash reports" delete folders too, not only files.
+  The second also covers `~/.config/mozilla/firefox`, where Firefox 147 and later keep new profiles.
+- "Clear clicked links history in Thunderbird" deletes `places.sqlite-wal`; it looked for
+  `places.sqlite.wal`. The Thunderbird cleanup scripts also cover `~/.config/thunderbird`.
+- "Disable connectivity checks" reports whether NetworkManager reloaded its configuration instead of
+  always saying it did.
+- Reverting "Remove Zorin OS census unique ID" no longer creates an ID on systems without Zorin OS
+  census.
+
+Repository:
+
+- The repository is now `Turtlecute33/Debloat.net`; GitHub redirects the old address. The package is
+  named `debloat.net`, so generated scripts open with "debloat.net: ..." instead of "privacy.sexy: ...".
+  The scripts keep their `privacy.sexy` state names, so reverting still works on machines where earlier
+  scripts ran.
+- Each push runs one Ubuntu pipeline (lint, tests, build and E2E). Link checks and the macOS, Windows
+  and Docker runs moved to a weekly schedule.
+
 ## 0.17.1 (2026-11-10)
 
 The page does less work while it loads. With the CPU slowed down four times, which roughly matches what
