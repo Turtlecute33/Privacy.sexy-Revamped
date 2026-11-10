@@ -145,9 +145,7 @@ $size: 20px;
 
   &.is-checked &__box {
     background: var(--accent);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.28),
-      0 2px 6px -1px var(--focus-ring);
+    box-shadow: none;
   }
 
   &.is-indeterminate &__box {

@@ -126,8 +126,6 @@ export default defineComponent({
 <style scoped lang="scss">
 @use "@/presentation/assets/styles/main" as *;
 
-$lens-spring: cubic-bezier(0.34, 1.36, 0.5, 1);
-
 .list {
   display: flex;
   align-items: center;
@@ -155,7 +153,6 @@ $lens-spring: cubic-bezier(0.34, 1.36, 0.5, 1);
   padding: 3px;
   border-radius: 999px;
   background: var(--fill-track);
-  box-shadow: inset 0 1px 2px var(--hairline);
 
   :deep(.flat-button) {
     position: relative;
@@ -193,8 +190,8 @@ $lens-spring: cubic-bezier(0.34, 1.36, 0.5, 1);
 
   &--animated {
     transition:
-      transform 420ms $lens-spring,
-      width 420ms $lens-spring,
+      transform 260ms $motion-ease-out,
+      width 260ms $motion-ease-out,
       opacity $motion-duration-standard $motion-ease-standard;
   }
 }

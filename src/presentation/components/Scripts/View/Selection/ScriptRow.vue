@@ -21,9 +21,9 @@
       :docs="script.docs"
     />
     <!--
-      Shown on every reversible script, selected or not, so the choice between applying and
-      reverting is visible up front. Flipping it on an unselected script selects that script
-      in the reverted state.
+      Offered on every reversible script, selected or not: always visible once the script is
+      selected, and on hover or focus before that (see the styles). Flipping it on an unselected
+      script selects that script in the reverted state.
     -->
     <div
       v-if="script.isReversible"
@@ -112,6 +112,12 @@ export default defineComponent({
   align-items: center;
   gap: 4px;
   min-height: 46px;
+  /*
+    Rows are list items, and the base styles space list items in prose with a bottom margin. Here
+    that margin sat outside the row's own box, so the hover and selection fills stopped short of
+    the separator and left a strip of the card showing under every row.
+  */
+  margin: 0;
   padding: 4px 12px 4px 14px;
   transition: background-color $motion-duration-fast $motion-ease-standard;
 
@@ -158,22 +164,26 @@ export default defineComponent({
     transition: color $motion-duration-fast $motion-ease-standard;
   }
 
-  &__docs {
-    flex: 0 0 auto;
-  }
-
   /*
-    Every reversible script shows its apply/revert switch, but quietly until the row is in play
-    (hovered, focused or selected), so a long list reads as titles first and controls second.
+    The documentation button and the apply/revert switch stay out of sight until the row is in
+    play, so a long list reads as titles only: both appear on hover and focus, and the switch also
+    stays once the script is selected, since applying or reverting only matters for a chosen
+    script. Touch screens have no hover, so they always show both.
   */
+  &__docs,
   &__revert {
     flex: 0 0 auto;
-    margin-left: auto;
-    padding-left: 8px;
-    opacity: 0.55;
+    opacity: 0;
     transition: opacity $motion-duration-fast $motion-ease-standard;
   }
 
+  &__revert {
+    margin-left: auto;
+    padding-left: 8px;
+  }
+
+  &:hover &__docs,
+  &:focus-within &__docs,
   &:hover &__revert,
   &:focus-within &__revert,
   &.is-selected &__revert {
@@ -182,6 +192,7 @@ export default defineComponent({
 }
 
 @media (hover: none) {
+  .row__docs,
   .row__revert {
     opacity: 1;
   }

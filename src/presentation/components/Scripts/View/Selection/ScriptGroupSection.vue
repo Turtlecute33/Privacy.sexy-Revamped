@@ -204,6 +204,28 @@ export default defineComponent({
     overflow-wrap: anywhere;
   }
 
+  /* Revealed with the header, as in each row (see ScriptRow.vue). */
+  &__docs,
+  &__revert {
+    opacity: 0;
+    transition: opacity $motion-duration-fast $motion-ease-standard;
+  }
+
+  &__header:hover &__docs,
+  &__header:focus-within &__docs,
+  &__header:hover &__revert,
+  &__header:focus-within &__revert,
+  &__revert:has(input:checked) {
+    opacity: 1;
+  }
+
+  @media (hover: none) {
+    &__docs,
+    &__revert {
+      opacity: 1;
+    }
+  }
+
   &__docs {
     flex: 0 0 auto;
   }

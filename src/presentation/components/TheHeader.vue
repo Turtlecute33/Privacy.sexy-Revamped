@@ -84,24 +84,15 @@ export default defineComponent({
   gap: 11px;
 }
 
-/*
-  The mark sits on a small glossy tile, the way an app icon does: an accent gradient, a lit top
-  edge and a soft drop, so it reads as a solid object floating on the glass bar.
-*/
+/* The mark on a flat accent tile: one colour, no gloss, no glow. */
 .topbar__logo {
   display: grid;
   place-items: center;
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 55%),
-    linear-gradient(140deg, #6f97ff 0%, #2f62e0 52%, #14a58a 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.45),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.12),
-    0 4px 12px -2px rgba(47, 98, 224, 0.45);
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
   font-size: 21px;
 }
 
@@ -109,8 +100,8 @@ export default defineComponent({
   margin: 0;
   color: var(--text);
   font-family: $font-family-display;
-  font-size: 18px;
-  font-weight: 650;
+  font-size: 19px;
+  font-weight: 600;
   line-height: 1;
   letter-spacing: -0.025em;
   white-space: nowrap;
@@ -123,7 +114,7 @@ export default defineComponent({
   padding: 3px 6px;
   border-radius: 999px;
   color: var(--text-tertiary);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   line-height: 1;

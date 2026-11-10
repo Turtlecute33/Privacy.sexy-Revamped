@@ -172,8 +172,8 @@ function isTypingTarget(target: EventTarget | null): boolean {
 }
 
 /*
-  A recessed well in the bar rather than another pane of glass: a neutral fill and an inner
-  shadow at rest, lifting into a bright lens with an accent halo once focused.
+  A flat well in the bar rather than another pane of glass: a neutral fill at rest, a bright lens
+  with an accent halo once focused.
 */
 .search {
   position: relative;
@@ -183,7 +183,6 @@ function isTypingTarget(target: EventTarget | null): boolean {
   height: 40px;
   border-radius: 999px;
   background: var(--fill-track);
-  box-shadow: inset 0 1px 2px var(--hairline);
   transition:
     background-color $motion-duration-standard $motion-ease-standard,
     box-shadow $motion-duration-standard $motion-ease-standard;
@@ -246,7 +245,7 @@ function isTypingTarget(target: EventTarget | null): boolean {
   position: absolute;
   right: 12px;
   min-width: 22px;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 16px;
   pointer-events: none;
 }

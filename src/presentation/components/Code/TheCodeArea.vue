@@ -316,20 +316,9 @@ function getDefaultCode(language: ScriptLanguage, project: ProjectDetails): stri
       Keep the slogan without a period for impact and continuity.
       Slogans should be punchy and memorable, not punctuated like full sentences.
     */
-    .appendCommentLine(' 🔐 Enforce privacy & security best-practices on Windows, macOS and Linux.')
     .appendLine()
-    .appendCommentLine('-- 🤔 How to use')
-    .appendCommentLine(' 📙 Start by exploring different categories and choosing different tweaks.')
-    .appendCommentLine(' 📙 On top left, you can apply predefined selections for privacy level you\'d like.')
-    .appendCommentLine(' 📙 After you choose any tweak, you can download or copy to execute your script.')
-    .appendCommentLine(' 📙 Come back regularly to apply latest version for stronger privacy and security.')
-    .appendLine()
-    .appendCommentLine(`-- 🧐 Why ${project.name}`)
-    .appendCommentLine(' ✔️ Rich tweak pool to harden security & privacy of the OS and other software on it.')
-    .appendCommentLine(' ✔️ No need to run any compiled software on your system, just run the generated scripts.')
-    .appendCommentLine(' ✔️ Have full visibility into what the tweaks do as you enable them.')
-    .appendCommentLine(' ✔️ Open-source and free (both free as in beer and free as in speech).')
-    .appendCommentLine(' ✔️ Committed to your safety with strong security measures.')
+    .appendCommentLine('Choose tweaks on the left and the script builds here as you go.')
+    .appendCommentLine('Read every line, then copy or download it to run.')
     .toString();
 }
 

@@ -344,8 +344,7 @@ function dismissOnEscape(
   @include glass-surface($radius: 16px, $tint: var(--glass-tint-strong), $frosted: true);
   transition: box-shadow 160ms $motion-ease-standard;
 
-  &::before,
-  &::after {
+  &::before {
     opacity: 0;
     transition: opacity 160ms $motion-ease-standard;
   }
@@ -354,8 +353,7 @@ function dismissOnEscape(
     box-shadow: none;
   }
 
-  .tooltip__overlay--visible &::before,
-  .tooltip__overlay--visible &::after {
+  .tooltip__overlay--visible &::before {
     opacity: 1;
   }
 }

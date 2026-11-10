@@ -64,8 +64,7 @@ export default defineComponent({
 }
 
 /*
-  Capsules: a neutral glass chip for secondary actions, and a filled accent capsule with a lit top
-  edge for the primary one.
+  Flat capsules: a neutral fill for secondary actions, a solid accent fill for the primary one.
 */
 .button {
   @include reset-button;
@@ -79,7 +78,6 @@ export default defineComponent({
   padding: 0 15px;
   border-radius: 999px;
   background: var(--fill-track);
-  box-shadow: inset 0 0 0 1px var(--hairline);
   color: var(--text);
   white-space: nowrap;
   transition:
@@ -88,18 +86,17 @@ export default defineComponent({
     transform $motion-duration-standard $motion-ease-out;
 
   .button__icon {
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .button__text {
     display: block;
     font-size: $font-size-absolute-small;
-    font-weight: 600;
+    font-weight: 500;
   }
 
   @include hover-or-touch {
     background: var(--fill-hover);
-    box-shadow: inset 0 0 0 1px var(--control-edge);
   }
 
   &:active {
@@ -109,21 +106,11 @@ export default defineComponent({
   @include focus-ring;
 
   &--primary {
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 60%),
-      var(--accent);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.3),
-      0 6px 16px -6px var(--accent);
+    background: var(--accent);
     color: var(--on-accent);
 
     @include hover-or-touch {
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 60%),
-        var(--accent-hover);
-      box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.35),
-        0 8px 20px -6px var(--accent);
+      background: var(--accent-hover);
     }
   }
 }

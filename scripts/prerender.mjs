@@ -58,8 +58,7 @@ const STARTUP_FAILURE_NOTICE_ID = 'startup-failure';
  * A sentence from the generated default script. It is matched against the tag-stripped text
  * rather than the raw HTML, so it does not depend on how the snapshot marks the script up.
  */
-const PRERENDERED_SCRIPT_PHRASE = 'Start by exploring different categories '
-  + 'and choosing different tweaks';
+const PRERENDERED_SCRIPT_PHRASE = 'Choose tweaks on the left and the script builds here';
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',

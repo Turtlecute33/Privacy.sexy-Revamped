@@ -10,8 +10,6 @@
     <p class="footer__lede">
       <strong>{{ slogan }}.</strong>
       Independently maintained fork of privacy.sexy, not affiliated with the original.
-      Debloat Windows 11, disable telemetry, and harden macOS and Linux. Every command is
-      shown before you run it.
     </p>
     <!--
       The static catalog and comparison pages (scripts/generate-catalog-pages) are reachable from
@@ -25,21 +23,14 @@
         :href="page.href"
       >{{ page.label }}</a>
       <span class="footer__divider" aria-hidden="true" />
-      <a :href="feedbackUrl" target="_blank" rel="noopener noreferrer">
-        <AppIcon class="icon" icon="face-smile" />
-        <span>Feedback</span>
-      </a>
-      <a :href="repositoryUrl" target="_blank" rel="noopener noreferrer">
-        <AppIcon class="icon" icon="github" />
-        <span>Source code</span>
-      </a>
+      <a :href="feedbackUrl" target="_blank" rel="noopener noreferrer">Feedback</a>
+      <a :href="repositoryUrl" target="_blank" rel="noopener noreferrer">Source code</a>
     </nav>
   </footer>
 </template>
 
 <script lang="ts">
 import { defineComponent, computed } from 'vue';
-import AppIcon from '@/presentation/components/Shared/Icon/AppIcon.vue';
 import { injectKey } from '@/presentation/injectionSymbols';
 
 /* Paths are relative to the deploy base, matching what `generate-catalog-pages` writes. */
@@ -51,9 +42,6 @@ const CATALOG_PAGES: readonly { readonly path: string, readonly label: string }[
 ];
 
 export default defineComponent({
-  components: {
-    AppIcon,
-  },
   setup() {
     const { projectDetails } = injectKey((keys) => keys.useApplication);
 
@@ -80,10 +68,6 @@ export default defineComponent({
 
 <style scoped lang="scss">
 @use "@/presentation/assets/styles/main" as *;
-
-.icon {
-  font-size: 12px;
-}
 
 /*
   A single quiet line under the workbench, on the page itself rather than on glass: it is
@@ -133,7 +117,7 @@ export default defineComponent({
         color $motion-duration-fast $motion-ease-standard,
         background-color $motion-duration-fast $motion-ease-standard;
 
-      // The leading icon already marks these as outbound; the global external-link glyph doubles it.
+      // A footer of plain links: the global external-link glyph would only add noise.
       &::after {
         display: none;
       }

@@ -7,56 +7,47 @@
     <p>
       {{ description }}
     </p>
-    <div class="recommendation">
-      <AppIcon icon="lightbulb" class="icon" />
-      <span>{{ recommendation }}</span>
-    </div>
+    <p class="recommendation">
+      {{ recommendation }}
+    </p>
     <div
       v-if="includes?.length > 0"
       class="includes"
     >
-      <AppIcon icon="square-check" class="icon" />
-      <span>
-        Includes:
-        <ul>
-          <li
-            v-for="inclusionItem in includes"
-            :key="inclusionItem"
-          >
-            {{ inclusionItem }}
-          </li>
-        </ul>
-      </span>
+      <strong>Includes</strong>
+      <ul>
+        <li
+          v-for="inclusionItem in includes"
+          :key="inclusionItem"
+        >
+          {{ inclusionItem }}
+        </li>
+      </ul>
     </div>
     <div
       v-if="considerations?.length > 0"
       class="considerations"
     >
-      <AppIcon icon="triangle-exclamation" class="icon" />
-      <span>
-        <strong>Considerations:</strong>
-        <ul>
-          <li
-            v-for="considerationItem in considerations"
-            :key="considerationItem"
-          >
-            {{ considerationItem }}
-          </li>
-        </ul>
-      </span>
+      <strong>Considerations</strong>
+      <ul>
+        <li
+          v-for="considerationItem in considerations"
+          :key="considerationItem"
+        >
+          {{ considerationItem }}
+        </li>
+      </ul>
     </div>
   </section>
 </template>
 
 <script lang="ts">
 import { type PropType, defineComponent } from 'vue';
-import AppIcon from '@/presentation/components/Shared/Icon/AppIcon.vue';
 import CircleRating from './Rating/CircleRating.vue';
 
 export default defineComponent({
   components: {
     CircleRating,
-    AppIcon,
   },
   props: {
     privacyRating: {
@@ -86,43 +77,21 @@ export default defineComponent({
 <style scoped lang="scss">
 @use "@/presentation/assets/styles/main" as *;
 
-@mixin horizontal-stack {
-  display: flex;
-  gap: $spacing-relative-small;
-}
-
-@mixin apply-icon-color($color) {
-  .icon {
-    color: $color;
-  }
-}
-
 /*
-  `div`, not `p`: these hold an icon `div` and lists, which a `p` cannot contain, so the HTML parser
-  split them apart in the prerendered snapshot. The margin keeps the spacing `p` elements get globally.
+  Plain text, no icons: a lead paragraph, then labelled lists. `div`, not `p`, for the lists'
+  containers, which a `p` cannot hold; the margin keeps the spacing `p` elements get globally.
 */
-.recommendation, .includes, .considerations {
+.includes, .considerations {
   &:not(:last-child) {
     margin-bottom: $spacing-relative-medium;
+  }
+
+  ul {
+    margin-top: $spacing-relative-x-small;
   }
 }
 
 .privacy-rating {
   text-align: center;
-}
-
-.includes {
-  @include horizontal-stack;
-  @include apply-icon-color($color-success);
-}
-.considerations {
-  @include horizontal-stack;
-  @include apply-icon-color($color-danger);
-}
-.recommendation {
-  align-items: center;
-
-  @include horizontal-stack;
-  @include apply-icon-color($color-caution);
 }
 </style>

@@ -31,7 +31,15 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
+/* Quiet until pointed at, like the documentation buttons in the script list. */
 .info-container {
   vertical-align: text-top;
+  color: var(--text-tertiary);
+  transition: color 120ms ease;
+
+  &:hover,
+  &:focus-within {
+    color: var(--accent-text);
+  }
 }
 </style>

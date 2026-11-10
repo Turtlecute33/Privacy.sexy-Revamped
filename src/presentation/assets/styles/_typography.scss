@@ -10,17 +10,17 @@ $font-family-monospace  : 'Source Code Pro', ui-monospace, 'SF Mono', 'Cascadia 
 
   We prefix each variable with its type (absolute or relative) for clear identification and context.
 
-  The scale is tuned for a desktop workbench: 14px body text, as native macOS and Windows apps use,
-  keeps a long list of settings scannable without feeling cramped.
+  The scale is tuned for a desktop workbench: 15px body text, a step above the 14px native macOS
+  and Windows apps use, keeps a long list of settings scannable and easy to read.
 */
 // Absolute sizes use the <absolute-size> CSS data type, representing specific, fixed sizes unaffected by the parent element's size.
 // See: https://archive.ph/2024.02.02-005228/https://developer.mozilla.org/en-US/docs/Web/CSS/absolute-size.
-$font-size-absolute-x-small   : 12px;
-$font-size-absolute-small     : 13px;
-$font-size-absolute-normal    : 14px;
-$font-size-absolute-large     : 16px;
-$font-size-absolute-x-large   : 20px;
-$font-size-absolute-xx-large  : 28px;
+$font-size-absolute-x-small   : 13px;
+$font-size-absolute-small     : 14px;
+$font-size-absolute-normal    : 15px;
+$font-size-absolute-large     : 17px;
+$font-size-absolute-x-large   : 22px;
+$font-size-absolute-xx-large  : 30px;
 // Relative sizes employ the <relative-size> CSS data type, allowing font size adjustments based on the parent element's size.
 // See: https://archive.ph/2024.02.02-010054/https://developer.mozilla.org/en-US/docs/Web/CSS/relative-size.
 $font-size-relative-smallest  : 80%;

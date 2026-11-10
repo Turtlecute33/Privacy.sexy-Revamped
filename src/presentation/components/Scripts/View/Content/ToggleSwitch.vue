@@ -83,11 +83,11 @@ export default defineComponent({
 @use 'sass:math';
 @use "@/presentation/assets/styles/main" as *;
 
-$font-size                    : 11px;
+$font-size                    : 12px;
 
 /*
-  The switch appears once per reversible script, so its resting state is a quiet recessed capsule
-  with a glass knob. Only the active "revert" state takes colour (amber, not the accent), since it
+  The switch appears once per reversible script, so its resting state is a quiet flat capsule
+  with a plain knob. Only the active "revert" state takes colour (amber, not the accent), since it
   is the one state worth noticing in a long list: it undoes a change rather than making one.
 */
 $padding-horizontal           : 3px;
@@ -146,7 +146,6 @@ $gap-between-circle-and-text  : 2px;
     height: $size-height;
     border-radius: $size-height;
     background-color: var(--fill-track);
-    box-shadow: inset 0 1px 2px var(--hairline);
     transition:
       background-color $motion-duration-standard $motion-ease-standard,
       box-shadow $motion-duration-standard $motion-ease-standard;
@@ -166,7 +165,7 @@ $gap-between-circle-and-text  : 2px;
       box-shadow: var(--lens-shadow);
       transition:
         background-color $motion-duration-fast $motion-ease-standard,
-        transform $motion-duration-emphasized cubic-bezier(0.34, 1.36, 0.5, 1);
+        transform $motion-duration-standard $motion-ease-out;
     }
   }
 
@@ -177,7 +176,7 @@ $gap-between-circle-and-text  : 2px;
 
     .circle {
       background-color: var(--warn);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 1px 3px rgba(0, 0, 0, 0.2);
+      box-shadow: none;
       transform: translateX($size-width - $size-circle - (2 * $padding-horizontal));
     }
   }

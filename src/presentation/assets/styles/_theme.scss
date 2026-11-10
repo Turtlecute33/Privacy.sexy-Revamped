@@ -1,5 +1,5 @@
 /*
-  Liquid glass theme tokens.
+  Flat glass theme tokens.
 
   Emitted once, from App.vue's global style block, as CSS custom properties rather than Sass
   variables: the light and dark appearances share every rule and differ only in these values, so
@@ -7,10 +7,11 @@
   without a second compiled copy of its rules.
 
   Naming:
-    --canvas-*   the page behind everything, which shows through the glass. Kept soft: small
-                 text sits on it (the footer directly, the panels through a light tint), so the
-                 colour stays at the edges and never drops body text below WCAG AA contrast.
-    --glass-*    translucent surfaces (panels, bars, popovers) and their rims.
+    --canvas-*   the page behind everything, which shows through the glass: a ground and two
+                 soft washes. Kept quiet: small text sits on it (the footer directly, the panels
+                 through a light tint), so it never drops body text below WCAG AA contrast.
+    --glass-*    translucent surfaces (panels, bars, popovers) and the hairline around them.
+                 Flat on purpose: no specular rim and no drop shadow, only popovers float.
     --text-*     foreground, from primary to tertiary emphasis.
     --fill-*     neutral tints for hover, tracks and grouped rows, drawn on top of glass.
     --accent-*   the single interactive colour: selection, primary action, focus.
@@ -20,11 +21,9 @@
 @mixin light-theme {
   color-scheme: light;
 
-  --canvas: #e8ecf5;
-  --canvas-blob-1: rgba(78, 128, 255, 0.4);
-  --canvas-blob-2: rgba(30, 205, 185, 0.3);
-  --canvas-blob-3: rgba(155, 115, 255, 0.32);
-  --canvas-blob-4: rgba(255, 160, 115, 0.26);
+  --canvas: #eceff5;
+  --canvas-blob-1: rgba(78, 128, 255, 0.22);
+  --canvas-blob-2: rgba(30, 205, 185, 0.14);
 
   --text: #0b1220;
   --text-secondary: #3d475a;
@@ -33,15 +32,9 @@
   --glass-tint: rgba(255, 255, 255, 0.5);
   --glass-tint-strong: rgba(250, 251, 254, 0.84);
   --glass-tint-subtle: rgba(255, 255, 255, 0.36);
-  --glass-filter: blur(36px) saturate(200%);
-  --glass-edge: rgba(255, 255, 255, 0.7);
-  --glass-edge-outer: rgba(15, 23, 42, 0.07);
-  --glass-specular: rgba(255, 255, 255, 1);
-  --glass-specular-low: rgba(255, 255, 255, 0.55);
-  --glass-shadow:
-    0 1px 1px rgba(15, 23, 42, 0.03),
-    0 10px 30px -10px rgba(15, 23, 42, 0.12),
-    0 30px 70px -30px rgba(40, 60, 130, 0.22);
+  --glass-filter: blur(32px) saturate(160%);
+  --glass-edge: rgba(15, 23, 42, 0.09);
+  --float-shadow: 0 16px 40px -16px rgba(15, 23, 42, 0.28);
 
   --hairline: rgba(15, 23, 42, 0.075);
   --fill-hover: rgba(15, 23, 42, 0.045);
@@ -50,10 +43,7 @@
   --fill-selected: rgba(47, 98, 224, 0.075);
 
   --lens: rgba(255, 255, 255, 0.96);
-  --lens-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.1),
-    0 6px 16px -6px rgba(15, 23, 42, 0.22),
-    inset 0 0 0 0.5px rgba(15, 23, 42, 0.06);
+  --lens-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.1);
 
   --accent: #2f62e0;
   --accent-hover: #2654c8;
@@ -76,27 +66,20 @@
 @mixin dark-theme {
   color-scheme: dark;
 
-  --canvas: #060911;
-  --canvas-blob-1: rgba(59, 108, 255, 0.4);
-  --canvas-blob-2: rgba(20, 184, 166, 0.22);
-  --canvas-blob-3: rgba(139, 92, 246, 0.32);
-  --canvas-blob-4: rgba(236, 72, 153, 0.14);
+  --canvas: #121419;
+  --canvas-blob-1: rgba(59, 108, 255, 0.2);
+  --canvas-blob-2: rgba(20, 184, 166, 0.09);
 
   --text: #eef2fa;
   --text-secondary: rgba(226, 232, 245, 0.74);
   --text-tertiary: rgba(226, 232, 245, 0.56);
 
-  --glass-tint: rgba(20, 26, 44, 0.56);
-  --glass-tint-strong: rgba(24, 30, 48, 0.86);
-  --glass-tint-subtle: rgba(24, 30, 48, 0.34);
-  --glass-filter: blur(32px) saturate(170%);
-  --glass-edge: rgba(255, 255, 255, 0.075);
-  --glass-edge-outer: rgba(0, 0, 0, 0.45);
-  --glass-specular: rgba(255, 255, 255, 0.3);
-  --glass-specular-low: rgba(255, 255, 255, 0.1);
-  --glass-shadow:
-    0 1px 1px rgba(0, 0, 0, 0.25),
-    0 22px 60px -18px rgba(0, 0, 0, 0.65);
+  --glass-tint: rgba(30, 33, 42, 0.62);
+  --glass-tint-strong: rgba(32, 35, 44, 0.94);
+  --glass-tint-subtle: rgba(32, 35, 44, 0.4);
+  --glass-filter: blur(28px) saturate(140%);
+  --glass-edge: rgba(255, 255, 255, 0.08);
+  --float-shadow: 0 18px 44px -16px rgba(0, 0, 0, 0.6);
 
   --hairline: rgba(255, 255, 255, 0.07);
   --fill-hover: rgba(255, 255, 255, 0.055);
@@ -104,11 +87,8 @@
   --fill-grouped: rgba(255, 255, 255, 0.035);
   --fill-selected: rgba(107, 147, 255, 0.1);
 
-  --lens: rgba(255, 255, 255, 0.15);
-  --lens-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.12),
-    0 6px 18px -6px rgba(0, 0, 0, 0.55);
+  --lens: rgba(255, 255, 255, 0.12);
+  --lens-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 
   --accent: #3d6ff5;
   --accent-hover: #5682ff;

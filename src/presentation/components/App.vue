@@ -87,10 +87,8 @@ function getOptionalDevToolkitComponent(): Component | undefined {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(52vw 58vh at 6% -4%, var(--canvas-blob-1), transparent 70%),
-    radial-gradient(44vw 52vh at 104% 12%, var(--canvas-blob-2), transparent 70%),
-    radial-gradient(56vw 60vh at 72% 108%, var(--canvas-blob-3), transparent 70%),
-    radial-gradient(40vw 46vh at 12% 104%, var(--canvas-blob-4), transparent 70%),
+    radial-gradient(60vw 64vh at 4% -6%, var(--canvas-blob-1), transparent 70%),
+    radial-gradient(56vw 60vh at 100% 104%, var(--canvas-blob-2), transparent 70%),
     var(--canvas);
 }
 
