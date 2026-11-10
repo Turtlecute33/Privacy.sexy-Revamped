@@ -15,7 +15,7 @@ export const SITE_ORIGIN = 'https://debloat.net';
 /* The site's own domain; see src/presentation/components/Shared/SiteIdentity.ts for why. */
 export const SITE_NAME = 'debloat.net';
 /* The `?v=` revision changes with the image so cached link previews fetch it again. */
-const OG_IMAGE_URL = `${SITE_ORIGIN}/og-image.png?v=4`;
+const OG_IMAGE_URL = `${SITE_ORIGIN}/og-image.png?v=5`;
 
 /*
  * Comments live out here rather than inside the string, because the string is inlined into every

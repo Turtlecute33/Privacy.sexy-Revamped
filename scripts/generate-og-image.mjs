@@ -9,9 +9,9 @@
  * previews in Telegram, X, LinkedIn and Facebook are cached by image URL for days to weeks, so the
  * old image keeps showing until the URL changes.
  *
- * Deliberately minimal: one headline, the logo and two short lines, in the app's light appearance
- * (src/presentation/assets/styles/_theme.scss). Text is sized to stay legible at half size, which
- * is how most feeds display a 1200px card.
+ * Deliberately minimal: one headline, the logo on its flat accent tile and two short lines, in the
+ * app's light appearance (src/presentation/assets/styles/_theme.scss). Text is sized to stay
+ * legible at half size, which is how most feeds display a 1200px card.
  *
  * The identity on the card is this site's domain, not "privacy.sexy". That name is the upstream
  * project's own domain, so a preview that leads with it teaches people to type the original's
@@ -42,13 +42,10 @@ function renderHtml(logoSvg) {
     color: #0b1220;
     background: radial-gradient(700px 520px at 108% 50%, rgba(78, 128, 255, 0.22), transparent 70%), #f6f7fb;
   }
-  .brand { display: flex; align-items: center; gap: 16px; font-size: 30px; font-weight: 650; letter-spacing: -0.02em; }
+  .brand { display: flex; align-items: center; gap: 16px; font-size: 30px; font-weight: 600; letter-spacing: -0.02em; }
   .logo {
     display: grid; place-items: center; width: 52px; height: 52px; border-radius: 15px; color: #fff;
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 55%),
-      linear-gradient(140deg, #6f97ff 0%, #2f62e0 52%, #14a58a 100%);
-    box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.45), 0 12px 28px -8px rgba(47, 98, 224, 0.5);
+    background: #2f62e0;
   }
   h1 {
     margin-top: 96px; font-size: 80px; font-weight: 750; line-height: 1.04; letter-spacing: -0.045em;
