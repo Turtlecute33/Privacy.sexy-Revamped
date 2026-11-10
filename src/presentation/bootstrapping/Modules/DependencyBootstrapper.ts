@@ -1,6 +1,7 @@
 import { inject, type App } from 'vue';
 import { buildContext } from '@/application/Context/ApplicationContextFactory';
 import { provideDependencies } from '@/presentation/bootstrapping/DependencyProvider';
+import type { IApplicationContext } from '@/application/Context/IApplicationContext';
 import type { CategoryCollection } from '@/domain/Collection/CategoryCollection';
 import type { Script } from '@/domain/Executables/Script/Script';
 import type { Bootstrapper } from '../Bootstrapper';
@@ -27,7 +28,7 @@ export class DependencyBootstrapper implements Bootstrapper {
       provide: app.provide,
       inject: this.injector,
     });
-    warmUpScriptCode(context.app.collections, context.state.collection);
+    warmUpScriptCodeOfShownCollections(context);
   }
 }
 
@@ -37,24 +38,28 @@ export class DependencyBootstrapper implements Bootstrapper {
   once the app is up gives the cache a head start, so a hover, a search or a selection lands on
   code that is already there.
 
-  The collection the app opened on goes first, because every interaction until the user switches
-  operating system can only reach that one; the other two are warmed behind it so that switching
-  is not a cold start either.
+  Only the collection on screen is warmed, because every interaction until the user switches
+  operating system can only reach that one. A collection is warmed once the user switches to it,
+  ahead of whatever is still queued. Warming all three up front kept the page busy for seconds
+  after it loaded, for scripts most visitors never look at: some Windows scripts take over 100 ms
+  each to compile with the CPU throttled 4x, and a single script cannot be split across slices, so
+  each of them was a long task that Lighthouse counted as Total Blocking Time even for a visitor
+  on macOS.
 */
-function warmUpScriptCode(
-  collections: readonly CategoryCollection[],
-  activeCollection: CategoryCollection,
-): void {
-  const pending = [
-    activeCollection,
-    ...collections.filter((collection) => collection !== activeCollection),
-  ].flatMap((collection) => collection.getAllScripts());
-  if (pending.length === 0) {
-    return;
-  }
+function warmUpScriptCodeOfShownCollections(context: IApplicationContext): void {
+  const warmUp = createScriptCodeWarmUp();
+  warmUp(context.state.collection);
+  context.contextChanged.on((event) => warmUp(event.newState.collection));
+}
+
+function createScriptCodeWarmUp(): (collection: CategoryCollection) => void {
+  const queuedCollections = new Set<CategoryCollection>();
   const schedule = createIdleScheduler();
+  let pending: readonly Script[] = [];
   let index = 0;
+  let isSliceScheduled = false;
   const warmUpSlice = (deadline?: IdleDeadline): void => {
+    isSliceScheduled = false;
     const sliceStart = performance.now();
     while (
       index < pending.length
@@ -64,11 +69,23 @@ function warmUpScriptCode(
       warmUpScript(pending[index]);
       index += 1;
     }
-    if (index < pending.length) {
+    scheduleSliceIfPending();
+  };
+  function scheduleSliceIfPending(): void {
+    if (index < pending.length && !isSliceScheduled) {
+      isSliceScheduled = true;
       schedule(warmUpSlice);
     }
+  }
+  return (collection) => {
+    if (queuedCollections.has(collection)) {
+      return;
+    }
+    queuedCollections.add(collection);
+    pending = [...collection.getAllScripts(), ...pending.slice(index)];
+    index = 0;
+    scheduleSliceIfPending();
   };
-  schedule(warmUpSlice);
 }
 
 function warmUpScript(script: Script): void {
@@ -81,8 +98,8 @@ function warmUpScript(script: Script): void {
     script.canRevert();
   } catch {
     /*
-      A malformed script must not stop the warm-up for the ~1,100 healthy ones queued behind it,
-      and must not become an uncaught error for a script the user may never open. The failure is
+      A malformed script must not stop the warm-up for the healthy ones queued behind it, and
+      must not become an uncaught error for a script the user may never open. The failure is
       memoized by `CollectionScript`, so the identical error is thrown again the moment the script
       is genuinely used (a render, a search, an export), where it is reported in context.
     */

@@ -2,6 +2,7 @@ import {
   afterEach, beforeEach, describe, expect, it, vi,
 } from 'vitest';
 import { ApplicationContextStub } from '@tests/unit/shared/Stubs/ApplicationContextStub';
+import { ApplicationContextChangedEventStub } from '@tests/unit/shared/Stubs/ApplicationContextChangedEventStub';
 import { DependencyBootstrapper } from '@/presentation/bootstrapping/Modules/DependencyBootstrapper';
 import type { IApplicationContext } from '@/application/Context/IApplicationContext';
 import { VueDependencyInjectionApiStub } from '@tests/unit/shared/Stubs/VueDependencyInjectionApiStub';
@@ -104,34 +105,28 @@ describe('DependencyBootstrapper', () => {
         vi.unstubAllGlobals();
       });
 
-      it('compiles the code of every script in every collection', async () => {
+      it('compiles the code of every script in the collection the app opened on', async () => {
         // arrange
         const log = createScriptCodeReadLog();
-        const activeScriptIds = ['active-1', 'active-2'];
-        const otherScriptIds = ['other-1', 'other-2', 'other-3'];
-        const expectedScriptIds = [...activeScriptIds, ...otherScriptIds];
-        const activeCollection = createCollectionWithScripts(log.createScripts(activeScriptIds));
-        const context = createContext(activeCollection, [
-          createCollectionWithScripts(log.createScripts(otherScriptIds)),
-        ]);
+        const expectedScriptIds = ['active-1', 'active-2', 'active-3'];
+        const activeCollection = createCollectionWithScripts(log.createScripts(expectedScriptIds));
+        const context = createContext(activeCollection, []);
         // act
         await bootstrapWith(context);
         vi.runAllTimers();
         // assert
-        expect([...log.readScriptIds].sort()).to.deep.equal([...expectedScriptIds].sort());
+        expect(log.readScriptIds).to.deep.equal(expectedScriptIds);
       });
 
-      it('compiles the collection the app opened on before the others', async () => {
+      /*
+        Warming every collection up front kept the page busy for seconds after load, compiling
+        scripts for operating systems most visitors never switch to.
+      */
+      it('leaves the other collections alone until they are shown', async () => {
         // arrange
         const log = createScriptCodeReadLog();
-        const expectedFirstScriptIds = ['active-1', 'active-2'];
-        const activeCollection = createCollectionWithScripts(
-          log.createScripts(expectedFirstScriptIds),
-        );
-        /*
-          The active collection is deliberately last in `app.collections`, because a fixture that
-          already listed it first could not tell hoisting apart from plain iteration order.
-        */
+        const expectedScriptIds = ['active-1', 'active-2'];
+        const activeCollection = createCollectionWithScripts(log.createScripts(expectedScriptIds));
         const context = createContext(activeCollection, [
           createCollectionWithScripts(log.createScripts(['other-1', 'other-2'])),
         ]);
@@ -139,8 +134,62 @@ describe('DependencyBootstrapper', () => {
         await bootstrapWith(context);
         vi.runAllTimers();
         // assert
-        const actualFirstScriptIds = log.readScriptIds.slice(0, expectedFirstScriptIds.length);
-        expect(actualFirstScriptIds).to.deep.equal(expectedFirstScriptIds);
+        expect(log.readScriptIds).to.deep.equal(expectedScriptIds);
+      });
+
+      it('compiles a collection once the user switches to it', async () => {
+        // arrange
+        const log = createScriptCodeReadLog();
+        const expectedScriptIds = ['other-1', 'other-2'];
+        const otherCollection = createCollectionWithScripts(log.createScripts(expectedScriptIds));
+        const context = createContext(createCollectionWithScripts([]), [otherCollection]);
+        // act
+        await bootstrapWith(context);
+        vi.runAllTimers();
+        switchContextTo(context, otherCollection);
+        vi.runAllTimers();
+        // assert
+        expect(log.readScriptIds).to.deep.equal(expectedScriptIds);
+      });
+
+      it('compiles a collection the user switches to ahead of the queued scripts', async () => {
+        // arrange
+        const log = createScriptCodeReadLog();
+        const activeScriptIds = ['active-1', 'active-2', 'active-3'];
+        const otherScriptIds = ['other-1', 'other-2'];
+        const scriptsPerSlice = 1;
+        const otherCollection = createCollectionWithScripts(log.createScripts(otherScriptIds));
+        const context = createContext(
+          createCollectionWithScripts(log.createScripts(activeScriptIds)),
+          [otherCollection],
+        );
+        stubIdleCallback(() => createDeadlineAllowingScripts(scriptsPerSlice));
+        const expectedScriptIds = ['active-1', ...otherScriptIds, 'active-2', 'active-3'];
+        // act
+        await bootstrapWith(context);
+        vi.advanceTimersToNextTimer();
+        switchContextTo(context, otherCollection);
+        vi.runAllTimers();
+        // assert
+        expect(log.readScriptIds).to.deep.equal(expectedScriptIds);
+      });
+
+      it('does not queue a collection again when the user switches back to it', async () => {
+        // arrange
+        const log = createScriptCodeReadLog();
+        const expectedScriptIds = ['active-1', 'other-1'];
+        const activeCollection = createCollectionWithScripts(log.createScripts(['active-1']));
+        const otherCollection = createCollectionWithScripts(log.createScripts(['other-1']));
+        const context = createContext(activeCollection, [otherCollection]);
+        // act
+        await bootstrapWith(context);
+        vi.runAllTimers();
+        switchContextTo(context, otherCollection);
+        vi.runAllTimers();
+        switchContextTo(context, activeCollection);
+        vi.runAllTimers();
+        // assert
+        expect(log.readScriptIds).to.deep.equal(expectedScriptIds);
       });
 
       it('keeps compiling after a script fails to compile', async () => {
@@ -252,12 +301,23 @@ async function bootstrapWith(context: IApplicationContext): Promise<void> {
 function createContext(
   activeCollection: CategoryCollection,
   otherCollections: readonly CategoryCollection[],
-): IApplicationContext {
+): ApplicationContextStub {
   const context = new ApplicationContextStub()
     .withState(new CategoryCollectionStateStub().withCollection(activeCollection));
   context.app = new ApplicationStub()
     .withCollections(...otherCollections, activeCollection);
   return context;
+}
+
+function switchContextTo(
+  context: ApplicationContextStub,
+  collection: CategoryCollection,
+): void {
+  const newState = new CategoryCollectionStateStub().withCollection(collection);
+  context.dispatchContextChange(new ApplicationContextChangedEventStub()
+    .withOldState(context.state)
+    .withNewState(newState));
+  context.state = newState;
 }
 
 function createCollectionWithScripts(scripts: readonly Script[]): CategoryCollection {
