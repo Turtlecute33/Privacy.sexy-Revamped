@@ -37,7 +37,7 @@ scripting:
     endCode: |-
       echo 'Your privacy and security is now hardened 🎉💪'
       echo 'Press any key to exit.'
-      read -n 1 -s
+      read -n 1 -s || true # Without a terminal there is no key to read; the script still finished
 actions:
   -
     category: Privacy cleanup
@@ -532,7 +532,7 @@ actions:
                   Thunderbird saves annotations, bookmarks, favorite icons, input history, keywords, and browsing history
                   (a list of pages visited) [1].
 
-                  Data is saved at persistent `places.sqlite` [1] and temporary `places.sqlite-shm` and `places.sqlite.wal` [2].
+                  Data is saved at persistent `places.sqlite` [1] and temporary `places.sqlite-shm` and `places.sqlite-wal` [2].
 
                   [1]: https://web.archive.org/web/20221029141626/https://kb.mozillazine.org/Places.sqlite "Places.sqlite | MozillaZine Knowledge Base | kb.mozillazine.org"
                   [2]: https://web.archive.org/web/20221029141631/https://bugzilla.mozilla.org/show_bug.cgi?id=686237 "686237 - places.sqlite-wal and places.sqlite-shm not removed on exit | Mozilla Bugs | bugzilla.mozilla.org"
@@ -548,7 +548,7 @@ actions:
                   -
                     function: DeleteFileFromThunderbirdProfiles
                     parameters:
-                      file: places.sqlite.wal
+                      file: places.sqlite-wal
           -
             category: Clear data from development tools
             docs: |-
@@ -839,7 +839,9 @@ actions:
                     parameters:
                       code: |-
                         # Global installation
-                        rm -fv ~/.mozilla/firefox/Crash\ Reports/*
+                        rm -rfv ~/.mozilla/firefox/Crash\ Reports/*
+                        # Global installation, Firefox 147 and later on a new installation (XDG Base Directory location)
+                        rm -rfv ~/.config/mozilla/firefox/Crash\ Reports/*
                         # Flatpak installation
                         rm -rfv ~/.var/app/org.mozilla.firefox/.mozilla/firefox/Crash\ Reports/*
                         # Snap installation
@@ -1178,7 +1180,8 @@ actions:
               Brave is a web browser by Brave Software that is built on Chromium.
 
               Brave keeps your data in `~/.config/BraveSoftware/Brave-Browser`, or in `Brave-Browser-Beta` and
-              `Brave-Browser-Nightly` next to it for the other channels [1] [2]. Inside it, it uses one subfolder per
+              `Brave-Browser-Nightly` next to it for the other channels [1] [2]. Brave Origin uses `Brave-Origin`,
+              `Brave-Origin-Beta` and `Brave-Origin-Nightly` in the same place. Inside it, it uses one subfolder per
               profile, as Chromium does: `Default`, `Profile 1`, `Profile 2` and so on [3]. The Flathub package uses
               `~/.var/app/com.brave.Browser/config/BraveSoftware/Brave-Browser` [4] [5]. These scripts clean every
               profile in these folders. Files are deleted as your user.
@@ -1200,7 +1203,7 @@ actions:
 
                   Brave follows Chromium's rule for the cache folder: when the user data folder is in `~/.config`, the cache
                   is in the same place under `~/.cache` [1]. This gives `~/.cache/BraveSoftware/Brave-Browser` (with
-                  `-Beta` and `-Nightly` for the other channels), and
+                  `-Beta` and `-Nightly` for the other channels, and `Brave-Origin` for Brave Origin), and
                   `~/.var/app/com.brave.Browser/cache/BraveSoftware/Brave-Browser` for the Flathub package, because
                   Flatpak moves the cache folder into the application's own folder [2].
 
@@ -1216,6 +1219,9 @@ actions:
                       "$HOME/.cache/BraveSoftware/Brave-Browser"
                       "$HOME/.cache/BraveSoftware/Brave-Browser-Beta"
                       "$HOME/.cache/BraveSoftware/Brave-Browser-Nightly"
+                      "$HOME/.cache/BraveSoftware/Brave-Origin"
+                      "$HOME/.cache/BraveSoftware/Brave-Origin-Beta"
+                      "$HOME/.cache/BraveSoftware/Brave-Origin-Nightly"
                       "$HOME/.var/app/com.brave.Browser/cache/BraveSoftware/Brave-Browser"
               -
                 name: Clear Brave browsing history
@@ -1555,11 +1561,19 @@ actions:
                   [1]: https://web.archive.org/web/20221029153522/https://docs.flatpak.org/en/latest/flatpak-command-reference.html#flatpak-uninstall "Flatpak Command Reference - Flatpak documentation | docs.flatpak.org"
                   [2]: https://web.archive.org/web/20221029153359/https://github.com/flatpak/flatpak/issues/2639 "[RFE] Auto remove orphaned runtimes · Issue #2639 · flatpak/flatpak | GitHub | github.com"
                   [3]: https://web.archive.org/web/20221029153507/https://docs.flatpak.org/en/latest/using-flatpak.html#troubleshooting "Using Flatpak - Flatpak documentation | docs.flatpak.org"
+                # The system-wide installation is cleaned as root and your own installation as you. Without
+                # `--system` or `--user`, root would also clean the installation in your home folder and leave
+                # files there that you can no longer change.
                 call:
-                  function: RunIfCommandExists
+                  function: RunAsTargetUser
                   parameters:
-                    command: flatpak
-                    code: flatpak uninstall --unused --noninteractive
+                    code: |-
+                      if ! command -v flatpak > /dev/null 2>&1; then
+                        echo 'Skipping because "flatpak" is not found.'
+                      else
+                        sudo flatpak uninstall --system --unused --noninteractive
+                        run_as_target_user flatpak uninstall --user --unused --noninteractive
+                      fi
               -
                 name: Clear Flatpak cache
                 docs: |-
@@ -1687,7 +1701,7 @@ actions:
               folders for Snap applications [1].
 
               [1]: https://web.archive.org/web/20221029154850/https://bugs.launchpad.net/snappy/+bug/1744584 "Bug #1744584 “Exclude Snap .cache from Dejadup backups” : Bugs : Snappy | bugs.launchpad.net/snappy"
-            code: rm -fv ~/snap/*/*/.cache/*
+            code: rm -rfv ~/snap/*/*/.cache/*
           -
             name: Clear thumbnails (icon cache)
             docs: |-
@@ -1811,7 +1825,6 @@ actions:
                 schema: org.gnome.desktop.privacy
                 key: send-software-usage-stats
                 value: 'false'
-                defaultValue: 'true'
           -
             name: Disable GNOME technical problem reports
             recommend: standard
@@ -1833,7 +1846,6 @@ actions:
                 schema: org.gnome.desktop.privacy
                 key: report-technical-problems
                 value: 'false'
-                defaultValue: 'true'
           -
             name: Disable GNOME location services
             recommend: standard
@@ -1853,7 +1865,6 @@ actions:
                 schema: org.gnome.system.location
                 key: enabled
                 value: 'false'
-                defaultValue: 'true'
           -
             name: Disable GNOME recent files history
             recommend: strict # Removes the "Recent" file list, which some users rely on
@@ -1877,7 +1888,6 @@ actions:
                 schema: org.gnome.desktop.privacy
                 key: remember-recent-files
                 value: 'false'
-                defaultValue: 'true'
           -
             name: Disable GNOME application usage history
             recommend: strict # Reduces the quality of application search results
@@ -1899,7 +1909,6 @@ actions:
                 schema: org.gnome.desktop.privacy
                 key: remember-app-usage
                 value: 'false'
-                defaultValue: 'true'
       -
         category: Disable KDE data collection
         docs: |-
@@ -2247,8 +2256,9 @@ actions:
             revertCode: |-
               if [ -f /var/lib/zorin-os-census/uuid ]; then
                 echo 'Skipping, uuid already exists.'
+              elif [ ! -d /var/lib/zorin-os-census ]; then
+                echo 'Skipping, Zorin OS census is not installed.'
               else
-                sudo mkdir -p /var/lib/zorin-os-census
                 uuidgen | sudo tee /var/lib/zorin-os-census/uuid > /dev/null
               fi
       -
@@ -2717,11 +2727,10 @@ actions:
                 echo -n "$content" | sudo tee "$file" > /dev/null
                 echo 'Successfully disabled connectivity checks.'
               fi
-              if command -v 'nmcli' &> /dev/null; then
-                sudo nmcli general reload
+              if sudo nmcli general reload; then
                 echo 'Successfully reloaded configuration.'
               else
-                echo 'It will take effect after reboot.'
+                >&2 echo 'NetworkManager could not reload its configuration; the change applies after a restart.'
               fi
             revertCode: |-
               file='/etc/NetworkManager/conf.d/20-disable-connectivity-privacy-sexy.conf'
@@ -2731,11 +2740,10 @@ actions:
                 sudo rm -fv "$file"
                 echo 'Successfully restored connectivity checks.'
               fi
-              if command -v 'nmcli' &> /dev/null; then
-                sudo nmcli general reload
+              if sudo nmcli general reload; then
                 echo 'Successfully reloaded configuration.'
               else
-                echo 'It will take effect after reboot.'
+                >&2 echo 'NetworkManager could not reload its configuration; the change applies after a restart.'
               fi
       -
         name: Use a stable Wi-Fi MAC address per network
@@ -4327,6 +4335,7 @@ actions:
 
           The scripts skip the change if Brave is not installed. The Flathub package of Brave links the policy files
           from this folder into its sandbox, so it follows them too [2]. Other sandboxed packages may not read them.
+          Brave Origin reads the same folder, so these policies apply to it as well.
 
           [1]: https://web.archive.org/web/20261028190136/https://support.brave.app/hc/en-us/articles/360039248271-Group-Policy "Group Policy - Brave Help Center | support.brave.app"
           [2]: https://web.archive.org/web/20261024175012/https://github.com/flathub/com.brave.Browser/blob/master/brave.sh "com.brave.Browser/brave.sh at master · flathub/com.brave.Browser · GitHub | github.com"
@@ -4875,7 +4884,6 @@ actions:
                 schema: org.gnome.desktop.media-handling
                 key: autorun-never
                 value: 'true'
-                defaultValue: 'true'
           -
             name: Disable automatic mounting of removable media in GNOME
             recommend: strict # Connected drives must be opened by hand before use
@@ -4901,14 +4909,12 @@ actions:
                   schema: org.gnome.desktop.media-handling
                   key: automount
                   value: 'false'
-                  defaultValue: 'true'
               -
                 function: SetGnomeSetting
                 parameters:
                   schema: org.gnome.desktop.media-handling
                   key: automount-open
                   value: 'false'
-                  defaultValue: 'true'
           -
             name: Disable notifications on the GNOME lock screen
             recommend: strict # Notifications that arrive while the screen is locked are seen only after unlocking
@@ -4931,7 +4937,6 @@ actions:
                 schema: org.gnome.desktop.notifications
                 key: show-in-lock-screen
                 value: 'false'
-                defaultValue: 'true'
       -
         name: Enable firewall to block incoming connections
         docs: |-
@@ -5283,51 +5288,79 @@ functions:
     # `pacman -Q <name>` matches the installed package exactly; `-Qs` is a regex search over names and
     # descriptions, so it also matched packages that merely mention the name. `-Rns` without `-c`, so
     # packages that depend on this one are never removed along with it unprompted.
+    # ❗️ Revert reinstalls the package only if this script removed it, which a state file records.
+    #   Without the record, reverting installed the package on systems that never had it, such as a
+    #   usage statistics tool on a system where it was never installed.
     call:
       function: RunIfCommandExists
       parameters:
         command: pacman
         code: |-
           pkg_package_name='{{ $packageName }}'
+          pkg_state_dir='/var/lib/privacy.sexy/state/packages'
+          pkg_state_file="$pkg_state_dir/$pkg_package_name"
           if pacman -Q "$pkg_package_name" > /dev/null 2>&1; then
             echo "\"$pkg_package_name\" is installed and will be uninstalled."
-            sudo pacman -Rns "$pkg_package_name" --noconfirm
+            if sudo pacman -Rns "$pkg_package_name" --noconfirm; then
+              sudo install --directory --mode=700 "$pkg_state_dir"
+              sudo touch "$pkg_state_file"
+            fi
           else
             echo "The package $pkg_package_name is not installed"
           fi
         revertCode: |-
           pkg_package_name='{{ $packageName }}'
+          pkg_state_file="/var/lib/privacy.sexy/state/packages/$pkg_package_name"
           if pacman -Q "$pkg_package_name" > /dev/null 2>&1; then
             echo "Skipping, no action needed because \"$pkg_package_name\" is already installed."
+            sudo rm --force "$pkg_state_file"
+          elif [ ! -e "$pkg_state_file" ]; then
+            echo "Skipping, \"$pkg_package_name\" was not uninstalled by privacy.sexy."
+            echo "To install it anyway, run: sudo pacman -S $pkg_package_name"
           else
             echo "\"$pkg_package_name\" is not installed and will be reinstalled."
-            sudo pacman -S "$pkg_package_name" --noconfirm
+            if sudo pacman -S "$pkg_package_name" --noconfirm; then
+              sudo rm --force "$pkg_state_file"
+            fi
           fi
   -
     name: UninstallAptPackage
     parameters:
       - name: packageName
+    # ❗️ Revert reinstalls the package only if this script removed it, like `UninstallPacmanPackage`.
     call:
       function: RunIfCommandExists
       parameters:
         command: apt-get
         code: |-
           apt_package_name='{{ $packageName }}'
+          apt_state_dir='/var/lib/privacy.sexy/state/packages'
+          apt_state_file="$apt_state_dir/$apt_package_name"
           if status="$(dpkg-query -W --showformat='${db:Status-Status}' "$apt_package_name" 2>&1)" \
               && [ "$status" = installed ]; then
             echo "\"$apt_package_name\" is installed and will be uninstalled."
-            sudo apt-get purge -y "$apt_package_name"
+            if sudo apt-get purge -y "$apt_package_name"; then
+              sudo install --directory --mode=700 "$apt_state_dir"
+              sudo touch "$apt_state_file"
+            fi
           else
             echo "Skipping, no action needed, \"$apt_package_name\" is not installed."
           fi
         revertCode: |-
           apt_package_name='{{ $packageName }}'
+          apt_state_file="/var/lib/privacy.sexy/state/packages/$apt_package_name"
           if status="$(dpkg-query -W --showformat='${db:Status-Status}' "$apt_package_name" 2>&1)" \
               && [ "$status" = installed ]; then
             echo "Skipping, no action needed because \"$apt_package_name\" is already installed."
+            sudo rm --force "$apt_state_file"
+          elif [ ! -e "$apt_state_file" ]; then
+            echo "Skipping, \"$apt_package_name\" was not uninstalled by privacy.sexy."
+            echo "To install it anyway, run: sudo apt-get install $apt_package_name"
           else
             echo "\"$apt_package_name\" is not installed and will be reinstalled."
-            sudo apt-get install -y "$apt_package_name"
+            if sudo apt-get install -y "$apt_package_name"; then
+              sudo rm --force "$apt_state_file"
+            fi
           fi
   -
     name: DisableSystemdService
@@ -5540,13 +5573,15 @@ functions:
             paths = glob.glob(expanded_path)
             if not paths:
               print('Skipping, no paths found.')
+            deleted_count = 0
             for path in paths:
               if not os.path.isfile(path):
                 print(f'Skipping folder: "{path}".')
                 continue
               os.remove(path)
+              deleted_count += 1
               print(f'Successfully delete file: "{path}".')
-            print(f'Successfully deleted {len(paths)} file(s).')
+            print(f'Successfully deleted {deleted_count} file(s).')
   -
     name: DeleteFilesFromFirefoxProfiles
     parameters:
@@ -5575,6 +5610,8 @@ functions:
     code: |-
       # {{ $file }}: Global installation
       rm -fv ~/.thunderbird/*/{{ $file }}
+      # {{ $file }}: Global installation, Thunderbird 154 and later on a new installation (XDG Base Directory location)
+      rm -fv ~/.config/thunderbird/*/{{ $file }}
       # {{ $file }}: Snap installation
       rm -fv ~/snap/thunderbird/common/.thunderbird/*/{{ $file }}
       # {{ $file }}: Flatpak installation
@@ -5659,7 +5696,10 @@ functions:
           sudo chmod 600 "$environment_state_file"
         fi
         echo "Variable \"$variable\" was not configured before."
-        echo -n $'\n'"$assignment" | sudo tee -a "$declaration_file" > /dev/null
+        # The line ends with a newline, and starts on its own line even if the file does not end with one,
+        # so that neither this assignment nor one that another tool appends later is joined to another line.
+        { [ -z "$(tail --bytes=1 "$declaration_file")" ] || echo; printf '%s\n' "$assignment"; } \
+          | sudo tee -a "$declaration_file" > /dev/null
         echo "Successfully configured ($assignment)."
       else
         if grep --quiet "^$assignment$" "${declaration_file}"; then
@@ -5677,7 +5717,8 @@ functions:
             >&2 echo "Failed to delete assignment starting with \"$assignment_start\"."
           else
             echo "Successfully deleted unexpected assignment of \"$variable\"."
-            if ! echo -n $'\n'"$assignment" | sudo tee -a "$declaration_file" > /dev/null; then
+            if ! { [ -z "$(tail --bytes=1 "$declaration_file")" ] || echo; printf '%s\n' "$assignment"; } \
+                | sudo tee -a "$declaration_file" > /dev/null; then
               >&2 echo "Failed to add assignment \"$assignment\"."
             else
               echo "Successfully reconfigured ($assignment)."
@@ -6044,7 +6085,6 @@ functions:
       - name: schema
       - name: key
       - name: value
-      - name: defaultValue
     call:
       function: RunAsTargetUser
       parameters:
@@ -6068,13 +6108,16 @@ functions:
               run_as_target_user chmod 600 "$gnome_state_file"
               recorded_now='yes'
             fi
-            if run_as_target_user gsettings set "$gnome_schema" "$gnome_key" "$gnome_value"; then
+            # Without a session bus, such as over SSH, `gsettings set` reports success but saves nothing,
+            # so the value is read back.
+            if run_as_target_user gsettings set "$gnome_schema" "$gnome_key" "$gnome_value" \
+                && [ "$(run_as_target_user gsettings get "$gnome_schema" "$gnome_key")" = "$gnome_value" ]; then
               echo "Successfully set \"$gnome_schema $gnome_key\" to \"$gnome_value\"."
             else
               if [ "$recorded_now" = 'yes' ]; then
                 run_as_target_user rm --force "$gnome_state_file"
               fi
-              >&2 echo "Failed to set \"$gnome_schema $gnome_key\" to \"$gnome_value\"."
+              >&2 echo "Failed to set \"$gnome_schema $gnome_key\" to \"$gnome_value\". Run this script while you are logged in to your desktop."
             fi
           fi
         revertCode: |-
@@ -6348,6 +6391,9 @@ functions:
           "$HOME/.config/BraveSoftware/Brave-Browser"
           "$HOME/.config/BraveSoftware/Brave-Browser-Beta"
           "$HOME/.config/BraveSoftware/Brave-Browser-Nightly"
+          "$HOME/.config/BraveSoftware/Brave-Origin"
+          "$HOME/.config/BraveSoftware/Brave-Origin-Beta"
+          "$HOME/.config/BraveSoftware/Brave-Origin-Nightly"
           "$HOME/.var/app/com.brave.Browser/config/BraveSoftware/Brave-Browser"
         profilePaths: '{{ $profilePaths }}'
   -
@@ -6472,7 +6518,12 @@ functions:
       function: SetChromiumBasedBrowserPolicy
       parameters:
         browserName: Brave
-        browserCommands: brave-browser brave-browser-beta brave-browser-nightly
+        # `brave-browser*` are the commands of Brave's own packages, `brave`, `brave-beta` and `brave-nightly`
+        # those of the Arch Linux packages. Brave Origin reads the same policy folder.
+        browserCommands: >-
+          brave-browser brave-browser-beta brave-browser-nightly
+          brave brave-beta brave-nightly
+          brave-origin brave-origin-beta brave-origin-nightly
         flatpakId: com.brave.Browser
         policyDirectory: /etc/brave/policies/managed
         policyName: '{{ $policyName }}'
