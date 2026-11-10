@@ -98,39 +98,35 @@ function inlineComments(code: string): string {
 */
 function mergeHereStrings(code: string) {
   const regex = /@(['"])\s*(?:\r\n|\r|\n)((.|\n|\r)+?)(\r\n|\r|\n)\1@/g;
-  return code.replaceAll(regex, (_$, quotes, scope) => {
-    const newString = getHereStringHandler(quotes);
-    const escaped = scope.replaceAll(quotes, newString.escapedQuotes);
-    const lines = splitTextIntoLines(escaped);
-    const inlined = lines.join(newString.separator);
-    const quoted = `${newString.quotesAround}${inlined}${newString.quotesAround}`;
-    return quoted;
-  });
+  return code.replaceAll(regex, (_$, quotes, scope) => (
+    inlineHereString(quotes, splitTextIntoLines(scope))
+  ));
 }
-interface InlinedHereString {
-  readonly quotesAround: string;
-  readonly escapedQuotes: string;
-  readonly separator: string;
-}
-function getHereStringHandler(quotes: string): InlinedHereString {
-  /*
-    We handle @' and @" differently.
-    Single quotes are interpreted literally and doubles are expandable.
-  */
+
+/*
+  We handle @' and @" differently.
+  Single quotes are interpreted literally and doubles are expandable.
+*/
+function inlineHereString(quotes: string, lines: readonly string[]): string {
   const expandableNewLine = '`r`n';
   switch (quotes) {
-    case '\'':
-      return {
-        quotesAround: '\'',
-        escapedQuotes: '\'\'',
-        separator: `'+"${expandableNewLine}"+'`,
-      };
+    case '\'': {
+      /*
+        A literal string cannot hold a line break, so the lines become an array joined by one:
+        `('first','second' -join "`r`n")`. That costs three characters per line break, where
+        `'first'+"`r`n"+'second'` costs nine (seventeen once the double quotes are escaped for
+        cmd). The scripts that run as TrustedInstaller pass about a hundred lines this way, and
+        their command lines sit just under cmd's 8191-character limit. The parentheses also keep
+        the string a single value where it is a command argument, which the `+` form was not.
+      */
+      const literals = lines.map((line) => `'${line.replaceAll('\'', '\'\'')}'`);
+      if (literals.length === 1) {
+        return literals[0];
+      }
+      return `(${literals.join(',')} -join "${expandableNewLine}")`;
+    }
     case '"':
-      return {
-        quotesAround: '"',
-        escapedQuotes: '`"',
-        separator: expandableNewLine,
-      };
+      return `"${lines.map((line) => line.replaceAll('"', '`"')).join(expandableNewLine)}"`;
     default:
       throw new Error(`expected quotes: ${quotes}`);
   }

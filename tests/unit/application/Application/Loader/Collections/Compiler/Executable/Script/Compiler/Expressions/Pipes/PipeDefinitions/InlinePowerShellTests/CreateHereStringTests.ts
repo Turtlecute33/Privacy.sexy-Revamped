@@ -109,12 +109,12 @@ export function createHereStringTests(): PipeTestScenario[] {
         '\'@',
       ),
       expectedOutput: getInlinedOutputWithSemicolons(
-        joinLinesForSingleQuotedString(
-          '$hasInnerSingleQuotedTerminator = \'inner text',
+        `$hasInnerSingleQuotedTerminator = ${joinLinesForSingleQuotedString(
+          'inner text',
           '@"',
           'inner terminator text',
-          '"@\'',
-        ),
+          '"@',
+        )}`,
       ),
     },
     {
@@ -186,8 +186,8 @@ export function createHereStringTests(): PipeTestScenario[] {
       ),
       expectedOutput: getInlinedOutputWithSemicolons(
         joinLinesForSingleQuotedString(
-          '\'\ttext with tabs around\t\t',
-          '  text with whitespace around \'',
+          '\ttext with tabs around\t\t',
+          '  text with whitespace around ',
         ),
       ),
     },
@@ -233,8 +233,9 @@ function joinLinesForDoubleQuotedString(
   return lines.join('`r`n');
 }
 
+/** Takes the lines without their quotes: each one becomes a literal of the joined array. */
 function joinLinesForSingleQuotedString(
   ...lines: readonly string[]
 ): string {
-  return lines.join('\'+"`r`n"+\'');
+  return `(${lines.map((line) => `'${line}'`).join(',')} -join "\`r\`n")`;
 }
