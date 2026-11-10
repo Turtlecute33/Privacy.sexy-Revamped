@@ -1,6 +1,6 @@
 # Collection files
 
-privacy.sexy is a data-driven application that reads YAML files.
+debloat.net is a data-driven application that reads YAML files.
 This document details the structure and syntax of the YAML files located in [`application/collections`](./../src/application/collections/), which form the backbone of the application's data model. The YAML schema [`.schema.yaml`](./../src/application/collections/.schema.yaml) is provided to provide better IDE support and be used in automated validations.
 
 Related documentation:
@@ -109,7 +109,7 @@ Specifies a function call. It may require providing argument values to its param
 ### `Function`
 
 - Enables reusable code in scripts.
-- Functions are templates compiled by privacy.sexy and uses special expression expressions.
+- Functions are templates compiled by debloat.net and uses special expression expressions.
 - A function can be of two different types (like [scripts](#script)):
   1. Inline function: a function with an inline code.
      - ❗ Requires `code` and optionally `revertCode`, but not `call`.

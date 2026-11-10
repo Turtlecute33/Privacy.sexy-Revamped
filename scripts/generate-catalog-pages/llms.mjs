@@ -13,7 +13,7 @@
 import { SITE_NAME, SITE_ORIGIN } from './layout.mjs';
 import { countScripts, flattenCategory } from './pages.mjs';
 
-const REPOSITORY_URL = 'https://github.com/Turtlecute33/Privacy.sexy-Revamped';
+const REPOSITORY_URL = 'https://github.com/Turtlecute33/Debloat.net';
 
 const TIER_LEGEND = 'Each tweak carries one recommendation tier: **Recommended** (selected by the '
   + 'Standard and Strict presets), **Strict** (added by the Strict preset only) or **Opt-in only** '

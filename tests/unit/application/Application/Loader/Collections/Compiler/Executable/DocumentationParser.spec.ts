@@ -62,7 +62,7 @@ describe('DocumentationParser', () => {
     });
     it('returns all when array', () => {
       // arrange
-      const expected = ['https://debloat.net', 'https://github.com/Turtlecute33/Privacy.sexy-Revamped'];
+      const expected = ['https://debloat.net', 'https://github.com/Turtlecute33/Debloat.net'];
       const sut: DocumentableData = { docs: expected };
       // act
       const actual = parseDocs(sut);

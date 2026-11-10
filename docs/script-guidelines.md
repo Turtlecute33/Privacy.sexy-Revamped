@@ -1,7 +1,7 @@
-# privacy.sexy Script Guidelines
+# debloat.net Script Guidelines
 
 Add a script to debloat.net by opening a pull request or an issue (see [Adding or changing scripts](./../CONTRIBUTING.md#adding-or-changing-scripts)).
-As scripts are central to privacy.sexy and reach a global audience, their design is critical.
+As scripts are central to debloat.net and reach a global audience, their design is critical.
 
 Key attributes of a good script:
 

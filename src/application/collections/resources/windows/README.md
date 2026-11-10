@@ -4,7 +4,7 @@
 [`yegors/deGDID` commit `068263f4`](https://github.com/yegors/deGDID/commit/068263f4fd9f1e6632c78c365b1a98027f6c2912).
 The neighboring `degdid.LICENSE` contains its MIT license.
 
-privacy.sexy embeds this source into generated batch scripts at build time. Generated scripts stay
+debloat.net embeds this source into generated batch scripts at build time. Generated scripts stay
 self-contained and do not download executable code when users run them.
 
 Local reliability adjustments:

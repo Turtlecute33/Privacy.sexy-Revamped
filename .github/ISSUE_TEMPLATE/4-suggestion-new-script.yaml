@@ -7,8 +7,8 @@ body:
     type: markdown
     attributes:
       value: |-
-        Please read the [script guidelines](https://github.com/Turtlecute33/Privacy.sexy-Revamped/blob/master/docs/script-guidelines.md) first.
-        A [pull request](https://github.com/Turtlecute33/Privacy.sexy-Revamped/blob/master/CONTRIBUTING.md#adding-or-changing-scripts) gets a script added faster.
+        Please read the [script guidelines](https://github.com/Turtlecute33/Debloat.net/blob/master/docs/script-guidelines.md) first.
+        A [pull request](https://github.com/Turtlecute33/Debloat.net/blob/master/CONTRIBUTING.md#adding-or-changing-scripts) gets a script added faster.
   -
     type: dropdown
     attributes:
@@ -25,7 +25,7 @@ body:
     attributes:
       label: Script name
       description: |-
-        A name that says what the script does. See the [naming guidelines](https://github.com/Turtlecute33/Privacy.sexy-Revamped/blob/master/docs/script-guidelines.md#name).
+        A name that says what the script does. See the [naming guidelines](https://github.com/Turtlecute33/Debloat.net/blob/master/docs/script-guidelines.md#name).
       placeholder: For example "Disable error data submission"
     validations:
       required: true
@@ -35,7 +35,7 @@ body:
       label: Documentation and sources
       description: |-
         What the script changes, why it matters, and what it may break. Prefer vendor documentation.
-        See the [documentation guidelines](https://github.com/Turtlecute33/Privacy.sexy-Revamped/blob/master/docs/script-guidelines.md#documentation).
+        See the [documentation guidelines](https://github.com/Turtlecute33/Debloat.net/blob/master/docs/script-guidelines.md#documentation).
       placeholder: >-
         For example: "This disables error data submission, see https://learn.microsoft.com/..."
     validations:
@@ -45,7 +45,7 @@ body:
     attributes:
       label: Code
       description: |-
-        The commands the script should run, if you know them. See the [code guidelines](https://github.com/Turtlecute33/Privacy.sexy-Revamped/blob/master/docs/script-guidelines.md#code).
+        The commands the script should run, if you know them. See the [code guidelines](https://github.com/Turtlecute33/Debloat.net/blob/master/docs/script-guidelines.md#code).
       placeholder: |-
         For example: `reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v "AllowTelemetry" /t REG_DWORD /d 0 /f`
     validations:

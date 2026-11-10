@@ -6,7 +6,7 @@ pull requests are all welcome. This is a small project, so replies can take a wh
 ## Ways to help
 
 - **Report a bug.** If a tweak fails, breaks something, or its documentation is wrong,
-  [open an issue](https://github.com/Turtlecute33/Privacy.sexy-Revamped/issues/new/choose).
+  [open an issue](https://github.com/Turtlecute33/Debloat.net/issues/new/choose).
   Include your OS version and, if you can, the generated script.
 - **Suggest a script.** Use the *New script* issue template and link vendor documentation.
 - **Send a pull request.** The fastest way to get a fix or a new script in.
@@ -53,7 +53,7 @@ Versions follow the content of a release rather than strict semantic versioning:
   new features.
 
 The maintainer bumps the version, tags the release as `v<version>`, and publishes it on
-[GitHub Releases](https://github.com/Turtlecute33/Privacy.sexy-Revamped/releases), with notes in
+[GitHub Releases](https://github.com/Turtlecute33/Debloat.net/releases), with notes in
 [CHANGELOG.md](./CHANGELOG.md).
 
 ## Refactoring

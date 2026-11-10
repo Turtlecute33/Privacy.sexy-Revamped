@@ -25,7 +25,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Turtlecute33/Privacy.sexy-Revamped/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Turtlecute33/Privacy.sexy-Revamped?style=flat-square&amp;label=release&amp;color=2f62e0"></a>
+  <a href="https://github.com/Turtlecute33/Debloat.net/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Turtlecute33/Debloat.net?style=flat-square&amp;label=release&amp;color=2f62e0"></a>
   <a href="LICENSE"><img alt="License: AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-2f62e0?style=flat-square"></a>
   <a href="https://github.com/undergroundwires/privacy.sexy"><img alt="Fork of privacy.sexy" src="https://img.shields.io/badge/fork%20of-privacy.sexy-2f62e0?style=flat-square"></a>
 </p>
@@ -166,7 +166,7 @@ a wrong claim can break someone's computer.
 Bug reports, script research, and pull requests are welcome.
 
 - Report a broken tweak or suggest a new one in
-  [issues](https://github.com/Turtlecute33/Privacy.sexy-Revamped/issues/new/choose).
+  [issues](https://github.com/Turtlecute33/Debloat.net/issues/new/choose).
 - Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [script guidelines](docs/script-guidelines.md)
   before opening a pull request.
 - Report vulnerabilities privately, as described in the [security policy](SECURITY.md).

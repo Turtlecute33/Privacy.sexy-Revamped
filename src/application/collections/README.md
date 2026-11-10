@@ -1,6 +1,6 @@
 # Collections
 
-This directory contains the **collection files**, which are the central source of truth for scripts and categories within privacy.sexy.
+This directory contains the **collection files**, which are the central source of truth for scripts and categories within debloat.net.
 
 In addition to the collection files, this folder contains two special files:
 

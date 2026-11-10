@@ -2,7 +2,7 @@
 
 Every commit merged to `master` is built and deployed to <https://debloat.net> once the
 unit and integration tests pass. Releases are tagged (`v<version>`) and published on
-[GitHub Releases](https://github.com/Turtlecute33/Privacy.sexy-Revamped/releases) to mark tested
+[GitHub Releases](https://github.com/Turtlecute33/Debloat.net/releases) to mark tested
 milestones; `git log` remains the complete history of changes.
 
 Release history up to and including `0.13.8`, the point this project forked, belongs to upstream and is

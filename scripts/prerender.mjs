@@ -1,7 +1,7 @@
 /*
  * Build-time prerendering for SEO.
  *
- * privacy.sexy Revamped ships as a client-rendered Vue SPA, so crawlers and
+ * debloat.net ships as a client-rendered Vue SPA, so crawlers and
  * social/AI scrapers that do not execute JavaScript see an empty <div id="app">.
  * This script serves the freshly built site over HTTP, loads it in headless
  * Chrome, waits until the app has finished mounting, then writes the fully

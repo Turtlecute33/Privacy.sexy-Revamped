@@ -53,8 +53,8 @@ See [ci-cd.md](./ci-cd.md) for more information.
 
 **Docker:**
 
-1. Build: `docker build -t privacy-sexy-revamped:latest .`
-2. Run: `docker run -it -p 8080:80 --rm --name privacy.sexy privacy-sexy-revamped:latest`
+1. Build: `docker build -t debloat-net:latest .`
+2. Run: `docker run -it -p 8080:80 --rm --name debloat.net debloat-net:latest`
 3. Application should be available at [`http://localhost:8080`](http://localhost:8080)
 
 ### Building

@@ -6,10 +6,10 @@ the scripts it generates. Thank you for reporting problems responsibly.
 ## Reporting a vulnerability
 
 - **Sensitive issues:** use
-  [private vulnerability reporting](https://github.com/Turtlecute33/Privacy.sexy-Revamped/security/advisories/new).
+  [private vulnerability reporting](https://github.com/Turtlecute33/Debloat.net/security/advisories/new).
   Only the maintainer can see the report. Please do not post details publicly until a fix ships.
 - **Everything else**, such as a script that weakens security by mistake:
-  [open an issue](https://github.com/Turtlecute33/Privacy.sexy-Revamped/issues/new/choose).
+  [open an issue](https://github.com/Turtlecute33/Debloat.net/issues/new/choose).
 
 Only the latest version, the one live on [debloat.net](https://debloat.net), receives fixes.
 

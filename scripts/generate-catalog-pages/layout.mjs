@@ -215,7 +215,7 @@ ${body}
     </p>
     <p>
       <a href="/">Build a script</a> &middot;
-      <a href="https://github.com/Turtlecute33/Privacy.sexy-Revamped" rel="noopener">Source code</a> &middot;
+      <a href="https://github.com/Turtlecute33/Debloat.net" rel="noopener">Source code</a> &middot;
       Licensed under the GNU AGPL v3.0
     </p>
   </div>

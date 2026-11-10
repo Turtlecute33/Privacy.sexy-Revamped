@@ -1,5 +1,5 @@
 {
-  "name": "privacy.sexy",
+  "name": "debloat.net",
   "version": "0.17.1",
   "private": true,
   "slogan": "Privacy is sexy",
@@ -86,6 +86,6 @@
   "homepage": "https://debloat.net",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Turtlecute33/Privacy.sexy-Revamped.git"
+    "url": "https://github.com/Turtlecute33/Debloat.net.git"
   }
 }

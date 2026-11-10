@@ -2,7 +2,7 @@
 blank_issues_enabled: true
 contact_links:
   - name: Report a security vulnerability
-    url: https://github.com/Turtlecute33/Privacy.sexy-Revamped/security/advisories/new
+    url: https://github.com/Turtlecute33/Debloat.net/security/advisories/new
     about: Report it privately. Please do not open a public issue.
   - name: Open debloat.net
     url: https://debloat.net

@@ -73,15 +73,15 @@ describe('GitHubProjectDetailsFactory', () => {
       }],
       feedbackUrl: [{
         description: 'without `.git` suffix',
-        expectedValue: 'https://github.com/Turtlecute33/Privacy.sexy-Revamped/issues',
+        expectedValue: 'https://github.com/Turtlecute33/Debloat.net/issues',
         prepareParams: (params) => params
-          .withRepositoryUrl('https://github.com/Turtlecute33/Privacy.sexy-Revamped'),
+          .withRepositoryUrl('https://github.com/Turtlecute33/Debloat.net'),
         getActualValue: (sut) => sut.feedbackUrl,
       }, {
         description: 'with `.git` suffix',
-        expectedValue: 'https://github.com/Turtlecute33/Privacy.sexy-Revamped/issues',
+        expectedValue: 'https://github.com/Turtlecute33/Debloat.net/issues',
         prepareParams: (params) => params
-          .withRepositoryUrl('https://github.com/Turtlecute33/Privacy.sexy-Revamped.git'),
+          .withRepositoryUrl('https://github.com/Turtlecute33/Debloat.net.git'),
         getActualValue: (sut) => sut.feedbackUrl,
       }],
     };

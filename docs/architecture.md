@@ -60,7 +60,7 @@ Each layer treat application layer differently.
 - So state is mutable, and fires related events when mutated.
 - 📖 Read more: [application.md | Application state](./application.md#application-state).
 
-It's comparable with `flux`, `vuex`, and `pinia`. A difference is that mutable application layer state in privacy.sexy is mutable and lies in single "store" that holds app state and logic. The "actions" mutate the state directly which in turns act as dispatcher to notify its own event subscriptions (callbacks).
+It's comparable with `flux`, `vuex`, and `pinia`. A difference is that mutable application layer state in debloat.net is mutable and lies in single "store" that holds app state and logic. The "actions" mutate the state directly which in turns act as dispatcher to notify its own event subscriptions (callbacks).
 
 ## Web infrastructure
 

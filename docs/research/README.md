@@ -1,6 +1,6 @@
 # Research Documentation
 
-Welcome to the research section of privacy.sexy.
+Welcome to the research section of debloat.net.
 This area houses in-depth technical research and analyses, serving as a resource for developers, contributors, and technology enthusiasts.
 
 **Structure:**
@@ -15,7 +15,7 @@ These documents offer comprehensive insights into the respective topics, support
 **Contributing:**
 
 Contributions to our research documentation are welcome.
-If your research aligns with privacy.sexy goals, please consider adding it here.
+If your research aligns with debloat.net goals, please consider adding it here.
 See [`CONTRIBUTING.md`](./../../CONTRIBUTING.md) on more information about how to contribute.
 
 **Usage:**

@@ -62,10 +62,10 @@ jobs:
         uses: actions/checkout@v6
       -
         name: Build Docker image
-        run: docker build -t privacy-sexy-revamped:latest .
+        run: docker build -t debloat-net:latest .
       -
         name: Run Docker image on port 8080
-        run: docker run -d -p 8080:80 --rm --name privacy.sexy privacy-sexy-revamped:latest
+        run: docker run -d -p 8080:80 --rm --name debloat.net debloat-net:latest
       -
         name: Enforce IPv4 Connectivity # Used due to GitHub runners' lack of IPv6 support, preventing request timeouts.
         uses: ./.github/actions/force-ipv4

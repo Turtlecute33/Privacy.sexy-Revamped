@@ -32,7 +32,7 @@ The presentation layer uses an event-driven architecture for bidirectional react
   It should be as clear as possible that they're interactable at first look without hovering.
   They should also have different visual state when hovering/touching on them that indicates that they are being clicked, which helps with accessibility.
 - **Borders**:
-  privacy.sexy prefers sharper edges in its design language.
+  debloat.net prefers sharper edges in its design language.
 - **Fonts**:
   - Use the primary font for regular text and monospace font for code or specific data.
   - Use cursive and logo fonts solely for branding.
