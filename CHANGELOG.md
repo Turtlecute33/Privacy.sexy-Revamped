@@ -8,6 +8,25 @@ milestones; `git log` remains the complete history of changes.
 Release history up to and including `0.13.8`, the point this project forked, belongs to upstream and is
 kept there: <https://github.com/undergroundwires/privacy.sexy/blob/master/CHANGELOG.md>.
 
+## 0.17.1 (2026-11-10)
+
+The page does less work while it loads. With the CPU slowed down four times, which roughly matches what
+PageSpeed Insights measured (410 ms), the page was blocked for about 400 ms of long tasks after the
+first paint; now it is about 160 ms. No script changes.
+
+- Only the scripts of the operating system on screen are prepared in the background after the page
+  loads. Preparing all three kept the page busy for several seconds, even for visitors on macOS or
+  Linux, and some Windows scripts take over 100 ms each. A system's scripts are prepared when you
+  switch to it.
+- Before the first paint the script list builds only the rows that fit in the window, and it prepares a
+  script's code only when its row is shown. The remaining rows follow a few per frame, as before.
+- The code preview is built in a step of its own after the editor downloads, and the system and preset
+  pickers no longer force a layout of the whole page while the page is being built.
+- The 14 interface icons ship with the app (about 3 KB) instead of as 14 separate downloads, so they no
+  longer disappear for a moment while the page starts.
+- Repository: a new README with current screenshots, an updated contributing guide and security policy,
+  and shorter issue forms.
+
 ## 0.17.0 (2026-11-10)
 
 The site has moved to its own domain, debloat.net. Every old privacy.turtlecute.org address forwards to the
