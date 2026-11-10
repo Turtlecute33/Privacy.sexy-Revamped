@@ -516,6 +516,25 @@ describe('compiled collection regressions', () => {
       ).to.deep.equal([]);
     });
 
+    it('reads a service state from its name, not from the localized label', () => {
+      /*
+        `sc queryex` prints `STATE : 4 RUNNING` on an English Windows and `STATO : 4 RUNNING` on an
+        Italian one. Looking for `STATE` made the time server script stop the Windows Time service
+        on every non-English system, which printed an error whenever it was not running.
+      */
+      const script = getScript(OperatingSystem.Windows, 'Set NTP (time) server to `pool.ntp.org`');
+      const usesLabel = getScripts(OperatingSystem.Windows)
+        .filter((candidate) => /find(str)?\s+"STATE"/i.test(
+          `${candidate.code.execute}\n${candidate.code.revert ?? ''}`,
+        ))
+        .map((candidate) => candidate.name);
+
+      expect(usesLabel).to.deep.equal([]);
+      for (const code of [script.code.execute, script.code.revert ?? '']) {
+        expect(code).to.include('sc queryex "w32time" | find "RUNNING" >nul && (');
+      }
+    });
+
     it("gives deleteOnRevert no value other than 'true'", () => {
       /*
         Any text turns the option on, so `deleteOnRevert: '15'`, meant as `dataOnRevert: '15'`,

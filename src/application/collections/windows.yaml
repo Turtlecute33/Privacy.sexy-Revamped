@@ -39688,14 +39688,16 @@ actions:
                     [1]: https://www.ntppool.org/en/use.html "How do I use pool.ntp.org? | www.ntppool.org"
                     [2]: https://web.archive.org/web/20250330001322/https://learn.microsoft.com/en-us/windows-server/networking/windows-time-service/windows-time-service-tools-and-settings "Windows Time service tools and settings | Microsoft Learn | learn.microsoft.com"
                 recommend: strict
-                 # `sc queryex` output is same in every OS language
+                 # `sc queryex` prints the state names (`RUNNING`) in English on every Windows, but not the labels:
+                 # an Italian Windows prints `STATO`, not `STATE`. Looking for the label made the script stop the
+                 # service on every non-English system, which printed an error whenever it was not running.
                  # Marked: refactor-with-revert-call, refactor-with-variables
                  #  This would allow re-using `StartService` and `StopService`
                 code: |-
                     :: Configure time source
                     w32tm /config /syncfromflags:manual /manualpeerlist:"0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org"
                     :: Stop time service if running
-                    SC queryex "w32time"|Find "STATE"|Find /v "RUNNING">Nul||(
+                    sc queryex "w32time" | find "RUNNING" >nul && (
                         net stop w32time
                     )
                     :: Start time service and sync now
@@ -39708,7 +39710,7 @@ actions:
                     :: restored configuration is not the state before this script ran.
                     w32tm /config /syncfromflags:manual /manualpeerlist:"time.windows.com,0x1"
                     :: Stop time service if running
-                    SC queryex "w32time"|Find "STATE"|Find /v "RUNNING">Nul||(
+                    sc queryex "w32time" | find "RUNNING" >nul && (
                         net stop w32time
                     )
                     :: Start time service and sync now
